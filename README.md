@@ -239,3 +239,28 @@ This repository now includes Docker scaffolding for Laravel + MSSQL.
 ### Notes
 - MSSQL database `lifelink` is initialized by `mssql-init` service.
 - Change `MSSQL_SA_PASSWORD` in `.env` before first run.
+
+## Phase 1 - Issue 2: Configure MSSQL connection and test migrations
+
+### Connection updates
+- Laravel app uses `sqlsrv` in `lifelink-app/.env`.
+- SQL Server TLS options are enabled in `lifelink-app/config/database.php`:
+  - `encrypt`
+  - `trust_server_certificate`
+- App image includes Microsoft ODBC Driver 18.
+
+### Verification commands
+1. `docker compose up -d --build`
+2. `docker compose exec app php artisan key:generate --force`
+3. `docker compose exec app php artisan migrate --force`
+4. `docker compose exec app php artisan migrate:status`
+
+### Expected migrated tables (default Laravel)
+- `migrations`
+- `users`
+- `password_reset_tokens`
+- `failed_jobs`
+- `personal_access_tokens`
+
+
+-->>now opens the laravel open home pg at http://localhost:8000
