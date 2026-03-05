@@ -1,0 +1,8 @@
+﻿/vendor/
+/node_modules/
+/.idea/
+/.vscode/
+.env
+lifelink-app/.env
+lifelink-app/vendor/
+lifelink-app/node_modules/
