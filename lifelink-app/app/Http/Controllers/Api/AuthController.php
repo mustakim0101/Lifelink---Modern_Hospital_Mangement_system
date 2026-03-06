@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,9 +33,12 @@ class AuthController extends Controller
 
         $user = User::query()->create([
             'name' => $name,
+            'full_name' => $name,
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
         ]);
+
+        $this->assignRole($user, 'Patient');
 
         $token = auth('api')->login($user);
 
@@ -54,7 +58,17 @@ class AuthController extends Controller
             ], 401);
         }
 
-        return $this->tokenResponse($token, auth('api')->user(), 200, 'Logged in');
+        $user = auth('api')->user();
+
+        if ($user->isFrozen()) {
+            auth('api')->logout();
+
+            return response()->json([
+                'message' => 'Account is frozen. Contact admin.',
+            ], 403);
+        }
+
+        return $this->tokenResponse($token, $user, 200, 'Logged in');
     }
 
     public function me(): JsonResponse
@@ -96,9 +110,12 @@ class AuthController extends Controller
 
         $user = User::query()->create([
             'name' => $validated['fullName'],
+            'full_name' => $validated['fullName'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
         ]);
+
+        $this->assignRole($user, 'Admin', $user->id);
 
         $token = auth('api')->login($user);
 
@@ -115,8 +132,25 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'email' => $user->email,
-                'fullName' => $user->name,
+                'fullName' => $user->full_name ?? $user->name,
+                'account_status' => $user->account_status,
+                'roles' => $user->roles()->pluck('role_name')->values(),
             ],
         ], $statusCode);
+    }
+
+    private function assignRole(User $user, string $roleName, ?int $assignedByUserId = null): void
+    {
+        $role = Role::query()->firstOrCreate(
+            ['role_name' => $roleName],
+            ['description' => $roleName.' role']
+        );
+
+        $user->roles()->syncWithoutDetaching([
+            $role->id => [
+                'assigned_at' => now(),
+                'assigned_by_user_id' => $assignedByUserId,
+            ],
+        ]);
     }
 }

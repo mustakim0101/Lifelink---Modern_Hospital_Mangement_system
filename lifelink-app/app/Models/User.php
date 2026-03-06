@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
@@ -19,7 +20,14 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $fillable = [
         'name',
+        'full_name',
         'email',
+        'phone',
+        'date_of_birth',
+        'gender',
+        'account_status',
+        'frozen_at',
+        'frozen_by_user_id',
         'password',
     ];
 
@@ -40,8 +48,29 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'frozen_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'user_roles')
+            ->withPivot(['assigned_at', 'assigned_by_user_id']);
+    }
+
+    public function hasRole(string ...$roles): bool
+    {
+        if (empty($roles)) {
+            return false;
+        }
+
+        return $this->roles()->whereIn('role_name', $roles)->exists();
+    }
+
+    public function isFrozen(): bool
+    {
+        return $this->account_status === 'Frozen';
+    }
 
     public function getJWTIdentifier(): mixed
     {

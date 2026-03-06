@@ -424,3 +424,148 @@ Branch target: `dev`
   - `permissions`
   - `user_roles`
   - `role_permissions`
+
+---
+
+## Phase 2 - Issue 5 (Implemented)
+
+Issue: Build role middleware & account controls  
+Commit message target: `feat(rbac): role middleware with freeze/unfreeze`  
+Branch target: `dev`
+
+### Files created/updated
+- Created: `lifelink-app/app/Http/Middleware/RoleMiddleware.php`
+- Created: `lifelink-app/app/Http/Middleware/EnsureUserIsActive.php`
+- Created: `lifelink-app/app/Http/Controllers/Api/Admin/AccountControlController.php`
+- Created: `lifelink-app/app/Models/Role.php`
+- Created: `lifelink-app/app/Models/Permission.php`
+- Updated: `lifelink-app/app/Http/Kernel.php`
+- Updated: `lifelink-app/app/Models/User.php`
+- Updated: `lifelink-app/app/Http/Controllers/Api/AuthController.php`
+- Updated: `lifelink-app/routes/api.php`
+
+### Implemented behavior
+1. Role middleware:
+   - New route middleware alias: `role`
+   - Checks `user_roles` -> `roles.role_name` for authorization
+2. Active-account middleware:
+   - New route middleware alias: `active.user`
+   - Blocks frozen users from protected API access
+3. Account control endpoints (Admin only):
+   - `POST /api/admin/users/{user}/freeze`
+   - `POST /api/admin/users/{user}/unfreeze`
+   - `GET /api/admin/users/{user}/status`
+4. Auth flow updates:
+   - Register assigns `Patient` role automatically
+   - Dev create-admin assigns `Admin` role automatically
+   - Login denies frozen users (`403`)
+   - Token response now includes `roles` and `account_status`
+
+### Access control flow
+JWT auth (`auth:api`)
+-> active user check (`active.user`)
+-> role check (`role:Admin`)
+-> admin controller action (freeze/unfreeze/status)
+
+### Validation evidence
+- `php artisan route:list --path=api` shows admin freeze/unfreeze/status routes.
+- Live API check:
+  - Created admin (`/api/dev/create-admin`) -> role assigned `Admin`
+  - Registered patient (`/api/auth/register`) -> role assigned `Patient`
+  - Admin froze patient (`/api/admin/users/{id}/freeze`) -> `account_status=Frozen`
+  - Patient login after freeze -> blocked with `403` and message `Account is frozen. Contact admin.`
+
+## Run + Verify Now (Phase 2 Issue 5)
+
+Use this from project root:
+`S:\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Ensure app is running and migrations are applied
+1. `docker compose ps`
+2. `docker compose exec app php artisan migrate --force`
+3. `docker compose exec app php artisan route:list --path=api`
+
+Expected extra routes for Issue 5:
+- `POST api/admin/users/{user}/freeze`
+- `POST api/admin/users/{user}/unfreeze`
+- `GET api/admin/users/{user}/status`
+
+### 2) Postman verification flow (API-only)
+Base URL:
+`http://localhost:8000/api`
+
+#### A) Create admin (bootstrap)
+- `POST /dev/create-admin`
+- Body:
+```json
+{
+  "email": "admin@demo.com",
+  "password": "admin12345",
+  "fullName": "Admin Demo"
+}
+```
+- Save returned `token` as `ADMIN_TOKEN`.
+
+#### B) Register normal user (patient role auto-assign)
+- `POST /auth/register`
+- Body:
+```json
+{
+  "email": "patient1@demo.com",
+  "password": "patient12345",
+  "fullName": "Patient One"
+}
+```
+- Save returned `user.id` as `PATIENT_ID`.
+
+#### C) Freeze user as admin
+- `POST /admin/users/{{PATIENT_ID}}/freeze`
+- Header: `Authorization: Bearer {{ADMIN_TOKEN}}`
+
+Expected:
+- `200` with `user.account_status = Frozen`.
+
+#### D) Confirm frozen user cannot login
+- `POST /auth/login`
+- Body:
+```json
+{
+  "email": "patient1@demo.com",
+  "password": "patient12345"
+}
+```
+
+Expected:
+- `403` with message:
+`Account is frozen. Contact admin.`
+
+#### E) Unfreeze user as admin
+- `POST /admin/users/{{PATIENT_ID}}/unfreeze`
+- Header: `Authorization: Bearer {{ADMIN_TOKEN}}`
+
+Expected:
+- `200` with `user.account_status = Active`.
+
+#### F) Check status endpoint
+- `GET /admin/users/{{PATIENT_ID}}/status`
+- Header: `Authorization: Bearer {{ADMIN_TOKEN}}`
+
+Expected:
+- `200` with account status + roles.
+
+### 3) UI status for Issue 5
+- No frontend UI/dashboard screen is implemented yet for freeze/unfreeze.
+- Issue 5 is currently implemented and verified through API endpoints (Postman/cURL).
+
+### 4) If Postman returns Laravel HTML page
+- Cause: request is going to web root (`/`) or wrong method/path.
+- Fix checklist:
+  1. Method must be `POST` (not GET).
+  2. Full URL must be exactly: `http://localhost:8000/api/dev/create-admin`
+  3. Body type: `raw` -> `JSON`
+  4. Header: `Content-Type: application/json`
+  5. Header: `Accept: application/json`
+  6. Restart request tab and send again.
+
+Quick terminal check:
+`curl -X POST http://localhost:8000/api/dev/create-admin -H "Content-Type: application/json" -H "Accept: application/json" -d "{\"email\":\"admin@demo.com\",\"password\":\"admin12345\",\"fullName\":\"Admin Demo\"}"`
