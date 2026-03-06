@@ -1,0 +1,642 @@
+
+///////////////////////////////////start/////////////////////////////////////////////
+=====================================================================================
+📋 plan of features role wise 
+=====================================================================================
+
+i am working on my databse rpoject must use mssql ,  hospital based management system where 
+
+Admin 
+Access: Everything
+Powers:
+
+Approve/reject job applications
+
+Freeze/unfreeze any user account
+
+View all users and data
+
+System-wide settings
+
+Full database access
+
+IT Workers (Department Admins)
+Access: Technical + Limited Admin
+Powers:
+
+Approve job applications
+
+System maintenance tools
+
+Network monitoring
+bed/ward/icu etc count/access department wise 
+
+Technical support
+
+Cannot freeze accounts
+can search(filter option) among patients admitted in the dept
+can select blood donor for patient based on blood type matching
+can see available blood bags amount
+
+Doctors 
+Access: Medical Operations
+Powers:
+
+View assigned patients
+
+Write prescriptions
+
+Give diagnoses
+
+Medical treatments
+
+Patient management(can reject patient or like cancel appoinment)
+selects if patients need BED or ICU from their dashboard
+
+Nurses (Care Staff)
+Access: Patient Care
+Powers:
+
+Patient records (nurse can see department wise patients data ) 
+
+Medication administration
+
+Vital signs monitoring (optional) 
+
+
+Patients (Users)
+Access: Personal Healthcare
+Powers:
+
+View own medical records
+
+Book appointments
+
+View prescriptions
+
+Account settings
+ask/request for blood(can see who will be blood donor after a donor selects)
+
+Applicants (Waiting)
+Access: Limited
+Powers:
+
+View application status
+
+"Admin will contact you" message
+
+Cannot access other features
+
+User applies for job → Becomes "applicant" → Admin/IT Worker approves → Gets proper role → Accesses role dashboard
+
+Blood Donor
+user can also register as blood donor
+gets blood donors dashboard 
+donor can let the bank know if he is free this week or not for crosscheck
+hospital it worker can send universal notice to that specific type donor when a patient of that type requests.....
+can enter bag amounts of blood possible to give
+will store weight, temp of donor and show in donation list
+
+ DEPARTMENT PAGE
+Lists some Hospital Departments: 
+
+🫀 Cardiology
+🧠 Neurology
+🦴 Orthopedics
+👶 Pediatrics
+🩺 General Medicine
+👁 Ophthalmology
+🦷 Dentistry
+
+bed /ward/ icu/ nicu availabilty dept wise managemnet
+it workers can see and assign a bed to a pateients based on admission
+nurse can only see which patient is in which bed in her dashboard
+total bed icu nicu is fixed but manage frequent checks on if anymore bed was freed based on after doctor releases that patient then his bed info will also be released that bed will be available
+
+blood bank feature  for all dept like paitient books/reqs blood 
+when donor gives blood +3bags of O+ blood added in databse and shown in it worker dashboard
+
+these are my initial thought
+
+////////////////////////////////////end//////////////////////////////////////////////
+
+
+///////////////////////////////////start/////////////////////////////////////////////
+=====================================================================================
+📋tables older version and updated versions according to erd
+=====================================================================================
+old tables plan:
+
+## 1) Users
+
+* **user_id (PK)**
+* email
+* password_hash
+* role
+* Attribute
+* created_at
+
+## 2) Admin
+
+* **admin_id (PK)**
+* full_name
+
+## 3) Staff_Applications
+
+* **application_id (PK)**
+* applied_role
+* Attribute
+* applied_date
+* status
+
+## 4) Departments
+
+* **department_id (PK)**
+* dept_name
+
+## 5) Doctors
+
+* **doctor_id (PK)**
+* full_name
+* specialization
+* license_number
+* department_id (FK → Departments.department_id)
+
+## 6) Nurses
+
+* **nurse_id (PK)**
+* full_name
+* ward_assignment
+
+## 7) Patients
+
+* **patient_id (PK)**
+* full_name
+* Date_of_Birth
+* blood_group
+* emergency_contact
+
+## 8) Admission
+
+* **admission_id (PK)**
+* diagnosis
+* admit_date
+* discharge_date
+* status
+
+## 9) Medical_Records
+
+* **record_no (PK)**
+* patient_id (FK → Patients.patient_id)
+* record_date
+* diagnosis
+* treatment
+
+## 10) Prescriptions
+
+* **prescription_no (PK)**
+* patient_id (FK → Patients.patient_id)
+* medication
+* Date
+
+## 11) Appointments
+
+* **appointment_id (PK)**
+* doctor_id (FK → Doctors.doctor_id)
+* patient_id (FK → Patients.patient_id)
+* date_time
+* status
+
+## 12) Ward_Unit
+
+* **unit_id (PK)**
+* unit_type (ICU / CCU / NCU)
+* floor
+
+## 13) Bed
+
+* **bed_number (PK)**
+* unit_id (FK → Ward_Unit.unit_id)
+* status
+
+# Blood Bank Module
+
+## 14) Blood_Bank
+
+* **bank_id (PK)**
+* bank_name
+* location
+
+## 15) Blood_Inventory
+
+* **blood_group_component (PK)**
+* bank_id (FK → Blood_Bank.bank_id)
+* units_available
+
+## 16) Blood_Donor
+
+* **donor_id (PK)**
+* full_name
+* Date_of_Birth
+* blood_group
+* phone
+* last_donation_date
+
+## 17) Blood_Request
+
+* **request_id (PK)**
+* request_date
+* blood_group
+* units_required
+* status
+
+=======================================================================================---=======================================================================================---
+=======================================================================================---=======================================================================================---
+Below is an **updated, MSSQL-friendly, future-proof schema** that matches your roles + flows (Admin / IT Dept Admin / Doctors / Nurses / Patients / Applicants / Blood Donors) and adds the missing pieces: **RBAC, department-wise access, bed lifecycle, blood request → donor matching → donation → inventory**, plus auditing.
+
+## 1) Key updates vs your old tables
+
+### Replace “role” inside Users with proper RBAC
+
+Old: `Users(role)`
+New: `Roles`, `UserRoles`, optional `Permissions`, `RolePermissions`
+
+This makes it easy later to add roles like **LabTech, Pharmacist, Receptionist** without changing Users.
+
+### Split “Ward_Unit / Bed” into real bed management with departments
+
+Old: Ward_Unit (unit_type, floor), Bed (status)
+New: `CareUnits` + `Beds` + `BedAssignments`
+So you can track **history** of who used which bed, and automatically free it when discharge happens.
+
+### Admissions must include department + required care type
+
+Add: `Admissions.department_id`, `care_level_requested`, `care_level_assigned`
+
+### Blood bank becomes a module with requests + donor availability + donation + inventory movements
+
+Old: Blood_Bank, Blood_Inventory, Blood_Donor, Blood_Request
+New: add `DonorAvailability`, `BloodDonations`, `BloodInventoryTransactions`, and link requests to patients + dept + matching donors.
+---
+
+## 2) Updated tables, attributes (MSSQL ready)
+
+### A) Identity / Roles / Accounts
+
+#### 1. Users
+
+* **user_id (PK, INT IDENTITY)**
+* email (UNIQUE)
+* password_hash
+* full_name
+* phone (nullable)
+* date_of_birth (nullable)
+* gender (nullable)
+* account_status (Active/Frozen/Deleted)
+* created_at, updated_at
+* frozen_at (nullable)
+* frozen_by_user_id (FK → Users.user_id, nullable)
+
+#### 2. Roles
+
+* **role_id (PK)**
+* role_name (UNIQUE)
+  Examples: Admin, ITWorker, Doctor, Nurse, Patient, Donor, Applicant
+
+#### 3. UserRoles
+
+* **user_id (PK, FK → Users)**
+* **role_id (PK, FK → Roles)**
+* assigned_at
+* assigned_by_user_id (FK → Users, nullable)
+
+> (Many-to-many: user can be Patient + Donor, or Nurse + Donor)
+
+#### 4. Permissions (optional but future proof)
+
+* **permission_id (PK)**
+* permission_code (UNIQUE) (e.g., FREEZE_USER, APPROVE_APPLICATION)
+
+#### 5. RolePermissions (optional)
+
+* **role_id (PK, FK → Roles)**
+* **permission_id (PK, FK → Permissions)**
+
+#### 6. AuditLogs (highly recommended)
+
+* **audit_id (PK)**
+* actor_user_id (FK → Users)
+* action_type (e.g., FREEZE_ACCOUNT, ASSIGN_BED, APPROVE_APP)
+* entity_name (e.g., Admissions)
+* entity_id (INT or UNIQUEIDENTIFIER)
+* details (NVARCHAR(MAX))
+* created_at
+---
+
+### B) Organization (Departments + IT scope)
+
+#### 7. Departments
+
+* **department_id (PK)**
+* dept_name (UNIQUE)  (Cardiology, Neurology, etc.)
+* is_active
+
+#### 8. DepartmentAdmins (IT Workers scope)
+
+* **user_id (PK, FK → Users)**  (must have ITWorker role)
+* **department_id (PK, FK → Departments)**
+* assigned_at
+
+> Supports “IT worker can only search admitted patients in their dept”.
+---
+
+### C) Job applications flow (Applicant → Approved → Role assigned)
+
+#### 9. JobApplications
+
+* **application_id (PK)**
+* user_id (FK → Users)  (the applicant’s user)
+* applied_role_id (FK → Roles)
+* applied_department_id (FK → Departments, nullable) (for doctor/nurse/it worker)
+* status (Pending/Approved/Rejected)
+* applied_at
+* reviewed_by_user_id (FK → Users, nullable)
+* reviewed_at (nullable)
+* review_notes (nullable)
+
+> When Approved → you insert into `UserRoles` and (if needed) create Doctor/Nurse/IT profile row.
+
+---
+
+### D) Staff profiles (medical staff)
+
+#### 10. Doctors
+
+* **doctor_id (PK, FK → Users.user_id)**
+* department_id (FK → Departments)
+* specialization
+* license_number (UNIQUE)
+* is_active
+
+#### 11. Nurses
+
+* **nurse_id (PK, FK → Users.user_id)**
+* department_id (FK → Departments)
+* ward_assignment_note (nullable)
+* is_active
+---
+
+### E) Patients / clinical workflow
+
+#### 12. Patients
+
+* **patient_id (PK, FK → Users.user_id)**
+* blood_group (A+, A-, B+, …, O-)
+* emergency_contact_name
+* emergency_contact_phone
+* is_active
+
+#### 13. Appointments
+
+* **appointment_id (PK)**
+* patient_id (FK → Patients)
+* department_id (FK → Departments)
+* doctor_id (FK → Doctors, nullable) (nullable until assigned)
+* appointment_datetime
+* status (Booked/Cancelled/Completed/NoShow)
+* created_at
+* cancelled_by_user_id (FK → Users, nullable)
+* cancel_reason (nullable)
+
+> Matches “patient books appointment”, “doctor can cancel/reject”.
+
+#### 14. Admissions
+
+* **admission_id (PK)**
+* patient_id (FK → Patients)
+* department_id (FK → Departments)
+* admitted_by_doctor_id (FK → Doctors, nullable)
+* admit_date
+* discharge_date (nullable)
+* status (Admitted/Discharged/Transferred/Cancelled)
+* diagnosis_initial (nullable)
+* care_level_requested (General/ICU/NICU/CCU)
+* care_level_assigned (nullable)
+* notes (nullable)
+
+#### 15. MedicalRecords
+
+* **record_id (PK)**
+* patient_id (FK → Patients)
+* admission_id (FK → Admissions, nullable) (so outpatient records also possible)
+* created_by_user_id (FK → Users)
+* record_datetime
+* diagnosis
+* treatment_plan
+* notes (nullable)
+
+#### 16. Prescriptions
+
+* **prescription_id (PK)**
+* patient_id (FK → Patients)
+* admission_id (FK → Admissions, nullable)
+* doctor_id (FK → Doctors)
+* created_at
+* status (Active/Stopped/Completed)
+
+#### 17. PrescriptionItems
+
+* **item_id (PK)**
+* prescription_id (FK → Prescriptions)
+* medication_name
+* dosage
+* frequency
+* duration_days
+* instructions (nullable)
+
+> More future-proof than a single “medication” field.
+--
+
+### F) Bed / Ward / ICU management (department-wise)
+
+#### 18. CareUnits
+
+* **care_unit_id (PK)**
+* department_id (FK → Departments)
+* unit_type (Ward/ICU/NICU/CCU)
+* floor (nullable)
+* unit_name (nullable)
+* is_active
+
+#### 19. Beds
+
+* **bed_id (PK)**
+* care_unit_id (FK → CareUnits)
+* bed_code (e.g., ICU-01) (UNIQUE within unit)
+* status (Available/Occupied/Maintenance/Reserved)
+* is_active
+
+#### 20. BedAssignments  ✅ (this is what makes it “automatic free + history”)
+
+* **assignment_id (PK)**
+* admission_id (FK → Admissions)
+* bed_id (FK → Beds)
+* assigned_by_user_id (FK → Users)  (IT worker)
+* assigned_at
+* released_at (nullable)
+* released_by_user_id (FK → Users, nullable)
+* release_reason (Discharge/Transfer/Cancel/Maintenance)
+
+Rules:
+
+* Only **one active assignment** per admission (released_at IS NULL)
+* Only **one occupied bed** at a time (bed can’t have 2 active assignments)
+
+Nurses dashboard: join Admissions → BedAssignments(active) → Beds.
+---
+
+### G) Blood bank module (requests, donors, inventory, matching)
+
+#### 21. BloodBanks
+
+* **blood_bank_id (PK)**
+* bank_name
+* location
+* is_active
+
+#### 22. BloodInventory
+
+* **inventory_id (PK)**
+* blood_bank_id (FK → BloodBanks)
+* blood_group (A+, A-, …)
+* component_type (WholeBlood/Plasma/Platelets/RBC)  ✅ future-proof
+* units_available (INT)
+* last_updated_at
+
+Unique constraint: (blood_bank_id, blood_group, component_type)
+
+#### 23. BloodRequests
+
+* **request_id (PK)**
+* patient_id (FK → Patients)
+* admission_id (FK → Admissions, nullable)
+* department_id (FK → Departments)
+* requested_by_user_id (FK → Users)  (patient or doctor)
+* blood_group_needed
+* component_type
+* units_required
+* urgency (Normal/Urgent/Emergency)
+* status (Pending/Matched/Approved/Fulfilled/Rejected/Cancelled)
+* request_date
+* notes (nullable)
+
+#### 24. DonorProfiles
+
+* **donor_id (PK, FK → Users.user_id)**
+* blood_group
+* last_donation_date (nullable)
+* is_eligible (BIT)
+* notes (nullable)
+
+#### 25. DonorHealthChecks (for weight/temp requirement)
+
+* **check_id (PK)**
+* donor_id (FK → DonorProfiles)
+* check_datetime
+* weight_kg
+* temperature_c
+* hemoglobin (nullable)
+* notes (nullable)
+* checked_by_user_id (FK → Users, nullable)
+
+#### 26. DonorAvailability
+
+* **availability_id (PK)**
+* donor_id (FK → DonorProfiles)
+* week_start_date
+* is_available (BIT)
+* max_bags_possible (INT)
+* updated_at
+
+#### 27. BloodDonations
+
+* **donation_id (PK)**
+* donor_id (FK → DonorProfiles)
+* blood_bank_id (FK → BloodBanks)
+* donation_datetime
+* blood_group
+* component_type
+* units_donated
+* recorded_by_user_id (FK → Users)  (IT worker)
+* linked_request_id (FK → BloodRequests, nullable)  (if donation was for a request)
+
+#### 28. BloodInventoryTransactions  ✅ (most future-proof part)
+
+* **txn_id (PK)**
+* blood_bank_id (FK → BloodBanks)
+* donation_id (FK → BloodDonations, nullable)
+* request_id (FK → BloodRequests, nullable)
+* blood_group
+* component_type
+* units_change (+/-)
+* reason (Donation/Fulfillment/Adjustment/Expired)
+* created_at
+* created_by_user_id (FK → Users)
+
+> Inventory becomes reliable: when donation happens → insert +3; when request fulfilled → insert -units.
+
+#### 29. BloodRequestMatches (donor selection list)
+
+* **match_id (PK)**
+* request_id (FK → BloodRequests)
+* donor_id (FK → DonorProfiles)
+* match_score (nullable)
+* status (Suggested/Notified/Accepted/Declined/Completed)
+* created_at
+* responded_at (nullable)
+
+Patients can “see who will be donor after donor selects” → show only Accepted.
+---
+
+### H) Notifications (IT worker sends universal notice by blood type)
+
+#### 30. Notifications
+
+* **notification_id (PK)**
+* title
+* message
+* target_type (Role/Department/BloodType/SpecificUser)
+* created_by_user_id (FK → Users)
+* created_at
+
+#### 31. NotificationTargets
+
+* **notification_id (PK, FK → Notifications)**
+* **user_id (PK, FK → Users)**
+
+(mustgenerate target list at send-time based on blood type + availability.)
+---
+
+## 3) Relationships summary (connections)
+
+* Users ↔ Roles: **many-to-many** via UserRoles
+* DepartmentAdmins ties IT workers to departments
+* Doctors/Nurses belong to exactly one department
+* Patients are Users with Patient profile
+* Appointment belongs to department + patient + optional doctor
+* Admission belongs to patient + department + optional doctor
+* BedAssignment connects Admission ↔ Bed (history)
+* BloodRequest belongs to patient (+ optional admission) + department
+* DonorProfiles is a User; availability & healthchecks per donor
+* Donations add inventory via InventoryTransactions
+* Fulfillment subtracts inventory via InventoryTransactions
+* RequestMatches records donor acceptance flow
+* Admin freeze/unfreeze: Users.account_status + logs
+////////////////////////////////////end//////////////////////////////////////////////
+
+
+///////////////////////////////////start/////////////////////////////////////////////
+=====================================================================================
+📋📔🗒️🖊️
+=====================================================================================
+////////////////////////////////////end//////////////////////////////////////////////

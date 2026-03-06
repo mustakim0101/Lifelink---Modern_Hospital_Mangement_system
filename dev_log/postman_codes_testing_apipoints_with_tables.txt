@@ -1,0 +1,486 @@
+🧱create admin via API
+
+POST http://localhost:5000/api/dev/create-admin
+
+Body (JSON):
+
+{
+  "email": "admin@demo.com",
+  "password": "admin12345",
+  "fullName": "Admin Demo"
+}
+
+
+🧱login test
+POST http://localhost:5000/api/auth/login
+
+{ "email": "admin@demo.com", "password": "admin12345" }
+
+--should generate token
+
+🧱Test /me (confirms JWT + DB queries)
+GET http://localhost:5000/api/auth/me
+
+Header: Authorization: Bearer <your_token>
+
+--should get user info + roles + profiles.
+
+Put token in Postman once (saves time)
+
+Postman → Authorization tab:
+
+Type: Bearer Token
+
+Paste token
+Now every request uses it automatically.
+
+🧱A1) See bed summary (before)
+
+GET http://localhost:5000/api/ward/beds/summary
+
+--returns counts grouped by:
+
+department
+unit_type (Ward/ICU/NICU/CCU)
+status (Available/Occupied/etc.)
+
+
+🧱A2) List available ICU beds in a department 
+GET http://localhost:5000/api/ward/beds?unitType=ICU&status=Available
+
+🧱department filter :
+GET http://localhost:5000/api/ward/beds?departmentId=1&unitType=ICU&status=Available
+
+
+
+
+🧱A3)Admit a patient and auto-assign a bed
+Step 1 — Register patient
+
+POST http://localhost:5000/api/auth/register
+
+Body:
+
+{
+  "fullName": "Patient One",
+  "phone": "01700000001",
+  "email": "patient1@demo.com",
+  "password": "patient12345",
+  "sex": "Male",
+  "age": 20,
+  "address": "Dhaka",
+  "bloodGroup": "O+"
+}
+
+🧱Step 2 — Login as patient
+
+POST http://localhost:5000/api/auth/login
+
+{ "email": "patient1@demo.com", "password": "patient12345" }
+
+>>Copy the patient token and use that token in Postman.
+
+🧱Step 3 — Admit
+POST http://localhost:5000/api/admissions/admit
+
+{
+  "diagnosis": "Breathing issue",
+  "unitType": "ICU",
+  "departmentName": "Cardiology"
+}
+
+--should return admissionId + bedAssigned 
+Expected response:
+
+{
+  "message": "Admitted",
+  "admissionId": 123,
+  "bedAssigned": true,
+  "bedId": 45
+}
+
+🧱A4) Step 4 — Verify ICU decreased 
+
+Run again:
+GET http://localhost:5000/api/ward/beds?departmentId=1&unitType=ICU&status=Available
+
+--should go from 1 available to 0 available (and occupied increases).
+
+🧱A5) Check patient admissions show bed assigned
+
+GET http://localhost:5000/api/admissions/my
+
+--should see bed_code and unit_type.
+============================================================checking blood inventory=========================
+🧱check if DB is connected
+GET http://localhost:5000/api/db/ping
+output { "db":"connected", "result": { "ok": 1 } } means DB connected
+
+🧱Admin login (needed for “issue blood” later)
+1.1 Login admin
+
+POST http://localhost:5000/api/auth/login
+
+Body → raw JSON:
+
+{
+  "email": "admin@demo.com",
+  "password": "admin12345"
+}
+
+✅{
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsInJvbGVzIjpbIkFkbWluIl0sInJvbGUiOiJBZG1pbiIsImlhdCI6MTc3MjU1NTY0MiwiZXhwIjoxNzczMTYwNDQyfQ.EmzY_esgg8ODTjbTnp5Q56V1DKkP7njUnN5sTa2Td4M",
+    "user": {
+        "id": 4,
+        "email": "admin@demo.com",
+        "role": "Admin",
+        "roles": [
+            "Admin"
+        ],
+        "fullName": "Admin Demo"
+    },
+    "profiles": {
+        "patient": null,
+        "doctor": null,
+        "nurse": null,
+        "itDepartments": [],
+        "donor": null
+    },
+    "latestApplication": null
+}
+
+Save token
+Copy token and set it into environment variable ADMIN_TOKEN.
+
+🧱Register donor (creates donor account)
+
+POST http://localhost:5000/api/donor-auth/register
+
+Body (raw JSON):
+
+{
+  "fullName": "Donor One",
+  "email": "donor1@demo.com",
+  "password": "donor12345",
+  "phone": "01700000002",
+  "dob": "2000-01-01",
+  "bloodGroup": "O+"
+}
+
+Expected (example):
+
+{
+  "message": "Donor registered",
+  "user": { "id": 123, "email": "donor1@demo.com", "role": "Donor" }
+}
+✅{
+    "message": "Email already used"
+}
+🧱Login donor
+
+POST http://localhost:5000/api/donor-auth/login
+
+Body:
+
+{
+  "email": "donor1@demo.com",
+  "password": "donor12345"
+}
+
+Expected: returns token.
+Copy this token → save to DONOR_TOKEN.
+✅{
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsInJvbGVzIjpbIkRvbm9yIl0sInJvbGUiOiJEb25vciIsImlhdCI6MTc3MjU1NjI3NCwiZXhwIjoxNzczMTYxMDc0fQ.9qOpBtuM5Q_iV1r2YVRTUBcbXp7RbNumQS6Xapv0-h4",
+    "user": {
+        "id": 3,
+        "email": "donor1@demo.com",
+        "role": "Donor",
+        "roles": [
+            "Donor"
+        ],
+        "fullName": "Donor One"
+    }
+}
+🧱Check blood inventory BEFORE donation
+
+Use Admin token or any token (inventory is usually allowed to logged-in users).
+
+GET http://localhost:5000/api/blood/inventory
+✅[
+    {
+        "blood_group": "A-",
+        "component_type": "Plasma",
+        "units_available": 0
+    },
+    {
+        "blood_group": "A-",
+        "component_type": "Platelets",
+        "units_available": 0
+    },
+    {
+        "blood_group": "A-",
+        "component_type": "RBC",
+        "units_available": 0
+    },
+.....................majhe onk line silo but kheyal kori shudhu nicher part ta...........
+    {
+        "blood_group": "O+",
+        "component_type": "WholeBlood",
+        "units_available": 6
+    }
+]
+🧱Donate blood (increase inventory)
+
+POST http://localhost:5000/api/blood/donate
+
+Headers:
+
+Authorization: Bearer {{DONOR_TOKEN}}
+
+Body:
+
+{ "units": 3 }
+✅{
+    "message": "Donation recorded",
+    "donationId": 3
+}
+🧱Check inventory AFTER donation (should be +3)
+
+GET http://localhost:5000/api/blood/inventory
+
+Headers:
+
+Authorization: Bearer {{DONOR_TOKEN}}
+
+Find same row (O+ / WholeBlood).
+units_available should be previous + 3.
+✅.................................shob line baad diye eta dekh age silo 6 akhon 9 hoise .......................................................................
+    {
+        "blood_group": "O+",
+        "component_type": "WholeBlood",
+        "units_available": 9
+    }
+
+==============================================================================================================
+
+🧱Patient flow (register + login + request blood + view requests)
+3.1 Register patient
+
+POST http://localhost:5000/api/auth/register
+
+Body:
+
+{
+  "fullName": "Patient One",
+  "phone": "01700000001",
+  "email": "patient1@demo.com",
+  "password": "patient12345",
+  "sex": "Male",
+  "age": 20,
+  "address": "Dhaka",
+  "bloodGroup": "O+"
+}
+
+Expected:
+
+{ "message": "Registered", "user": { "id": 456, "email": "patient1@demo.com", "role": "Patient" } }
+
+If “Email already used” it’s okay.
+
+🧱Login patient
+
+POST http://localhost:5000/api/auth/login
+
+Body:
+
+{
+  "email": "patient1@demo.com",
+  "password": "patient12345"
+}
+
+Copy returned token → save as PATIENT_TOKEN.
+✅jodi {
+    "message": "Invalid credentials"
+} bole post man a tahole server folder a giye run dau eta  node -e "const bcrypt=require('bcrypt'); bcrypt.hash('patient12345',10).then(h=>console.log(h))"
+thole hash key generate hoy like below
+
+S:\Modern_Hospital_Mangement_system\server>node -e "const bcrypt=require('bcrypt'); bcrypt.hash('patient12345',10).then(h=>console.log(h))"
+$2b$10$bivKJNtb9C64Qv7cXXDtaOJySofnS0RcLbywblP1cJhgUHfNF0XfK
+
+now open sql severe management studio and paste this
+
+USE ModernHospitalDB;
+GO
+UPDATE dbo.Users
+SET password_hash = 'PASTE THE HASHED PASSWORD HERE IN QUATION AND EXECUTE THIS LINES THEN LOGIN IN POSTMAN AGAIN'
+WHERE email = 'patient1@demo.com';
+
+
+--token generated 
+{
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInJvbGVzIjpbIlBhdGllbnQiXSwicm9sZSI6IlBhdGllbnQiLCJpYXQiOjE3NzI1NTc2MTgsImV4cCI6MTc3MzE2MjQxOH0.spx3SWNX3DqvkVp2bAhn64KF77GJkGqVwa2lxnD1PkM",
+    "user": {
+        "id": 2,
+        "email": "patient1@demo.com",
+        "role": "Patient",
+        "roles": [
+            "Patient"
+        ],
+        "fullName": "Patient One"
+    },
+    "profiles": {
+        "patient": {
+            "patient_id": 2,
+            "blood_group": "O+",
+            "emergency_contact_name": "Father",
+            "emergency_contact_phone": "01700000000",
+            "is_active": true
+        },
+        "doctor": null,
+        "nurse": null,
+        "itDepartments": [],
+        "donor": null
+    },
+    "latestApplication": null
+}
+
+🧱Patient requests blood
+
+POST http://localhost:5000/api/blood/request
+
+Headers:
+
+Authorization: Bearer {{PATIENT_TOKEN}}
+
+Body:
+
+{
+  "bloodGroup": "O+",
+  "unitsRequested": 2
+}
+
+Expected:
+
+{ "message": "Request submitted", "requestId": 5 }
+(If your requestId is not 5, use whatever you got.)
+✅{
+    "message": "Request submitted",
+    "requestId": 3
+}
+
+🧱Patient views their requests list
+
+GET http://localhost:5000/api/blood/requests/my
+
+Headers:
+
+Authorization: Bearer {{PATIENT_TOKEN}}
+
+Expected: list containing your request with:
+
+status: Pending
+✅[
+    {
+        "request_id": 3,
+        "patient_id": 2,
+        "admission_id": null,
+        "department_id": 1,
+        "requested_by_user_id": 2,
+        "blood_group_needed": "O+",
+        "component_type": "WholeBlood",
+        "units_required": 2,
+        "urgency": "Urgent",
+        "status": "Pending",
+        "request_date": "2026-03-03T17:10:28.612Z",
+        "notes": null
+    },
+    ................request_id 2, 1 er info gulau dekhay...................
+]
+🧱Admin/IT fulfills the request (inventory decreases)
+4.1 Check bank inventory BEFORE issuing
+
+GET http://localhost:5000/api/bank-blood/banks/1/inventory
+
+Headers:
+
+Authorization: Bearer {{ADMIN_TOKEN}}
+
+Find row:
+
+O+ / WholeBlood
+Note units_available.
+✅{
+        "blood_group": "O+",
+        "component_type": "WholeBlood",
+        "units_available": 9
+    }
+🧱Fulfill the request (issue blood)
+
+Use the requestId you received .(here 3)
+
+POST http://localhost:5000/api/bank-blood/requests/3/issue
+
+Headers:
+
+Authorization: Bearer {{ADMIN_TOKEN}}
+
+Body:
+
+{ "bankId": 1 }
+
+Expected:
+
+{
+  "message": "Issued / fulfilled",
+  "requestId": 5,
+  "issuedUnits": 2
+}
+✅{
+    "message": "Issued / fulfilled",
+    "requestId": 3,
+    "issuedUnits": 2
+}
+🧱Check bank inventory AFTER issuing (should be -2)
+
+GET {{BASE_URL}}/api/bank-blood/banks/1/inventory
+
+Headers:
+
+Authorization: Bearer {{ADMIN_TOKEN}}
+
+O+ / WholeBlood should now be previous - 2.
+✅{
+        "blood_group": "O+",
+        "component_type": "WholeBlood",
+        "units_available": 7
+    }
+9 theke 7 hoise
+🧱Patient checks requests again (should be Fulfilled)
+
+GET {{BASE_URL}}/api/blood/requests/my
+
+Headers:
+
+Authorization: Bearer {{PATIENT_TOKEN}}
+
+Your request should show:
+
+status = Fulfilled
+✅{
+        "request_id": 3,
+        "patient_id": 2,
+        "admission_id": null,
+        "department_id": 1,
+        "requested_by_user_id": 2,
+        "blood_group_needed": "O+",
+        "component_type": "WholeBlood",
+        "units_required": 2,
+        "urgency": "Urgent",
+        "status": "Fulfilled",
+        "request_date": "2026-03-03T17:10:28.612Z",
+        "notes": null
+    },
+🧱
+✅
+🧱
+✅
