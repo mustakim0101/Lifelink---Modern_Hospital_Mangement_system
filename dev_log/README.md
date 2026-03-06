@@ -569,3 +569,50 @@ Expected:
 
 Quick terminal check:
 `curl -X POST http://localhost:8000/api/dev/create-admin -H "Content-Type: application/json" -H "Accept: application/json" -d "{\"email\":\"admin@demo.com\",\"password\":\"admin12345\",\"fullName\":\"Admin Demo\"}"`
+
+---
+
+## Phase 3 - Issue 6 (Implemented)
+
+Issue: Department & application tables  
+Commit message target: `feat(hiring): migrations for departments and applications`  
+Branch target: `dev`
+
+### Files created/updated
+- Created: `lifelink-app/database/migrations/2026_03_06_000200_create_departments_table.php`
+- Created: `lifelink-app/database/migrations/2026_03_06_000210_create_job_applications_table.php`
+
+### Tables added
+1. `departments`
+   - `id` (PK)
+   - `dept_name` (unique)
+   - `is_active` (default true)
+   - `timestamps`
+
+2. `job_applications`
+   - `id` (PK)
+   - `user_id` (FK -> `users.id`)
+   - `applied_role_id` (FK -> `roles.id`)
+   - `applied_department_id` (nullable FK -> `departments.id`)
+   - `status` (default `Pending`, indexed)
+   - `applied_at`
+   - `reviewed_by_user_id` (nullable FK -> `users.id`)
+   - `reviewed_at` (nullable)
+   - `review_notes` (nullable)
+   - `timestamps`
+   - index: (`user_id`, `status`)
+
+### Hiring flow mapping (Issue 6 scope)
+Applicant user (`users`)
+-> chooses target role (`roles`)
+-> optionally chooses department (`departments`)
+-> submits record in `job_applications` with `Pending` status.
+
+### Verification commands
+1. `docker compose exec app php artisan migrate --force`
+2. `docker compose exec app php artisan migrate:status`
+
+### Verification result
+- Issue 6 migrations ran successfully on MSSQL:
+  - `2026_03_06_000200_create_departments_table`
+  - `2026_03_06_000210_create_job_applications_table`
