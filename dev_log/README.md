@@ -13,15 +13,15 @@
 |:---:|-------------|----------------|:---:|:---:|
 | **3** | **Install JWT & implement authentication** | `feat(auth): install jwt-auth with login/register` | `dev` | musa|
 | **4** | **Create RBAC database schema** | `feat(rbac): migrations for users, roles, permissions` | `dev` | musa |
-| **5** | **Build role middleware & account controls** | `feat(rbac): role middleware with freeze/unfreeze` | `dev` | Backend Developer |
+| **5** | **Build role middleware & account controls** | `feat(rbac): role middleware with freeze/unfreeze` | `dev` | musa |
 
 ## 📝 Phase 3: Hiring Flow (3 Issues/Commits)
 
 | # | Issue Title | Commit Message | Branch | Assigned To |
 |:---:|-------------|----------------|:---:|:---:|
-| **6** | **Department & application tables** | `feat(hiring): migrations for departments and applications` | `dev` | Database Architect |
-| **7** | **Job application submission feature** | `feat(hiring): applicant submission with status tracking` | `dev` | Full Stack Developer |
-| **8** | **Admin approval workflow** | `feat(hiring): admin/it approval with auto-role assignment` | `dev` | Backend Developer |
+| **6** | **Department & application tables** | `feat(hiring): migrations for departments and applications` | `dev` | musa |
+| **7** | **Job application submission feature** | `feat(hiring): applicant submission with status tracking` | `dev` | musa |
+| **8** | **Admin approval workflow** | `feat(hiring): admin/it approval with auto-role assignment` | `dev` | musa |
 
 ## 🏥 Phase 4: Bed Management (3 Issues/Commits)
 
@@ -618,8 +618,8 @@ Applicant user (`users`)
   - `2026_03_06_000210_create_job_applications_table`
 
 ---
-
 ## Phase 3 - Issue 7 (Implemented)
+
 
 Issue: Job application submission feature  
 Commit message target: `feat(hiring): applicant submission with status tracking`  
@@ -792,3 +792,102 @@ Base URL: `http://localhost:8000/api`
   - API submit message: `Application submitted`
   - status tracking works (`Pending`)
   - duplicate pending returns `409` conflict
+
+---
+
+## Phase 3 - Issue 8 (Implemented)
+
+Issue: Admin approval workflow  
+Commit message target: `feat(hiring): admin/it approval with auto-role assignment`  
+Branch target: `dev`
+
+### New files created (Issue 8)
+- `lifelink-app/app/Http/Controllers/Api/Admin/ApplicationReviewController.php`
+- `lifelink-app/resources/views/ui/application-reviews.blade.php`
+
+### Existing files updated (Issue 8)
+- `lifelink-app/routes/api.php`
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/README.md`
+
+### API endpoints added
+- `GET /api/admin/applications` (Admin/ITWorker)
+- `POST /api/admin/applications/{application}/approve` (Admin/ITWorker)
+- `POST /api/admin/applications/{application}/reject` (Admin/ITWorker)
+
+### Issue 8 behavior implemented
+1. Admin/IT can list applications with optional status filter:
+   - `?status=Pending|Approved|Rejected`
+2. Approve workflow:
+   - Allowed only when current status is `Pending`
+   - Sets `status=Approved`, `reviewed_by_user_id`, `reviewed_at`, optional `review_notes`
+   - Auto-assigns the applied role to the applicant in `user_roles` (if not already assigned)
+   - Removes `Applicant` role after approval
+3. Reject workflow:
+   - Allowed only when current status is `Pending`
+   - Sets `status=Rejected`, review metadata, optional notes
+4. Non-pending review protection:
+   - Approve/reject on non-pending returns `409`
+
+### UI added for Issue 8 testing
+- New page: `/ui/application-reviews`
+  - Uses `ADMIN_TOKEN` from localStorage
+  - Load applications by status
+  - Approve/reject by application id with optional review notes
+
+### Flowchart (Issue 8)
+Admin/IT login (JWT)
+-> `GET /api/admin/applications` to fetch pending items
+-> Select application id
+-> `POST /api/admin/applications/{id}/approve` or `/reject`
+-> On approve: update `job_applications` + assign role in `user_roles` + remove `Applicant`
+-> Applicant next login shows updated roles
+
+### Live verification evidence (Issue 8)
+- Route verification:
+  - `api/admin/applications`
+  - `api/admin/applications/{application}/approve`
+  - `api/admin/applications/{application}/reject`
+- End-to-end API run result:
+  - submitted application id: `4`
+  - review status after approve: `Approved`
+  - applied role: `Doctor`
+  - applicant login roles after approval: `Patient,Doctor`
+
+## Run + Verify Now (Up to Issue 8)
+
+Use this from project root:
+`S:\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start stack
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose ps`
+
+Expected:
+- `lifelink_app`, `lifelink_web`, `lifelink_mssql` are `Up`
+- App responds at `http://localhost:8000`
+
+### 2) Verify migrations/routes
+1. `docker compose exec app php artisan migrate --force`
+2. `docker compose exec app php artisan route:list --path=api/admin/applications`
+3. `docker compose exec app php artisan route:list --path=api/applications`
+
+### 3) Browser verify pages
+1. `http://localhost:8000/ui`
+2. `http://localhost:8000/ui/auth`
+3. `http://localhost:8000/ui/applications`
+4. `http://localhost:8000/ui/admin-users`
+5. `http://localhost:8000/ui/application-reviews`
+
+### 4) End-to-end approval test
+1. On `/ui/auth`: create admin, register/login applicant.
+2. On `/ui/applications`: submit application (`appliedRole=Doctor` for quick test).
+3. On `/ui/application-reviews`: load `Pending`, take application id, click `Approve`.
+4. On `/ui/auth` (login applicant again): check roles now include approved role.
+
+Expected:
+- Application status transitions `Pending -> Approved`
+- Applicant role assignment updates automatically in `user_roles`
+- `Applicant` role is removed after approval

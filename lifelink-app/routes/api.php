@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\Admin\ApplicationReviewController;
 use App\Http\Controllers\Api\Admin\AccountControlController;
 use App\Http\Controllers\Api\JobApplicationController;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,12 @@ Route::prefix('admin')->middleware(['auth:api', 'active.user', 'role:Admin'])->g
     Route::post('/users/{user}/freeze', [AccountControlController::class, 'freeze']);
     Route::post('/users/{user}/unfreeze', [AccountControlController::class, 'unfreeze']);
     Route::get('/users/{user}/status', [AccountControlController::class, 'status']);
+});
+
+Route::prefix('admin')->middleware(['auth:api', 'active.user', 'role:Admin,ITWorker'])->group(function () {
+    Route::get('/applications', [ApplicationReviewController::class, 'index']);
+    Route::post('/applications/{application}/approve', [ApplicationReviewController::class, 'approve']);
+    Route::post('/applications/{application}/reject', [ApplicationReviewController::class, 'reject']);
 });
 
 Route::prefix('applications')->middleware(['auth:api', 'active.user'])->group(function () {
