@@ -16,3 +16,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::view('/ui', 'ui.index');
+Route::view('/ui/auth', 'ui.auth');
+Route::view('/ui/applications', 'ui.applications');
+Route::view('/ui/admin-users', 'ui.admin-users');

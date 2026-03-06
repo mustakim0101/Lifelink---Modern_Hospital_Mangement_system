@@ -1,0 +1,8 @@
+lastly give me step to run the project
+currently we finished issue 5
+follow the files to understand where we are
+S:\Lifelink---Modern_Hospital_Mangement_system\README.md
+S:\Lifelink---Modern_Hospital_Mangement_system\dev_log\README.md
+S:\Lifelink---Modern_Hospital_Mangement_system\dev_log\postman_codes_testing_apipoints_with_tables.txt
+S:\Lifelink---Modern_Hospital_Mangement_system\dev_log\plan_for_Lifelink_Modern_Hospital_Mangement_system.txt
+and give me steps and also give steps for someone who will clone it now
