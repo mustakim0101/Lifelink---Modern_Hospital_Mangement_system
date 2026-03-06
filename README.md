@@ -138,61 +138,61 @@ LifeLink is a comprehensive hospital management system built with **Laravel Blad
 
 | # | Issue Title | Commit Message | Branch |
 |:---:|-------------|----------------|:---:|
-| **3** | **Setup Docker environment with MSSQL** | `chore: dockerize laravel 10 with mssql 2019` | `main` |
-| **4** | **Configure MSSQL database connection** | `fix: establish mssql connection and test migrations` | `main` |
+| **1** | **Setup Docker environment with MSSQL** | `chore: dockerize laravel  with mssql 2022` | `main` |
+| **2** | **Configure MSSQL database connection** | `fix: establish mssql connection and test migrations` | `main` |
 
 ## 🔐 Phase 2: Identity & RBAC (3 Issues/Commits)
 
 
 | # | Issue Title | Commit Message | Branch |
 |:---:|-------------|----------------|:---:|
-| **5** | **Install JWT & implement authentication** | `feat(auth): install jwt-auth with login/register` | `dev` |
-| **6** | **Create RBAC database schema** | `feat(rbac): migrations for users, roles, permissions` | `dev` |
-| **7** | **Build role middleware & account controls** | `feat(rbac): role middleware with freeze/unfreeze` | `dev` |
+| **3** | **Install JWT & implement authentication** | `feat(auth): install jwt-auth with login/register` | `dev` |
+| **4** | **Create RBAC database schema** | `feat(rbac): migrations for users, roles, permissions` | `dev` |
+| **5** | **Build role middleware & account controls** | `feat(rbac): role middleware with freeze/unfreeze` | `dev` |
 
 ## 📝 Phase 3: Hiring Flow (3 Issues/Commits)
 
 
 | # | Issue Title | Commit Message | Branch |
 |:---:|-------------|----------------|:---:|
-| **8** | **Department & application tables** | `feat(hiring): migrations for departments and applications` | `dev` |
-| **9** | **Job application submission feature** | `feat(hiring): applicant submission with status tracking` | `dev` |
-| **10** | **Admin approval workflow** | `feat(hiring): admin/it approval with auto-role assignment` | `dev` |
+| **6** | **Department & application tables** | `feat(hiring): migrations for departments and applications` | `dev` |
+| **7** | **Job application submission feature** | `feat(hiring): applicant submission with status tracking` | `dev` |
+| **8** | **Admin approval workflow** | `feat(hiring): admin/it approval with auto-role assignment` | `dev` |
 
 ## 🏥 Phase 4: Bed Management (3 Issues/Commits)
 
 
 | # | Issue Title | Commit Message | Branch |
 |:---:|-------------|----------------|:---:|
-| **11** | **Bed/ICU/Ward schema** | `feat(beds): migrations for care_units and beds` | `dev` |
-| **12** | **IT worker bed assignment** | `feat(beds): it-worker dashboard for bed allocation` | `dev` |
-| **13** | **Discharge & bed release** | `feat(beds): auto-release bed on patient discharge` | `dev` |
+| **9** | **Bed/ICU/Ward schema** | `feat(beds): migrations for care_units and beds` | `dev` |
+| **10** | **IT worker bed assignment** | `feat(beds): it-worker dashboard for bed allocation` | `dev` |
+| **11** | **Discharge & bed release** | `feat(beds): auto-release bed on patient discharge` | `dev` |
 
 ## 👨‍⚕️ Phase 5: Clinical Operations (4 Issues/Commits)
 
 
 | # | Issue Title | Commit Message | Branch |
 |:---:|-------------|----------------|:---:|
-| **14** | **Clinical data schema** | `feat(clinical): migrations for patients, appointments, records` | `dev` |
-| **15** | **Doctor dashboard & actions** | `feat(clinical): doctor management of patients and bed requests` | `dev` |
-| **16** | **Nurse care dashboard** | `feat(clinical): nurse view for dept-wise patient monitoring` | `dev` |
-| **17** | **Patient portal** | `feat(clinical): patient portal for records and blood requests` | `dev` |
+| **12** | **Clinical data schema** | `feat(clinical): migrations for patients, appointments, records` | `dev` |
+| **13** | **Doctor dashboard & actions** | `feat(clinical): doctor management of patients and bed requests` | `dev` |
+| **14** | **Nurse care dashboard** | `feat(clinical): nurse view for dept-wise patient monitoring` | `dev` |
+| **15** | **Patient portal** | `feat(clinical): patient portal for records and blood requests` | `dev` |
 
 ## 🩸 Phase 6: Blood Bank (3 Issues/Commits)
 
 
 | # | Issue Title | Commit Message | Branch |
 |:---:|-------------|----------------|:---:|
-| **18** | **Blood bank schema** | `feat(blood): migrations for donors, inventory, requests` | `dev` |
-| **19** | **Donor dashboard & tracking** | `feat(blood): donor availability, weight, temp, bag logging` | `dev` |
-| **20** | **Blood matching system** | `feat(blood): it-worker matching with donor notifications` | `dev` |
+| **16** | **Blood bank schema** | `feat(blood): migrations for donors, inventory, requests` | `dev` |
+| **17** | **Donor dashboard & tracking** | `feat(blood): donor availability, weight, temp, bag logging` | `dev` |
+| **18** | **Blood matching system** | `feat(blood): it-worker matching with donor notifications` | `dev` |
 
 ## ✅ Phase 7: Final Polish (3 Issues/Commits)
 
 
 | # | Issue Title | Commit Message | Branch |
 |:---:|-------------|----------------|:---:|
-| **21** | **Comprehensive testing** | `test: feature tests for all role workflows` | `dev` |
-| **22** | **API documentation** | `docs: swagger/openapi documentation for all endpoints` | `dev` |
-| **23** | **Deployment preparation** | `chore: deployment config and environment setup` | `dev` |
+| **19** | **Comprehensive testing** | `test: feature tests for all role workflows` | `dev` |
+| **20** | **API documentation** | `docs: swagger/openapi documentation for all endpoints` | `dev` |
+| **21** | **Deployment preparation** | `chore: deployment config and environment setup` | `dev` |
 
