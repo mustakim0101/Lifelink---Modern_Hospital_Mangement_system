@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\JobApplication;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -136,6 +137,7 @@ class AuthController extends Controller
                 'account_status' => $user->account_status,
                 'roles' => $user->roles()->pluck('role_name')->values(),
             ],
+            'latestApplication' => $this->latestApplicationPayload($user->id),
         ], $statusCode);
     }
 
@@ -152,5 +154,26 @@ class AuthController extends Controller
                 'assigned_by_user_id' => $assignedByUserId,
             ],
         ]);
+    }
+
+    private function latestApplicationPayload(int $userId): ?array
+    {
+        $latest = JobApplication::query()
+            ->with(['appliedRole', 'department'])
+            ->where('user_id', $userId)
+            ->orderByDesc('applied_at')
+            ->first();
+
+        if (! $latest) {
+            return null;
+        }
+
+        return [
+            'id' => $latest->id,
+            'status' => $latest->status,
+            'applied_at' => optional($latest->applied_at)->toISOString(),
+            'applied_role' => $latest->appliedRole?->role_name,
+            'applied_department' => $latest->department?->dept_name,
+        ];
     }
 }

@@ -616,3 +616,179 @@ Applicant user (`users`)
 - Issue 6 migrations ran successfully on MSSQL:
   - `2026_03_06_000200_create_departments_table`
   - `2026_03_06_000210_create_job_applications_table`
+
+---
+
+## Phase 3 - Issue 7 (Implemented)
+
+Issue: Job application submission feature  
+Commit message target: `feat(hiring): applicant submission with status tracking`  
+Branch target: `dev`
+
+### Files created/updated
+- Created: `lifelink-app/app/Models/Department.php`
+- Created: `lifelink-app/app/Models/JobApplication.php`
+- Created: `lifelink-app/app/Http/Controllers/Api/JobApplicationController.php`
+- Updated: `lifelink-app/routes/api.php`
+- Updated: `lifelink-app/app/Http/Controllers/Api/AuthController.php`
+- Updated: `lifelink-app/routes/web.php`
+- Created: `lifelink-app/resources/views/ui/index.blade.php`
+- Created: `lifelink-app/resources/views/ui/auth.blade.php`
+- Created: `lifelink-app/resources/views/ui/applications.blade.php`
+- Created: `lifelink-app/resources/views/ui/admin-users.blade.php`
+
+### Pages created in this issue
+1. `/ui`
+   - UI landing page for completed backend features.
+2. `/ui/auth`
+   - Create admin, register patient/user, login.
+   - Shows/stores IDs and tokens in a context panel.
+   - Stores test keys in localStorage:
+     - `ADMIN_TOKEN`, `ADMIN_USER_ID`, `ADMIN_EMAIL`
+     - `USER_TOKEN`
+     - `PATIENT_ID`, `PATIENT_EMAIL`, `PATIENT_PASSWORD`
+3. `/ui/applications`
+   - Submit job application.
+   - View `my` and `my/latest`.
+   - Saves and shows last application snapshot.
+4. `/ui/admin-users`
+   - Admin freeze/unfreeze/status.
+   - Auto-loads stored `PATIENT_ID`.
+   - Has built-in "Test Patient Login (frozen check)" button.
+
+### Program flow (page to backend)
+#### A) UI route and page load flow
+Browser `GET /ui/*`
+-> `lifelink-app/routes/web.php`
+-> Blade view file in `lifelink-app/resources/views/ui/*.blade.php`
+-> HTML + JS rendered in browser.
+
+#### B) Auth page flow (`/ui/auth`)
+UI button click (Create Admin/Register/Login)
+-> `fetch('/api/...')` from `resources/views/ui/auth.blade.php`
+-> `routes/api.php`
+-> `AuthController` method
+-> DB (`users`, `roles`, `user_roles`)
+-> JSON response shown in page `<pre>` output.
+-> important IDs/tokens saved to localStorage.
+
+#### C) Applications page flow (`/ui/applications`)
+UI button click (Submit / My / My Latest)
+-> `fetch('/api/applications...')` from `resources/views/ui/applications.blade.php`
+-> `routes/api.php`
+-> `JobApplicationController` (`submit`, `myApplications`, `myLatest`)
+-> DB (`job_applications`, `roles`, `departments`, `user_roles`)
+-> JSON response shown in page.
+
+#### D) Admin account control flow (`/ui/admin-users`)
+UI button click (Freeze / Unfreeze / Status)
+-> `fetch('/api/admin/users/{id}/...')` from `resources/views/ui/admin-users.blade.php`
+-> `routes/api.php` + middleware (`auth:api`, `active.user`, `role:Admin`)
+-> `Api\Admin\AccountControlController`
+-> DB update/read on `users`
+-> JSON response shown in page.
+
+#### E) Frozen login verification flow from UI
+UI click "Test Patient Login (frozen check)" on `/ui/admin-users`
+-> reads `PATIENT_EMAIL` + `PATIENT_PASSWORD` from localStorage
+-> `POST /api/auth/login`
+-> if frozen, backend returns `403` with message:
+`Account is frozen. Contact admin.`
+
+### Backend behavior implemented (Issue 7 core)
+- `POST /api/applications`
+  - Creates `job_applications` row with status `Pending`
+  - Assigns `Applicant` role automatically if missing
+  - Accepts `appliedRole`/`applied_role_id` and optional department id
+- `GET /api/applications/my`
+  - Returns authenticated user's application history (latest first)
+- `GET /api/applications/my/latest`
+  - Returns latest application status
+- Duplicate pending protection:
+  - Re-submit while pending -> `409` with message:
+    - `You already have a pending application.`
+- Auth response update:
+  - `latestApplication` included in auth token response.
+
+### Verification commands
+1. `docker compose exec app php artisan route:list --path=api`
+2. `docker compose exec app php artisan route:list --path=ui`
+
+### Run + Verify Now (Issue 7 with UI + API)
+Use from project root:
+`S:\Lifelink---Modern_Hospital_Mangement_system`
+
+#### 1) Start/verify app
+1. `docker compose up -d --build`
+2. `docker compose ps`
+3. `docker compose exec app php artisan migrate --force`
+4. `docker compose exec app php artisan route:list --path=api`
+5. `docker compose exec app php artisan route:list --path=ui`
+
+#### 2) What you will see in browser
+1. Open `http://localhost:8000/ui`
+   - A simple menu page with links to Auth, Applications, Admin Account Control.
+2. Open `http://localhost:8000/ui/auth`
+   - Three cards: Create Admin, Register Patient/User, Login.
+   - `Stored Test Context` block shows ids/tokens available for test flow.
+3. Open `http://localhost:8000/ui/applications`
+   - Submit role + optional department id.
+   - Buttons for `Get My Latest` and `Get My Applications`.
+   - `Latest Application Snapshot` block updates after submit/status calls.
+4. Open `http://localhost:8000/ui/admin-users`
+   - Freeze/unfreeze/status by user id (auto-filled from stored `PATIENT_ID`).
+   - Button `Test Patient Login (frozen check)` verifies if freeze is enforced.
+
+#### 3) Full UI test scenario (no manual ID hunting)
+A) Go to `/ui/auth` -> Create admin  
+- Use new email  
+- Expect token response + admin context stored.
+
+B) Same page `/ui/auth` -> Register patient/user  
+- Use new email  
+- Expect response includes `user.id`  
+- `PATIENT_ID`, `PATIENT_EMAIL`, `PATIENT_PASSWORD`, `USER_TOKEN` stored automatically.
+
+C) Go to `/ui/applications` -> Submit application  
+- `appliedRole`: e.g., `Doctor`  
+- optional `departmentId`: e.g., `1`  
+- Expect: `Application submitted`, status `Pending`.
+
+D) Still on `/ui/applications` -> click `Get My Latest` and `Get My Applications`  
+- Expect latest/history to show pending application.
+
+E) Go to `/ui/admin-users` -> click `Use Stored PATIENT_ID` -> click `Freeze`  
+- Expect account status changes to `Frozen`.
+
+F) On `/ui/admin-users` -> click `Test Patient Login (frozen check)`  
+- Expect `403`, `Account is frozen. Contact admin.`
+
+G) On `/ui/admin-users` -> click `Unfreeze` -> then `Test Patient Login` again  
+- Expect login success with token response.
+
+#### 4) Postman steps (optional parallel verification)
+Base URL: `http://localhost:8000/api`
+1. `POST /dev/create-admin`
+2. `POST /auth/register`
+3. `POST /applications` with bearer user token
+4. `GET /applications/my/latest`
+5. `POST /admin/users/{id}/freeze` with bearer admin token
+6. `POST /auth/login` for patient (expect `403`)
+7. `POST /admin/users/{id}/unfreeze`
+
+### Verification result
+- New routes visible:
+  - `POST api/applications`
+  - `GET api/applications/my`
+  - `GET api/applications/my/latest`
+- New UI routes visible:
+  - `GET /ui`
+  - `GET /ui/auth`
+  - `GET /ui/applications`
+  - `GET /ui/admin-users`
+- Live verification passed:
+  - UI pages load with HTTP `200`
+  - UI now exposes/stores patient/admin IDs and tokens for complete manual test flow
+  - API submit message: `Application submitted`
+  - status tracking works (`Pending`)
+  - duplicate pending returns `409` conflict
