@@ -10,7 +10,7 @@ LifeLink is a comprehensive hospital management system built with **Laravel Blad
 | Name | Email | GitHub |
 |------|-------|--------|
 | Mustakim Musa | mustakim.official.0101@gmail.com | [mustakim0101](https://github.com/mustakim0101) |
-| Ahbab Hasan | hasan100_official@gmail.com | [tigertech119](https://github.com/tigertech119) |
+| Ahbab Hasan | hasan100.official@gmail.com | [tigertech119](https://github.com/tigertech119) |
 | Shadman Muhtasim | nksoag2006@gmail.com | [ShadmanMuhtasim](https://github.com/ShadmanMuhtasim) |
 
 ---
@@ -196,71 +196,3 @@ LifeLink is a comprehensive hospital management system built with **Laravel Blad
 | **22** | **API documentation** | `docs: swagger/openapi documentation for all endpoints` | `dev` |
 | **23** | **Deployment preparation** | `chore: deployment config and environment setup` | `dev` |
 
-
-
-## Phase 1 - Issue 1: Setup Docker environment with MSSQL
-
-This repository now includes Docker scaffolding for Laravel + MSSQL.
-
-### Added files
-- `docker-compose.yml`
-- `docker/Dockerfile`
-- `docker/nginx/default.conf`
-- `docker/mssql/init/01-init.sql`
-- `.env.docker`
-- `scripts/setup-laravel.ps1`
-
-### Quick start
-1. Copy Docker environment variables:
-   - PowerShell: `Copy-Item .env.docker .env`
-2. Bootstrap Laravel app (Laravel 10) into `lifelink-app/`:
-   - PowerShell: `./scripts/setup-laravel.ps1`
-3. Start containers:
-   - `docker compose up -d --build`
-4. Install PHP dependencies inside app container (if needed):
-   - `docker compose exec app composer install`
-5. Copy Laravel env file and set DB values:
-   - `docker compose exec app cp .env.example .env`
-   - Set in `lifelink-app/.env`:
-     - `DB_CONNECTION=sqlsrv`
-     - `DB_HOST=mssql`
-     - `DB_PORT=1433`
-     - `DB_DATABASE=lifelink`
-     - `DB_USERNAME=sa`
-     - `DB_PASSWORD=<same as MSSQL_SA_PASSWORD>`
-6. Generate app key and run migrations:
-   - `docker compose exec app php artisan key:generate`
-   - `docker compose exec app php artisan migrate`
-
-### Service endpoints
-- Laravel (nginx): `http://localhost:8000`
-- MSSQL: `localhost:1433`
-
-### Notes
-- MSSQL database `lifelink` is initialized by `mssql-init` service.
-- Change `MSSQL_SA_PASSWORD` in `.env` before first run.
-
-## Phase 1 - Issue 2: Configure MSSQL connection and test migrations
-
-### Connection updates
-- Laravel app uses `sqlsrv` in `lifelink-app/.env`.
-- SQL Server TLS options are enabled in `lifelink-app/config/database.php`:
-  - `encrypt`
-  - `trust_server_certificate`
-- App image includes Microsoft ODBC Driver 18.
-
-### Verification commands
-1. `docker compose up -d --build`
-2. `docker compose exec app php artisan key:generate --force`
-3. `docker compose exec app php artisan migrate --force`
-4. `docker compose exec app php artisan migrate:status`
-
-### Expected migrated tables (default Laravel)
-- `migrations`
-- `users`
-- `password_reset_tokens`
-- `failed_jobs`
-- `personal_access_tokens`
-
-
--->>now opens the laravel open home pg at http://localhost:8000
