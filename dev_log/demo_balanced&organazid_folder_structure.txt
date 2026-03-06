@@ -1,0 +1,346 @@
+LifeLink/
+├── 📁 api/
+│   └── 📁 postman/
+│       └── ⚙️ .gitkeep
+│
+├── 📁 database/
+│   ├── 📁 backups/
+│   │   └── ⚙️ .gitkeep
+│   ├── 📁 queries/
+│   │   ├── 📄 01_core_identity.sql
+│   │   ├── 📄 02_application_flow.sql
+│   │   ├── 📄 03_department_bed.sql
+│   │   ├── 📄 04_clinical_ops.sql
+│   │   ├── 📄 05_blood_bank.sql
+│   │   ├── 📄 06_audit_notifications.sql
+│   │   └── ⚙️ .gitkeep
+│   ├── 📁 schema/
+│   │   ├── 📄 001_create_users_tables.sql
+│   │   ├── 📄 002_create_rbac_tables.sql
+│   │   ├── 📄 003_create_departments.sql
+│   │   ├── 📄 004_create_staff_tables.sql
+│   │   ├── 📄 005_create_patient_tables.sql
+│   │   ├── 📄 006_create_clinical_tables.sql
+│   │   ├── 📄 007_create_bed_management.sql
+│   │   ├── 📄 008_create_blood_bank.sql
+│   │   ├── 📄 009_create_audit_notifications.sql
+│   │   └── 📄 all_tables.sql
+│   └── 📁 seed/
+│       ├── 📄 roles_permissions.sql
+│       ├── 📄 departments.sql
+│       ├── 📄 test_users.sql
+│       └── ⚙️ .gitkeep
+│
+├── 📁 docker/
+│   ├── 🐳 Dockerfile
+│   ├── 📄 mssql-entrypoint.sh
+│   └── 📄 nginx.conf
+│
+├── 📁 docs/
+│   ├── 🖼️ ERD.png
+│   ├── 📄 API_Documentation.md
+│   ├── 📄 DEPLOYMENT.md
+│   └── 📄 README.md
+│
+├── 📁 lifelink-app/           (Laravel Application)
+│   ├── 📁 app/
+│   │   ├── 📁 Console/
+│   │   │   └── 📁 Commands/
+│   │   │       ├── 🐘 AssignBedCommand.php
+│   │   │       ├── 🐘 CheckBloodInventoryCommand.php
+│   │   │       └── 🐘 ReleaseBedsCommand.php
+│   │   │
+│   │   ├── 📁 Exceptions/
+│   │   │   └── 🐘 Handler.php
+│   │   │
+│   │   ├── 📁 Http/
+│   │   │   ├── 📁 Controllers/
+│   │   │   │   ├── 📁 API/
+│   │   │   │   │   ├── 🐘 AuthController.php
+│   │   │   │   │   └── 🐘 ProfileController.php
+│   │   │   │   ├── 📁 Admin/
+│   │   │   │   │   ├── 🐘 DashboardController.php
+│   │   │   │   │   ├── 🐘 UserManagementController.php
+│   │   │   │   │   └── 🐘 ApplicationController.php
+│   │   │   │   ├── 📁 ITWorker/
+│   │   │   │   │   ├── 🐘 DashboardController.php
+│   │   │   │   │   ├── 📁 BedManagement/
+│   │   │   │   │   │   ├── 🐘 BedAssignmentController.php
+│   │   │   │   │   │   └── 🐘 WardController.php
+│   │   │   │   │   ├── 📁 BloodBank/
+│   │   │   │   │   │   ├── 🐘 BloodRequestController.php
+│   │   │   │   │   │   ├── 🐘 DonorMatchingController.php
+│   │   │   │   │   │   ├── 🐘 InventoryController.php
+│   │   │   │   │   │   └── 🐘 DonationController.php
+│   │   │   │   │   └── 📁 PatientManagement/
+│   │   │   │   │       └── 🐘 PatientSearchController.php
+│   │   │   │   ├── 📁 Doctor/
+│   │   │   │   │   ├── 🐘 DashboardController.php
+│   │   │   │   │   ├── 📁 PatientCare/
+│   │   │   │   │   │   ├── 🐘 AppointmentController.php
+│   │   │   │   │   │   ├── 🐘 DiagnosisController.php
+│   │   │   │   │   │   ├── 🐘 PrescriptionController.php
+│   │   │   │   │   │   └── 🐘 MedicalRecordController.php
+│   │   │   │   │   └── 📁 Admission/
+│   │   │   │   │       └── 🐘 CareLevelController.php
+│   │   │   │   ├── 📁 Nurse/
+│   │   │   │   │   ├── 🐘 DashboardController.php
+│   │   │   │   │   └── 📁 PatientCare/
+│   │   │   │   │       ├── 🐘 PatientViewController.php
+│   │   │   │   │       └── 🐘 BedViewController.php
+│   │   │   │   ├── 📁 Patient/
+│   │   │   │   │   ├── 🐘 DashboardController.php
+│   │   │   │   │   ├── 🐘 AppointmentController.php
+│   │   │   │   │   ├── 🐘 MedicalRecordController.php
+│   │   │   │   │   └── 📁 BloodRequest/
+│   │   │   │   │       └── 🐘 RequestController.php
+│   │   │   │   ├── 📁 Applicant/
+│   │   │   │   │   └── 🐘 ApplicationStatusController.php
+│   │   │   │   ├── 📁 Donor/
+│   │   │   │   │   ├── 🐘 DashboardController.php
+│   │   │   │   │   ├── 🐘 AvailabilityController.php
+│   │   │   │   │   ├── 🐘 HealthCheckController.php
+│   │   │   │   │   └── 🐘 DonationHistoryController.php
+│   │   │   │   └── 🐘 Controller.php
+│   │   │   │
+│   │   │   ├── 📁 Middleware/
+│   │   │   │   ├── 🐘 RoleMiddleware.php
+│   │   │   │   ├── 🐘 ITWorkerScope.php
+│   │   │   │   ├── 🐘 JwtMiddleware.php
+│   │   │   │   └── 🐘 CheckUserStatus.php
+│   │   │   │
+│   │   │   └── 📁 Requests/
+│   │   │       ├── 📁 Auth/
+│   │   │       │   ├── 🐘 LoginRequest.php
+│   │   │       │   └── 🐘 RegisterRequest.php
+│   │   │       ├── 📁 Application/
+│   │   │       │   └── 🐘 JobApplicationRequest.php
+│   │   │       ├── 📁 Bed/
+│   │   │       │   └── 🐘 AssignBedRequest.php
+│   │   │       ├── 📁 Blood/
+│   │   │       │   ├── 🐘 BloodRequestRequest.php
+│   │   │       │   └── 🐘 DonationRequest.php
+│   │   │       ├── 📁 Clinical/
+│   │   │       │   ├── 🐘 PrescriptionRequest.php
+│   │   │       │   └── 🐘 DiagnosisRequest.php
+│   │   │       └── 🐘 ProfileUpdateRequest.php
+│   │   │
+│   │   ├── 📁 Models/
+│   │   │   ├── 📁 Core/
+│   │   │   │   ├── 🐘 User.php
+│   │   │   │   ├── 🐘 Role.php
+│   │   │   │   ├── 🐘 Permission.php
+│   │   │   │   ├── 🐘 UserRole.php
+│   │   │   │   ├── 🐘 AuditLog.php
+│   │   │   │   └── 🐘 Notification.php
+│   │   │   │
+│   │   │   ├── 📁 Organization/
+│   │   │   │   ├── 🐘 Department.php
+│   │   │   │   └── 🐘 DepartmentAdmin.php
+│   │   │   │
+│   │   │   ├── 📁 Applications/
+│   │   │   │   └── 🐘 JobApplication.php
+│   │   │   │
+│   │   │   ├── 📁 Staff/
+│   │   │   │   ├── 🐘 Doctor.php
+│   │   │   │   └── 🐘 Nurse.php
+│   │   │   │
+│   │   │   ├── 📁 Patients/
+│   │   │   │   ├── 🐘 Patient.php
+│   │   │   │   ├── 🐘 Appointment.php
+│   │   │   │   ├── 🐘 Admission.php
+│   │   │   │   ├── 🐘 MedicalRecord.php
+│   │   │   │   ├── 🐘 Prescription.php
+│   │   │   │   └── 🐘 PrescriptionItem.php
+│   │   │   │
+│   │   │   ├── 📁 BedManagement/
+│   │   │   │   ├── 🐘 CareUnit.php
+│   │   │   │   ├── 🐘 Bed.php
+│   │   │   │   └── 🐘 BedAssignment.php
+│   │   │   │
+│   │   │   └── 📁 BloodBank/
+│   │   │       ├── 🐘 BloodBank.php
+│   │   │       ├── 🐘 BloodInventory.php
+│   │   │       ├── 🐘 BloodRequest.php
+│   │   │       ├── 🐘 DonorProfile.php
+│   │   │       ├── 🐘 DonorHealthCheck.php
+│   │   │       ├── 🐘 DonorAvailability.php
+│   │   │       ├── 🐘 BloodDonation.php
+│   │   │       ├── 🐘 BloodInventoryTransaction.php
+│   │   │       └── 🐘 BloodRequestMatch.php
+│   │   │
+│   │   ├── 📁 Services/
+│   │   │   ├── 📁 Auth/
+│   │   │   │   └── 🐘 JwtService.php
+│   │   │   ├── 📁 BloodBank/
+│   │   │   │   ├── 🐘 BloodCompatibilityService.php
+│   │   │   │   ├── 🐘 DonorMatchingService.php
+│   │   │   │   └── 🐘 InventoryService.php
+│   │   │   ├── 📁 Bed/
+│   │   │   │   └── 🐘 BedAssignmentService.php
+│   │   │   ├── 📁 Notification/
+│   │   │   │   └── 🐘 NotificationService.php
+│   │   │   └── 📁 Audit/
+│   │   │       └── 🐘 AuditService.php
+│   │   │
+│   │   └── 📁 Traits/
+│   │       ├── 🐘 HasRoles.php
+│   │       ├── 🐘 HasDepartmentScope.php
+│   │       └── 🐘 Auditable.php
+│   │
+│   ├── 📁 bootstrap/
+│   │   ├── 🐘 app.php
+│   │   └── 🐘 providers.php
+│   │
+│   ├── 📁 config/
+│   │   ├── 🐘 app.php
+│   │   ├── 🐘 auth.php
+│   │   ├── 🐘 database.php
+│   │   ├── 🐘 jwt.php
+│   │   ├── 🐘 permissions.php
+│   │   └── 🐘 roles.php
+│   │
+│   ├── 📁 database/
+│   │   ├── 📁 factories/
+│   │   │   ├── 🐘 UserFactory.php
+│   │   │   ├── 🐘 PatientFactory.php
+│   │   │   └── 🐘 DonorProfileFactory.php
+│   │   │
+│   │   ├── 📁 migrations/
+│   │   │   ├── 🐘 0001_01_01_000000_create_users_table.php
+│   │   │   ├── 🐘 0001_01_01_000001_create_roles_permissions_tables.php
+│   │   │   ├── 🐘 0001_01_01_000002_create_departments_table.php
+│   │   │   ├── 🐘 2026_03_01_000100_create_staff_tables.php
+│   │   │   ├── 🐘 2026_03_01_000200_create_patient_tables.php
+│   │   │   ├── 🐘 2026_03_01_000300_create_clinical_tables.php
+│   │   │   ├── 🐘 2026_03_01_000400_create_bed_management_tables.php
+│   │   │   ├── 🐘 2026_03_01_000500_create_blood_bank_tables.php
+│   │   │   └── 🐘 2026_03_01_000600_create_audit_notifications_tables.php
+│   │   │
+│   │   └── 📁 seeders/
+│   │       ├── 🐘 DatabaseSeeder.php
+│   │       ├── 🐘 RolePermissionSeeder.php
+│   │       ├── 🐘 DepartmentSeeder.php
+│   │       ├── 🐘 AdminUserSeeder.php
+│   │       ├── 🐘 TestDataSeeder.php
+│   │       └── 🐘 BloodBankSeeder.php
+│   │
+│   ├── 📁 public/
+│   │   ├── 📁 assets/
+│   │   │   ├── 📁 css/
+│   │   │   │   └── 🎨 app.css
+│   │   │   ├── 📁 js/
+│   │   │   │   └── 📄 app.js
+│   │   │   └── 📁 images/
+│   │   │       └── 🖼️ logo.png
+│   │   ├── ⚙️ .htaccess
+│   │   ├── 🐘 index.php
+│   │   └── 📄 robots.txt
+│   │
+│   ├── 📁 resources/
+│   │   ├── 📁 css/
+│   │   │   └── 🎨 app.css
+│   │   ├── 📁 js/
+│   │   │   └── 📄 bootstrap.js
+│   │   └── 📁 views/
+│   │       ├── 📁 layouts/
+│   │       │   ├── 🐘 app.blade.php
+│   │       │   └── 🐘 guest.blade.php
+│   │       ├── 📁 auth/
+│   │       │   ├── 🐘 login.blade.php
+│   │       │   └── 🐘 register.blade.php
+│   │       ├── 📁 dashboard/
+│   │       │   ├── 📁 admin/
+│   │       │   │   └── 🐘 index.blade.php
+│   │       │   ├── 📁 it-worker/
+│   │       │   │   ├── 🐘 dashboard.blade.php
+│   │       │   │   ├── 📁 beds/
+│   │       │   │   │   ├── 🐘 index.blade.php
+│   │       │   │   │   └── 🐘 assign.blade.php
+│   │       │   │   ├── 📁 blood-bank/
+│   │       │   │   │   ├── 🐘 requests.blade.php
+│   │       │   │   │   ├── 🐘 inventory.blade.php
+│   │       │   │   │   └── 🐘 donors.blade.php
+│   │       │   │   └── 📁 patients/
+│   │       │   │       └── 🐘 search.blade.php
+│   │       │   ├── 📁 doctor/
+│   │       │   │   ├── 🐘 dashboard.blade.php
+│   │       │   │   ├── 📁 patients/
+│   │       │   │   │   └── 🐘 index.blade.php
+│   │       │   │   ├── 📁 appointments/
+│   │       │   │   │   └── 🐘 index.blade.php
+│   │       │   │   ├── 📁 prescriptions/
+│   │       │   │   │   └── 🐘 create.blade.php
+│   │       │   │   └── 📁 admissions/
+│   │       │   │       └── 🐘 care-level.blade.php
+│   │       │   ├── 📁 nurse/
+│   │       │   │   ├── 🐘 dashboard.blade.php
+│   │       │   │   ├── 📁 patients/
+│   │       │   │   │   └── 🐘 view.blade.php
+│   │       │   │   └── 📁 beds/
+│   │       │   │       └── 🐘 view.blade.php
+│   │       │   ├── 📁 patient/
+│   │       │   │   ├── 🐘 dashboard.blade.php
+│   │       │   │   ├── 📁 appointments/
+│   │       │   │   │   └── 🐘 index.blade.php
+│   │       │   │   ├── 📁 records/
+│   │       │   │   │   └── 🐘 index.blade.php
+│   │       │   │   └── 📁 blood-request/
+│   │       │   │       └── 🐘 create.blade.php
+│   │       │   ├── 📁 applicant/
+│   │       │   │   └── 🐘 status.blade.php
+│   │       │   └── 📁 donor/
+│   │       │       ├── 🐘 dashboard.blade.php
+│   │       │       ├── 📁 availability/
+│   │       │       │   └── 🐘 index.blade.php
+│   │       │       ├── 📁 health/
+│   │       │       │   └── 🐘 create.blade.php
+│   │       │       └── 📁 donations/
+│   │       │           └── 🐘 history.blade.php
+│   │       ├── 📁 partials/
+│   │       │   ├── 🐘 navigation.blade.php
+│   │       │   ├── 🐘 footer.blade.php
+│   │       │   └── 📁 components/
+│   │       │       ├── 🐘 alert.blade.php
+│   │       │       └── 🐘 modal.blade.php
+│   │       ├── 🐘 home.blade.php
+│   │       └── 🐘 welcome.blade.php
+│   │
+│   ├── 📁 routes/
+│   │   ├── 🐘 web.php
+│   │   ├── 🐘 api.php
+│   │   └── 🐘 console.php
+│   │
+│   ├── 📁 storage/
+│   │   ├── 📁 app/
+│   │   ├── 📁 framework/
+│   │   └── 📁 logs/
+│   │
+│   ├── 📁 tests/
+│   │   ├── 📁 Feature/
+│   │   │   ├── 📁 Auth/
+│   │   │   ├── 📁 Admin/
+│   │   │   ├── 📁 ITWorker/
+│   │   │   ├── 📁 BloodBank/
+│   │   │   └── 📁 BedManagement/
+│   │   └── 📁 Unit/
+│   │
+│   ├── ⚙️ .env.example
+│   ├── ⚙️ .gitattributes
+│   ├── ⚙️ .gitignore
+│   ├── 📄 artisan
+│   ├── ⚙️ composer.json
+│   ├── ⚙️ package.json
+│   ├── 📄 phpunit.xml
+│   ├── 📄 vite.config.js
+│   └── 📄 tailwind.config.js
+│
+├── 📁 scripts/
+│   ├── 📄 setup.sh
+│   ├── 📄 backup-db.sh
+│   └── ⚙️ .gitkeep
+│
+├── ⚙️ .gitignore
+├── 📄 README.md
+├── ⚙️ docker-compose.yml
+└── 📄 commit-strategy.md

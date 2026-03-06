@@ -1,5 +1,64 @@
 # Dev Notes (Q&A)
 
+## 🚀 Phase 1: Infrastructure (2 Issues/Commits)
+
+| # | Issue Title | Commit Message | Branch | Assigned To -->>DONE  |
+|:---:|-------------|----------------|:---:|:---:|
+| **1** | **Setup Docker environment with MSSQL** | `chore: dockerize laravel with mssql 2022` | `main` | musa|
+| **2** | **Configure MSSQL database connection** | `fix: establish mssql connection and test migrations` | `main` | musa |
+
+## 🔐 Phase 2: Identity & RBAC (3 Issues/Commits)
+
+| # | Issue Title | Commit Message | Branch | Assigned To |
+|:---:|-------------|----------------|:---:|:---:|
+| **3** | **Install JWT & implement authentication** | `feat(auth): install jwt-auth with login/register` | `dev` | musa|
+| **4** | **Create RBAC database schema** | `feat(rbac): migrations for users, roles, permissions` | `dev` | musa |
+| **5** | **Build role middleware & account controls** | `feat(rbac): role middleware with freeze/unfreeze` | `dev` | Backend Developer |
+
+## 📝 Phase 3: Hiring Flow (3 Issues/Commits)
+
+| # | Issue Title | Commit Message | Branch | Assigned To |
+|:---:|-------------|----------------|:---:|:---:|
+| **6** | **Department & application tables** | `feat(hiring): migrations for departments and applications` | `dev` | Database Architect |
+| **7** | **Job application submission feature** | `feat(hiring): applicant submission with status tracking` | `dev` | Full Stack Developer |
+| **8** | **Admin approval workflow** | `feat(hiring): admin/it approval with auto-role assignment` | `dev` | Backend Developer |
+
+## 🏥 Phase 4: Bed Management (3 Issues/Commits)
+
+| # | Issue Title | Commit Message | Branch | Assigned To |
+|:---:|-------------|----------------|:---:|:---:|
+| **9** | **Bed/ICU/Ward schema** | `feat(beds): migrations for care_units and beds` | `dev` | Database Architect |
+| **10** | **IT worker bed assignment** | `feat(beds): it-worker dashboard for bed allocation` | `dev` | Frontend Developer |
+| **11** | **Discharge & bed release** | `feat(beds): auto-release bed on patient discharge` | `dev` | Backend Developer |
+
+## 👨‍⚕️ Phase 5: Clinical Operations (4 Issues/Commits)
+
+| # | Issue Title | Commit Message | Branch | Assigned To |
+|:---:|-------------|----------------|:---:|:---:|
+| **12** | **Clinical data schema** | `feat(clinical): migrations for patients, appointments, records` | `dev` | Database Architect |
+| **13** | **Doctor dashboard & actions** | `feat(clinical): doctor management of patients and bed requests` | `dev` | Frontend Developer |
+| **14** | **Nurse care dashboard** | `feat(clinical): nurse view for dept-wise patient monitoring` | `dev` | Frontend Developer |
+| **15** | **Patient portal** | `feat(clinical): patient portal for records and blood requests` | `dev` | Full Stack Developer |
+
+## 🩸 Phase 6: Blood Bank (3 Issues/Commits)
+
+| # | Issue Title | Commit Message | Branch | Assigned To |
+|:---:|-------------|----------------|:---:|:---:|
+| **16** | **Blood bank schema** | `feat(blood): migrations for donors, inventory, requests` | `dev` | Database Architect |
+| **17** | **Donor dashboard & tracking** | `feat(blood): donor availability, weight, temp, bag logging` | `dev` | Full Stack Developer |
+| **18** | **Blood matching system** | `feat(blood): it-worker matching with donor notifications` | `dev` | Backend Developer |
+
+## ✅ Phase 7: Final Polish (3 Issues/Commits)
+
+| # | Issue Title | Commit Message | Branch | Assigned To |
+|:---:|-------------|----------------|:---:|:---:|
+| **19** | **Comprehensive testing** | `test: feature tests for all role workflows` | `dev` | QA Engineer |
+| **20** | **API documentation** | `docs: swagger/openapi documentation for all endpoints` | `dev` | Technical Writer |
+| **21** | **Deployment preparation** | `chore: deployment config and environment setup` | `dev` | DevOps Engineer |
+
+
+
+
 
 
 ## Phase 1 - Issue 1: Setup Docker environment with MSSQL
@@ -266,3 +325,102 @@ Expected:
 - If API gives 500: run `docker compose logs app --tail 100`.
 - If DB error: verify `lifelink-app/.env` DB settings (`DB_HOST=mssql`, `DB_PORT=1433`, `DB_DATABASE=lifelink`, `DB_USERNAME=sa`).
 - If token issues: ensure `JWT_SECRET` exists in `lifelink-app/.env`.
+
+---
+
+## Phase 2 Re-run Fix (Clone on another drive: migration timeout)
+
+### Reported problem
+- `php artisan migrate` failed with:
+  - `SQLSTATE[HYT00] ... Login timeout expired`
+- In re-runs, setup was unstable after `docker compose down -v` and fresh `up -d`.
+- Risk of env mismatch in fresh clone (`.env.example` defaulted to MySQL settings).
+
+### Root causes found
+1. SQL Server readiness race:
+   - Compose only ensured container start order, not DB readiness.
+   - Existing `mssql-init` used a fixed `sleep 25`, which can be insufficient on slower startups.
+2. Fresh-clone env mismatch risk:
+   - `lifelink-app/.env.example` had MySQL defaults (`mysql`, port `3306`), which conflicts with project MSSQL setup.
+
+### Files changed to fix
+1. `docker-compose.yml`
+   - Added MSSQL healthcheck (`tcp 1433`).
+   - Changed `app` dependency to wait for MSSQL health.
+   - Changed `mssql-init` dependency to wait for MSSQL health.
+2. `docker/mssql/init/init-db.sh` (new)
+   - Added robust DB init script with:
+     - sqlcmd binary auto-detection (`/opt/mssql-tools18/bin/sqlcmd` fallback `/opt/mssql-tools/bin/sqlcmd`)
+     - readiness retries (`SELECT 1`, up to 120 seconds)
+     - database creation script execution only after SQL Server is ready
+3. `lifelink-app/.env.example`
+   - Switched defaults from MySQL to MSSQL:
+     - `DB_CONNECTION=sqlsrv`
+     - `DB_HOST=mssql`
+     - `DB_PORT=1433`
+     - `DB_DATABASE=lifelink`
+     - `DB_USERNAME=sa`
+     - `DB_PASSWORD=YourStrong!Passw0rd`
+     - `DB_ENCRYPT=yes`
+     - `DB_TRUST_SERVER_CERTIFICATE=true`
+
+### Why this solves it
+- Migrations no longer race against SQL Server boot time.
+- Init script no longer depends on a fragile single sleep duration.
+- New clones start with SQL Server-compatible app defaults instead of MySQL defaults.
+
+### Re-run commands (clean test)
+1. `docker compose down -v`
+2. `Copy-Item .env.docker .env -Force`
+3. `docker compose up -d --build`
+4. `docker compose exec app cp -n .env.example .env`
+5. `docker compose exec app php artisan key:generate --force`
+6. `docker compose exec app php artisan config:clear`
+7. `docker compose exec app php artisan migrate --force`
+
+---
+
+## Phase 2 - Issue 4 (Implemented)
+
+Issue: Create RBAC database schema  
+Commit message target: `feat(rbac): migrations for users, roles, permissions`  
+Branch target: `dev`
+
+### Files created/updated
+- Created: `lifelink-app/database/migrations/2026_03_06_000100_add_rbac_fields_to_users_table.php`
+- Created: `lifelink-app/database/migrations/2026_03_06_000110_create_roles_table.php`
+- Created: `lifelink-app/database/migrations/2026_03_06_000120_create_permissions_table.php`
+- Created: `lifelink-app/database/migrations/2026_03_06_000130_create_user_roles_table.php`
+- Created: `lifelink-app/database/migrations/2026_03_06_000140_create_role_permissions_table.php`
+
+### RBAC schema flow
+`users` (base identity)  
+-> `roles` (role catalog)  
+-> `permissions` (permission catalog)  
+-> `user_roles` (many-to-many user-role assignment with `assigned_at`, `assigned_by_user_id`)  
+-> `role_permissions` (many-to-many role-permission mapping with `granted_at`)
+
+### Users table extensions added
+- `full_name` (nullable)
+- `phone` (nullable)
+- `date_of_birth` (nullable)
+- `gender` (nullable)
+- `account_status` (default: `Active`, indexed)
+- `frozen_at` (nullable)
+- `frozen_by_user_id` (nullable FK to users)
+
+### MSSQL compatibility note
+- During validation, SQL Server rejected `ON DELETE SET NULL` self/cross-user metadata FKs due to multiple cascade path rules.
+- Fix applied: metadata FKs (`frozen_by_user_id`, `assigned_by_user_id`) use default `NO ACTION` behavior instead of cascading delete actions.
+
+### Verification commands
+1. `docker compose exec app php artisan migrate:fresh --force`
+2. `docker compose exec app php artisan migrate:status`
+
+### Verification result
+- All default Laravel migrations + all Issue 4 RBAC migrations ran successfully on MSSQL.
+- New RBAC tables now exist:
+  - `roles`
+  - `permissions`
+  - `user_roles`
+  - `role_permissions`
