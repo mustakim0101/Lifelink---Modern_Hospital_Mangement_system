@@ -19,7 +19,7 @@
 <div class="wrap">
     <div class="card">
         <h1>LifeLink UI Starter</h1>
-        <p class="small">Frontend pages for backend features completed up to Phase 3 Issue 7.</p>
+        <p class="small">Frontend pages for backend features completed up to Phase 3 Issue 8.</p>
 
         <div class="grid">
             <a class="box" href="/ui/auth">
@@ -33,6 +33,10 @@
             <a class="box" href="/ui/admin-users">
                 <strong>Admin Account Control</strong><br>
                 Freeze/unfreeze user and check status.
+            </a>
+            <a class="box" href="/ui/application-reviews">
+                <strong>Application Reviews</strong><br>
+                Admin/IT approve or reject job applications.
             </a>
         </div>
     </div>
