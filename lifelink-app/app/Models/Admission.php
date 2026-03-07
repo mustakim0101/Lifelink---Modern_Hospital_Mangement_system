@@ -14,6 +14,7 @@ class Admission extends Model
     protected $fillable = [
         'patient_user_id',
         'department_id',
+        'admitted_by_doctor_id',
         'diagnosis',
         'care_level_requested',
         'care_level_assigned',
@@ -36,6 +37,11 @@ class Admission extends Model
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function admittedByDoctor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'admitted_by_doctor_id');
     }
 
     public function bedAssignments(): HasMany

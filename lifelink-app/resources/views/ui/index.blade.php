@@ -19,7 +19,7 @@
 <div class="wrap">
     <div class="card">
         <h1>LifeLink UI Starter</h1>
-        <p class="small">Frontend pages for backend features completed up to Phase 4 Issue 10.</p>
+        <p class="small">Frontend pages for backend features completed up to Phase 5 Issue 13.</p>
 
         <div class="grid">
             <a class="box" href="/ui/auth">
@@ -45,6 +45,10 @@
             <a class="box" href="/ui/it-bed-allocation">
                 <strong>IT Bed Allocation</strong><br>
                 Create admissions and assign available beds.
+            </a>
+            <a class="box" href="/ui/doctor-dashboard">
+                <strong>Doctor Dashboard</strong><br>
+                Manage doctor patients, appointments, and bed requests.
             </a>
         </div>
     </div>
