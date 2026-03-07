@@ -19,7 +19,7 @@
 <div class="wrap">
     <div class="card">
         <h1>LifeLink UI Starter</h1>
-        <p class="small">Frontend pages for backend features completed up to Phase 5 Issue 14.</p>
+        <p class="small">Frontend pages for backend features completed up to Phase 5 Issue 15.</p>
 
         <div class="grid">
             <a class="box" href="/ui/auth">
@@ -53,6 +53,10 @@
             <a class="box" href="/ui/nurse-dashboard">
                 <strong>Nurse Dashboard</strong><br>
                 Monitor department patients, beds, and vital signs.
+            </a>
+            <a class="box" href="/ui/patient-portal">
+                <strong>Patient Portal</strong><br>
+                View records, manage appointments, and request blood.
             </a>
         </div>
     </div>

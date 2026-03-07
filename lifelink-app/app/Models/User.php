@@ -105,6 +105,11 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(NurseVitalSignLog::class, 'nurse_id');
     }
 
+    public function requestedBloodRequests(): HasMany
+    {
+        return $this->hasMany(BloodRequest::class, 'requested_by_user_id');
+    }
+
     public function hasRole(string ...$roles): bool
     {
         if (empty($roles)) {

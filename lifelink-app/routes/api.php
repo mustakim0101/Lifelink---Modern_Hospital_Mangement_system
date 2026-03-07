@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Admin\AccountControlController;
 use App\Http\Controllers\Api\DoctorClinicalController;
 use App\Http\Controllers\Api\JobApplicationController;
 use App\Http\Controllers\Api\NurseCareController;
+use App\Http\Controllers\Api\PatientPortalController;
 use App\Http\Controllers\Api\ItBedAllocationController;
 use App\Http\Controllers\Api\WardCatalogController;
 use Illuminate\Support\Facades\Route;
@@ -84,4 +85,16 @@ Route::prefix('nurse')->middleware(['auth:api', 'active.user', 'role:Nurse'])->g
     Route::get('/admissions/{admission}', [NurseCareController::class, 'admissionDetail']);
     Route::get('/admissions/{admission}/vitals', [NurseCareController::class, 'vitalSigns']);
     Route::post('/admissions/{admission}/vitals', [NurseCareController::class, 'logVitalSigns']);
+});
+
+Route::prefix('patient')->middleware(['auth:api', 'active.user', 'role:Patient'])->group(function () {
+    Route::get('/portal', [PatientPortalController::class, 'portal']);
+    Route::get('/profile', [PatientPortalController::class, 'profile']);
+    Route::get('/medical-records', [PatientPortalController::class, 'medicalRecords']);
+    Route::get('/appointments', [PatientPortalController::class, 'appointments']);
+    Route::get('/booking-options', [PatientPortalController::class, 'bookingOptions']);
+    Route::post('/appointments', [PatientPortalController::class, 'bookAppointment']);
+    Route::post('/appointments/{appointment}/cancel', [PatientPortalController::class, 'cancelAppointment']);
+    Route::post('/blood-requests', [PatientPortalController::class, 'requestBlood']);
+    Route::get('/blood-requests', [PatientPortalController::class, 'myBloodRequests']);
 });

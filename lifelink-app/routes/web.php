@@ -26,3 +26,4 @@ Route::view('/ui/ward-setup', 'ui.ward-setup');
 Route::view('/ui/it-bed-allocation', 'ui.it-bed-allocation');
 Route::view('/ui/doctor-dashboard', 'ui.doctor-dashboard');
 Route::view('/ui/nurse-dashboard', 'ui.nurse-dashboard');
+Route::view('/ui/patient-portal', 'ui.patient-portal');

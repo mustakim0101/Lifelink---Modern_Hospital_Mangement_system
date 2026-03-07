@@ -1568,3 +1568,150 @@ Expected:
 - patients endpoint returns only nurse department admissions
 - admission details show bed assignment + medical records
 - vital log creation returns `201` and appears in recent vitals list
+
+---
+
+## Phase 5 - Issue 15 (Implemented)
+
+Issue: Patient portal  
+Commit message target: `feat(clinical): patient portal for records and blood requests`  
+Branch target: `dev`
+
+### New files created (Issue 15)
+- `lifelink-app/database/migrations/2026_03_07_000500_create_blood_requests_table.php`
+- `lifelink-app/app/Models/BloodRequest.php`
+- `lifelink-app/app/Http/Controllers/Api/PatientPortalController.php`
+- `lifelink-app/resources/views/ui/patient-portal.blade.php`
+
+### Existing files updated (Issue 15)
+- `lifelink-app/app/Http/Controllers/Api/AuthController.php`
+- `lifelink-app/app/Models/Patient.php`
+- `lifelink-app/app/Models/Department.php`
+- `lifelink-app/app/Models/Admission.php`
+- `lifelink-app/app/Models/User.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/README.md`
+
+### Schema updates
+1. `blood_requests`
+   - `patient_id` (FK -> `patients.patient_id`)
+   - `admission_id` (nullable FK -> `admissions.id`)
+   - `department_id` (FK -> `departments.id`)
+   - `requested_by_user_id` (FK -> `users.id`)
+   - `blood_group_needed`, `component_type`, `units_required`, `urgency`, `status`, `request_date`, `notes`
+2. Added model relationships for blood requests in:
+   - `Patient`
+   - `Admission`
+   - `Department`
+   - `User`
+
+### API endpoints added
+Patient role (`role:Patient`):
+- `GET /api/patient/portal`
+- `GET /api/patient/profile`
+- `GET /api/patient/medical-records`
+- `GET /api/patient/appointments`
+- `GET /api/patient/booking-options`
+- `POST /api/patient/appointments`
+- `POST /api/patient/appointments/{appointment}/cancel`
+- `POST /api/patient/blood-requests`
+- `GET /api/patient/blood-requests`
+
+### Patient portal actions implemented
+1. Patient dashboard summary with records/appointments/blood-request counts.
+2. Patient profile fetch with role + emergency info.
+3. Medical records list endpoint for current patient.
+4. Appointment booking + listing + cancellation by patient.
+5. Blood request submission + history list by patient.
+6. Automatic patient profile bootstrap during register/login to avoid missing `patients` profile rows.
+7. Booking options endpoint returns active departments + active doctors for patient-side dropdown UX.
+
+### UI added / modernized
+- `GET /ui/patient-portal`
+  - modern responsive portal UI
+  - token context + one-click refresh
+  - patient snapshot and summary stats
+  - appointment booking with department-linked doctor dropdown and live list/cancel actions
+  - blood request submission and request history
+  - medical records table with search filter
+  - API response log for debugging
+
+Also updated:
+- `/ui` index page now includes `Patient Portal` entry and progress note up to Issue 15.
+
+### Refinement pass (2026-03-07)
+Files updated in this pass:
+- `lifelink-app/app/Http/Controllers/Api/PatientPortalController.php`
+- `lifelink-app/app/Http/Controllers/Api/AuthController.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/resources/views/ui/patient-portal.blade.php`
+- `dev_log/README.md`
+
+Refinements applied:
+- Added `GET /api/patient/booking-options` for dynamic department/doctor selectors in patient UI.
+- Appointment booking now validates:
+  - datetime must be after now
+  - selected doctor must be active
+  - selected doctor must belong to selected department
+- Patient profile bootstrap was hardened to avoid force-resetting `patients.is_active` on every login.
+- Patient portal UI redesigned for clearer flow:
+  - guided doctor dropdown (no manual doctor ID typing)
+  - appointment/blood request status chips
+  - record search
+  - lightweight toast feedback
+
+### Verification evidence
+Executed in Docker app container:
+1. `docker compose exec app php artisan migrate --force`
+2. `docker compose exec app php artisan route:list --path=api/patient`
+3. `docker compose exec app php artisan route:list --path=ui/patient-portal`
+4. `docker compose exec app php artisan migrate:status | Select-String -Pattern "000500_create_blood_requests_table"`
+5. `docker compose exec app php artisan test`
+
+Observed results:
+- new patient routes listed correctly (`9 routes`)
+- patient portal web route listed correctly
+- `2026_03_07_000500_create_blood_requests_table` marked `Ran`
+- tests passed (`2 passed`)
+
+---
+
+## Run + Verify Now (Up to Issue 15)
+
+Use from project root:  
+`J:\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start and migrate
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose exec app php artisan jwt:secret --force`
+4. `docker compose exec app php artisan config:clear`
+5. `docker compose exec app php artisan migrate --force`
+
+### 2) Confirm Issue 15 routes
+1. `docker compose exec app php artisan route:list --path=api/patient`
+2. `docker compose exec app php artisan route:list --path=ui/patient-portal`
+
+### 3) Browser verification flow (Patient)
+1. Open `/ui/auth`
+   - register/login patient user
+2. Open `/ui/patient-portal`
+   - use `USER_TOKEN`
+   - click `Refresh All`
+3. Book appointment
+   - choose department
+   - set datetime
+   - submit and verify in appointments list
+4. Submit blood request
+   - set blood group + units + urgency
+   - submit and verify in blood request list
+5. Load medical records
+   - verify records table loads without authorization errors
+
+Expected:
+- portal profile and stats load with `200`
+- appointment booking returns `201`, then appears in list
+- blood request returns `201`, then appears in request history
+- patient-only routes reject non-patient tokens with `403`

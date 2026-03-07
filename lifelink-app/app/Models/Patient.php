@@ -51,4 +51,9 @@ class Patient extends Model
     {
         return $this->hasMany(NurseVitalSignLog::class, 'patient_id', 'patient_id');
     }
+
+    public function bloodRequests(): HasMany
+    {
+        return $this->hasMany(BloodRequest::class, 'patient_id', 'patient_id');
+    }
 }

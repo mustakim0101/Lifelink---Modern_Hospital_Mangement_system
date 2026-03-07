@@ -4,14 +4,18 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\JobApplication;
+use App\Models\Patient;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
+    private const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+
     public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -19,6 +23,9 @@ class AuthController extends Controller
             'fullName' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
+            'bloodGroup' => ['nullable', 'string', Rule::in(self::BLOOD_GROUPS)],
+            'emergencyContactName' => ['nullable', 'string', 'max:150'],
+            'emergencyContactPhone' => ['nullable', 'string', 'max:30'],
         ]);
 
         $name = $validated['name'] ?? $validated['fullName'] ?? null;
@@ -40,6 +47,7 @@ class AuthController extends Controller
         ]);
 
         $this->assignRole($user, 'Patient');
+        $this->ensurePatientProfile($user, $validated);
 
         $token = auth('api')->login($user);
 
@@ -68,6 +76,8 @@ class AuthController extends Controller
                 'message' => 'Account is frozen. Contact admin.',
             ], 403);
         }
+
+        $this->ensurePatientProfile($user, []);
 
         return $this->tokenResponse($token, $user, 200, 'Logged in');
     }
@@ -175,5 +185,37 @@ class AuthController extends Controller
             'applied_role' => $latest->appliedRole?->role_name,
             'applied_department' => $latest->department?->dept_name,
         ];
+    }
+
+    private function ensurePatientProfile(User $user, array $context): void
+    {
+        if (! $user->hasRole('Patient')) {
+            return;
+        }
+
+        $patient = Patient::query()->firstOrCreate(
+            ['patient_id' => $user->id],
+            ['is_active' => true]
+        );
+
+        $profileData = [];
+
+        if (array_key_exists('bloodGroup', $context)) {
+            $profileData['blood_group'] = $context['bloodGroup'];
+        }
+
+        if (array_key_exists('emergencyContactName', $context)) {
+            $profileData['emergency_contact_name'] = $context['emergencyContactName'];
+        }
+
+        if (array_key_exists('emergencyContactPhone', $context)) {
+            $profileData['emergency_contact_phone'] = $context['emergencyContactPhone'];
+        }
+
+        if (empty($profileData)) {
+            return;
+        }
+
+        $patient->fill($profileData)->save();
     }
 }
