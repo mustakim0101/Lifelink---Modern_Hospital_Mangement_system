@@ -1,6 +1,6 @@
 🧱create admin via API
 
-POST http://localhost:5000/api/dev/create-admin
+POST http://localhost:8000/api/dev/create-admin
 
 Body (JSON):
 
@@ -12,14 +12,14 @@ Body (JSON):
 
 
 🧱login test
-POST http://localhost:5000/api/auth/login
+POST http://localhost:8000/api/auth/login
 
 { "email": "admin@demo.com", "password": "admin12345" }
 
 --should generate token
 
 🧱Test /me (confirms JWT + DB queries)
-GET http://localhost:5000/api/auth/me
+GET http://localhost:8000/api/auth/me
 
 Header: Authorization: Bearer <your_token>
 
@@ -36,7 +36,7 @@ Now every request uses it automatically.
 
 🧱A1) See bed summary (before)
 
-GET http://localhost:5000/api/ward/beds/summary
+GET http://localhost:8000/api/ward/beds/summary
 
 --returns counts grouped by:
 
@@ -46,10 +46,10 @@ status (Available/Occupied/etc.)
 
 
 🧱A2) List available ICU beds in a department 
-GET http://localhost:5000/api/ward/beds?unitType=ICU&status=Available
+GET http://localhost:8000/api/ward/beds?unitType=ICU&status=Available
 
 🧱department filter :
-GET http://localhost:5000/api/ward/beds?departmentId=1&unitType=ICU&status=Available
+GET http://localhost:8000/api/ward/beds?departmentId=1&unitType=ICU&status=Available
 
 
 
@@ -57,7 +57,7 @@ GET http://localhost:5000/api/ward/beds?departmentId=1&unitType=ICU&status=Avail
 🧱A3)Admit a patient and auto-assign a bed
 Step 1 — Register patient
 
-POST http://localhost:5000/api/auth/register
+POST http://localhost:8000/api/auth/register
 
 Body:
 
@@ -74,14 +74,14 @@ Body:
 
 🧱Step 2 — Login as patient
 
-POST http://localhost:5000/api/auth/login
+POST http://localhost:8000/api/auth/login
 
 { "email": "patient1@demo.com", "password": "patient12345" }
 
 >>Copy the patient token and use that token in Postman.
 
 🧱Step 3 — Admit
-POST http://localhost:5000/api/admissions/admit
+POST http://localhost:8000/api/admissions/admit
 
 {
   "diagnosis": "Breathing issue",
@@ -102,24 +102,24 @@ Expected response:
 🧱A4) Step 4 — Verify ICU decreased 
 
 Run again:
-GET http://localhost:5000/api/ward/beds?departmentId=1&unitType=ICU&status=Available
+GET http://localhost:8000/api/ward/beds?departmentId=1&unitType=ICU&status=Available
 
 --should go from 1 available to 0 available (and occupied increases).
 
 🧱A5) Check patient admissions show bed assigned
 
-GET http://localhost:5000/api/admissions/my
+GET http://localhost:8000/api/admissions/my
 
 --should see bed_code and unit_type.
 ============================================================checking blood inventory=========================
 🧱check if DB is connected
-GET http://localhost:5000/api/db/ping
+GET http://localhost:8000/api/db/ping
 output { "db":"connected", "result": { "ok": 1 } } means DB connected
 
 🧱Admin login (needed for “issue blood” later)
 1.1 Login admin
 
-POST http://localhost:5000/api/auth/login
+POST http://localhost:8000/api/auth/login
 
 Body → raw JSON:
 
@@ -154,7 +154,7 @@ Copy token and set it into environment variable ADMIN_TOKEN.
 
 🧱Register donor (creates donor account)
 
-POST http://localhost:5000/api/donor-auth/register
+POST http://localhost:8000/api/donor-auth/register
 
 Body (raw JSON):
 
@@ -178,7 +178,7 @@ Expected (example):
 }
 🧱Login donor
 
-POST http://localhost:5000/api/donor-auth/login
+POST http://localhost:8000/api/donor-auth/login
 
 Body:
 
@@ -205,7 +205,7 @@ Copy this token → save to DONOR_TOKEN.
 
 Use Admin token or any token (inventory is usually allowed to logged-in users).
 
-GET http://localhost:5000/api/blood/inventory
+GET http://localhost:8000/api/blood/inventory
 ✅[
     {
         "blood_group": "A-",
@@ -231,7 +231,7 @@ GET http://localhost:5000/api/blood/inventory
 ]
 🧱Donate blood (increase inventory)
 
-POST http://localhost:5000/api/blood/donate
+POST http://localhost:8000/api/blood/donate
 
 Headers:
 
@@ -246,7 +246,7 @@ Body:
 }
 🧱Check inventory AFTER donation (should be +3)
 
-GET http://localhost:5000/api/blood/inventory
+GET http://localhost:8000/api/blood/inventory
 
 Headers:
 
@@ -266,7 +266,7 @@ units_available should be previous + 3.
 🧱Patient flow (register + login + request blood + view requests)
 3.1 Register patient
 
-POST http://localhost:5000/api/auth/register
+POST http://localhost:8000/api/auth/register
 
 Body:
 
@@ -289,7 +289,7 @@ If “Email already used” it’s okay.
 
 🧱Login patient
 
-POST http://localhost:5000/api/auth/login
+POST http://localhost:8000/api/auth/login
 
 Body:
 
@@ -346,7 +346,7 @@ WHERE email = 'patient1@demo.com';
 
 🧱Patient requests blood
 
-POST http://localhost:5000/api/blood/request
+POST http://localhost:8000/api/blood/request
 
 Headers:
 
@@ -370,7 +370,7 @@ Expected:
 
 🧱Patient views their requests list
 
-GET http://localhost:5000/api/blood/requests/my
+GET http://localhost:8000/api/blood/requests/my
 
 Headers:
 
@@ -399,7 +399,7 @@ status: Pending
 🧱Admin/IT fulfills the request (inventory decreases)
 4.1 Check bank inventory BEFORE issuing
 
-GET http://localhost:5000/api/bank-blood/banks/1/inventory
+GET http://localhost:8000/api/bank-blood/banks/1/inventory
 
 Headers:
 
@@ -418,7 +418,7 @@ Note units_available.
 
 Use the requestId you received .(here 3)
 
-POST http://localhost:5000/api/bank-blood/requests/3/issue
+POST http://localhost:8000/api/bank-blood/requests/3/issue
 
 Headers:
 
