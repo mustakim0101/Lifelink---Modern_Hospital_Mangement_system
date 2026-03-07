@@ -891,3 +891,130 @@ Expected:
 - Application status transitions `Pending -> Approved`
 - Applicant role assignment updates automatically in `user_roles`
 - `Applicant` role is removed after approval
+
+---
+
+## Phase 4 - Issue 9 (Implemented)
+
+Issue: Bed/ICU/Ward schema  
+Commit message target: `feat(beds): migrations for care_units and beds`  
+Branch target: `dev`
+
+### New files created (Issue 9)
+- `lifelink-app/database/migrations/2026_03_07_000300_create_care_units_table.php`
+- `lifelink-app/database/migrations/2026_03_07_000310_create_beds_table.php`
+- `lifelink-app/app/Models/CareUnit.php`
+- `lifelink-app/app/Models/Bed.php`
+- `lifelink-app/app/Http/Controllers/Api/WardCatalogController.php`
+- `lifelink-app/resources/views/ui/ward-setup.blade.php`
+
+### Existing files updated (Issue 9)
+- `lifelink-app/app/Models/Department.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/postman_codes_testing_apipoints_with_tables.txt` (localhost 5000 -> 8000 updates done before Issue 9 work)
+- `dev_log/README.md`
+
+### Schema implemented
+1. `care_units`
+   - `id` (PK)
+   - `department_id` (FK -> `departments.id`)
+   - `unit_type` (`Ward|ICU|NICU|CCU`)
+   - `unit_name` (nullable)
+   - `floor` (nullable)
+   - `is_active` (default true)
+   - `timestamps`
+
+2. `beds`
+   - `id` (PK)
+   - `care_unit_id` (FK -> `care_units.id`)
+   - `bed_code`
+   - `status` (`Available|Occupied|Maintenance|Reserved`, default `Available`)
+   - `is_active` (default true)
+   - `timestamps`
+   - unique: (`care_unit_id`, `bed_code`)
+
+### Backend APIs added (Issue 9)
+Protected with `auth:api` + `active.user`:
+- `GET /api/ward/departments`
+- `GET /api/ward/care-units`
+- `GET /api/ward/beds`
+- `GET /api/ward/beds/summary`
+
+Create APIs protected with `role:Admin,ITWorker`:
+- `POST /api/ward/care-units`
+- `POST /api/ward/beds`
+
+### UI added (Issue 9)
+- New page: `GET /ui/ward-setup`
+  - Create care unit
+  - Create bed
+  - List departments/care units/beds
+  - View bed summary
+  - Reads token from localStorage (`ADMIN_TOKEN`/`USER_TOKEN`)
+
+### Flowchart (Issue 9)
+`/ui/ward-setup` button click
+-> fetch `/api/ward/...`
+-> API route in `routes/api.php`
+-> `WardCatalogController`
+-> `CareUnit` / `Bed` Eloquent + MSSQL tables
+-> JSON response in UI panel
+
+### Verification evidence run
+1. `docker compose exec app php artisan migrate --force`
+   - migrated:
+     - `2026_03_07_000300_create_care_units_table`
+     - `2026_03_07_000310_create_beds_table`
+2. `docker compose exec app php artisan route:list --path=api/ward`
+   - shows 6 ward routes (list/create/summary)
+3. `docker compose exec app php artisan route:list --path=ui/ward-setup`
+   - shows UI route exists
+
+## Run + Verify Now (Up to Issue 9)
+
+Use from project root:  
+`F:\31 projects\db project\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start stack
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose ps`
+
+### 2) Migrate and confirm routes
+1. `docker compose exec app php artisan migrate --force`
+2. `docker compose exec app php artisan route:list --path=api/ward`
+3. `docker compose exec app php artisan route:list --path=ui/ward-setup`
+4. `docker compose exec app php artisan jwt:secret --force`
+5. `docker compose exec app php artisan config:clear`
+
+Expected ward APIs:
+- `GET api/ward/departments`
+- `GET api/ward/care-units`
+- `POST api/ward/care-units`
+- `GET api/ward/beds`
+- `POST api/ward/beds`
+- `GET api/ward/beds/summary`
+
+If you see `Secret is not set.` (JWTException), run step 4 and 5 above, then login again.
+
+### 3) Browser verify
+1. `http://localhost:8000/ui`
+2. `http://localhost:8000/ui/auth`
+3. `http://localhost:8000/ui/ward-setup`
+
+### 4) Quick test data flow
+1. On `/ui/auth`:
+   - Create admin and keep `ADMIN_TOKEN` in localStorage.
+2. On `/ui/ward-setup`:
+   - Click `Use ADMIN_TOKEN`.
+   - Create one care unit (example: `departmentId=1`, `unitType=ICU`, `unitName=Main ICU`, `floor=2`).
+   - Create one bed (example: `careUnitId=<created>`, `bedCode=ICU-01`, `status=Available`).
+   - Click `GET /ward/beds` and `GET /ward/beds/summary`.
+
+Expected:
+- Care unit create returns `201` and `care_unit.id`
+- Bed create returns `201` and `bed.id`
+- Bed list shows unit + department info
+- Summary returns grouped totals by `department`, `unit_type`, `status`

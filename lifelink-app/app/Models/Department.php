@@ -19,4 +19,9 @@ class Department extends Model
     {
         return $this->hasMany(JobApplication::class, 'applied_department_id');
     }
+
+    public function careUnits(): HasMany
+    {
+        return $this->hasMany(CareUnit::class);
+    }
 }

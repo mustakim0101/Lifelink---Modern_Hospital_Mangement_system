@@ -19,7 +19,7 @@
 <div class="wrap">
     <div class="card">
         <h1>LifeLink UI Starter</h1>
-        <p class="small">Frontend pages for backend features completed up to Phase 3 Issue 8.</p>
+        <p class="small">Frontend pages for backend features completed up to Phase 4 Issue 9.</p>
 
         <div class="grid">
             <a class="box" href="/ui/auth">
@@ -37,6 +37,10 @@
             <a class="box" href="/ui/application-reviews">
                 <strong>Application Reviews</strong><br>
                 Admin/IT approve or reject job applications.
+            </a>
+            <a class="box" href="/ui/ward-setup">
+                <strong>Ward Setup</strong><br>
+                Create care units/beds and view bed summary.
             </a>
         </div>
     </div>
