@@ -24,3 +24,4 @@ Route::view('/ui/admin-users', 'ui.admin-users');
 Route::view('/ui/application-reviews', 'ui.application-reviews');
 Route::view('/ui/ward-setup', 'ui.ward-setup');
 Route::view('/ui/it-bed-allocation', 'ui.it-bed-allocation');
+Route::view('/ui/doctor-dashboard', 'ui.doctor-dashboard');

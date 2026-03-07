@@ -1333,3 +1333,113 @@ Expected new rows marked `Ran`:
 Expected:
 - database default: `sqlsrv`
 - all three table checks return `1` (true)
+
+---
+
+## Phase 5 - Issue 13 (Implemented)
+
+Issue: Doctor dashboard & actions  
+Commit message target: `feat(clinical): doctor management of patients and bed requests`  
+Branch target: `dev`
+
+### New files created (Issue 13)
+- `lifelink-app/database/migrations/2026_03_07_000380_create_doctors_table.php`
+- `lifelink-app/database/migrations/2026_03_07_000390_add_admitted_by_doctor_to_admissions_table.php`
+- `lifelink-app/app/Models/Doctor.php`
+- `lifelink-app/app/Http/Controllers/Api/DoctorClinicalController.php`
+- `lifelink-app/resources/views/ui/doctor-dashboard.blade.php`
+
+### Existing files updated (Issue 13)
+- `lifelink-app/app/Models/User.php`
+- `lifelink-app/app/Models/Department.php`
+- `lifelink-app/app/Models/Admission.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/README.md`
+
+### Schema updates
+1. `doctors`
+   - `doctor_id` (PK + FK -> `users.id`)
+   - `department_id` (FK -> `departments.id`)
+   - `specialization`, `license_number`, `is_active`, timestamps
+2. `admissions` alteration
+   - added nullable `admitted_by_doctor_id` FK -> `users.id`
+
+### API endpoints added
+Admin:
+- `POST /api/admin/doctors/profile` (upsert doctor profile for a Doctor-role user)
+
+Doctor role (`role:Doctor`):
+- `GET /api/doctor/profile`
+- `GET /api/doctor/patients`
+- `GET /api/doctor/appointments`
+- `POST /api/doctor/appointments/{appointment}/cancel`
+- `POST /api/doctor/bed-requests`
+- `GET /api/doctor/bed-requests`
+
+### Doctor actions implemented
+1. Doctor profile view by logged-in doctor
+2. Doctor patients list based on doctor-linked admissions/appointments
+3. Appointment list and cancel action (for doctor-owned appointments)
+4. Bed request creation by doctor (creates admission with doctor linkage)
+5. Bed requests list for current doctor
+
+### UI added
+- `GET /ui/doctor-dashboard`
+  - admin doctor-profile setup panel
+  - doctor profile/patients/appointments actions
+  - doctor bed request create + list actions
+
+### Live verification evidence
+Smoke test completed:
+1. registered a user
+2. submitted Doctor application
+3. admin approved application (Doctor role granted)
+4. admin upserted doctor profile (`department=Cardiology`)
+5. doctor login succeeded
+6. doctor bed request submitted (`message: Bed request submitted`)
+7. doctor bed request list returned records
+8. doctor patients endpoint returned patient count > 0
+
+---
+
+## Run + Verify Now (Up to Issue 13)
+
+Use from project root:  
+`F:\31 projects\db project\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start and migrate
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose exec app php artisan jwt:secret --force`
+4. `docker compose exec app php artisan config:clear`
+5. `docker compose exec app php artisan migrate --force`
+
+### 2) Confirm routes
+1. `docker compose exec app php artisan route:list --path=api/doctor`
+2. `docker compose exec app php artisan route:list --path=api/admin/doctors/profile`
+3. `docker compose exec app php artisan route:list --path=ui/doctor-dashboard`
+
+### 3) Browser verification flow
+1. Open `/ui/auth`
+   - create/login admin
+   - register doctor-candidate user
+2. Use existing Issue 8 flow to approve candidate as `Doctor`
+   - `/ui/applications` submit appliedRole=`Doctor`
+   - `/ui/application-reviews` approve
+3. Open `/ui/doctor-dashboard`
+   - use `ADMIN_TOKEN`
+   - upsert doctor profile (doctor user id + department id)
+4. Login as doctor from `/ui/auth` (sets `USER_TOKEN`)
+5. Back to `/ui/doctor-dashboard` use `USER_TOKEN`
+   - `GET /doctor/profile`
+   - `GET /doctor/patients`
+   - create bed request
+   - `GET /doctor/bed-requests`
+
+Expected:
+- doctor profile returns configured department/specialization
+- doctor bed request returns `201` with admission payload
+- doctor bed request list includes created request
+- doctor patients list includes linked patient(s)
