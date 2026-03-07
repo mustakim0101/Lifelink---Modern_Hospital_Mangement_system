@@ -1223,3 +1223,113 @@ Expected response:
 Expected:
 - previously assigned bed is now counted under `status = Available`
 - occupied count decreases accordingly in that department/unit
+
+---
+
+## Phase 5 - Issue 12 (Implemented)
+
+Issue: Clinical data schema  
+Commit message target: `feat(clinical): migrations for patients, appointments, records`  
+Branch target: `dev`
+
+### New files created (Issue 12)
+- `lifelink-app/database/migrations/2026_03_07_000350_create_patients_table.php`
+- `lifelink-app/database/migrations/2026_03_07_000360_create_appointments_table.php`
+- `lifelink-app/database/migrations/2026_03_07_000370_create_medical_records_table.php`
+- `lifelink-app/app/Models/Patient.php`
+- `lifelink-app/app/Models/Appointment.php`
+- `lifelink-app/app/Models/MedicalRecord.php`
+
+### Existing files updated (Issue 12)
+- `lifelink-app/app/Models/User.php`
+- `lifelink-app/app/Models/Department.php`
+- `lifelink-app/app/Models/Admission.php`
+- `dev_log/README.md`
+
+### Schema implemented
+1. `patients`
+   - `patient_id` (PK + FK -> `users.id`)
+   - `blood_group`
+   - `emergency_contact_name`
+   - `emergency_contact_phone`
+   - `is_active`
+   - `timestamps`
+
+2. `appointments`
+   - `id` (PK)
+   - `patient_id` (FK -> `patients.patient_id`)
+   - `department_id` (FK -> `departments.id`)
+   - `doctor_user_id` (nullable FK -> `users.id`)
+   - `appointment_datetime`
+   - `status` (default `Booked`)
+   - `cancelled_by_user_id` (nullable FK -> `users.id`)
+   - `cancel_reason`
+   - `timestamps`
+
+3. `medical_records`
+   - `id` (PK)
+   - `patient_id` (FK -> `patients.patient_id`)
+   - `admission_id` (nullable FK -> `admissions.id`)
+   - `created_by_user_id` (FK -> `users.id`)
+   - `record_datetime`
+   - `diagnosis`
+   - `treatment_plan`
+   - `notes`
+   - `timestamps`
+
+### Model wiring added
+- `Patient` model with relations:
+  - `user`, `appointments`, `medicalRecords`
+- `Appointment` model with relations:
+  - `patient`, `department`, `doctor`, `cancelledBy`
+- `MedicalRecord` model with relations:
+  - `patient`, `admission`, `createdBy`
+- `User` model relations:
+  - `patientProfile`, `doctorAppointments`, `cancelledAppointments`, `createdMedicalRecords`
+- `Department` model relation:
+  - `appointments`
+- `Admission` model relation:
+  - `medicalRecords`
+
+### Verification evidence
+Commands run:
+1. `docker compose exec app php artisan migrate --force`
+2. `docker compose exec app php artisan migrate:status`
+3. `docker compose exec app php artisan tinker --execute "echo config('database.default');"`
+
+Results:
+- active DB connection: `sqlsrv`
+- new migrations are applied in batch 5:
+  - `2026_03_07_000350_create_patients_table`
+  - `2026_03_07_000360_create_appointments_table`
+  - `2026_03_07_000370_create_medical_records_table`
+
+---
+
+## Run + Verify Now (Up to Issue 12)
+
+Use from project root:  
+`F:\31 projects\db project\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start and prepare
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose exec app php artisan jwt:secret --force`
+4. `docker compose exec app php artisan config:clear`
+5. `docker compose exec app php artisan migrate --force`
+
+### 2) Confirm clinical migrations are applied
+1. `docker compose exec app php artisan migrate:status`
+
+Expected new rows marked `Ran`:
+- `2026_03_07_000350_create_patients_table`
+- `2026_03_07_000360_create_appointments_table`
+- `2026_03_07_000370_create_medical_records_table`
+
+### 3) Optional DB checks through Tinker
+1. `docker compose exec app php artisan tinker --execute "echo config('database.default');"`
+2. `docker compose exec app php artisan tinker --execute "print_r(Schema::hasTable('patients')); print_r(Schema::hasTable('appointments')); print_r(Schema::hasTable('medical_records'));"`
+
+Expected:
+- database default: `sqlsrv`
+- all three table checks return `1` (true)

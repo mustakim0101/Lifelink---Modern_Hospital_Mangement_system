@@ -42,5 +42,9 @@ class Admission extends Model
     {
         return $this->hasMany(BedAssignment::class);
     }
-}
 
+    public function medicalRecords(): HasMany
+    {
+        return $this->hasMany(MedicalRecord::class);
+    }
+}

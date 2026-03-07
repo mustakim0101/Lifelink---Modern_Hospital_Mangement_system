@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -67,6 +68,26 @@ class User extends Authenticatable implements JWTSubject
     public function admissionsAsPatient(): HasMany
     {
         return $this->hasMany(Admission::class, 'patient_user_id');
+    }
+
+    public function patientProfile(): HasOne
+    {
+        return $this->hasOne(Patient::class, 'patient_id');
+    }
+
+    public function doctorAppointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'doctor_user_id');
+    }
+
+    public function cancelledAppointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'cancelled_by_user_id');
+    }
+
+    public function createdMedicalRecords(): HasMany
+    {
+        return $this->hasMany(MedicalRecord::class, 'created_by_user_id');
     }
 
     public function hasRole(string ...$roles): bool
