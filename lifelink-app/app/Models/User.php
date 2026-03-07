@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -56,6 +57,16 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->belongsToMany(Role::class, 'user_roles')
             ->withPivot(['assigned_at', 'assigned_by_user_id']);
+    }
+
+    public function departmentAdminScopes(): HasMany
+    {
+        return $this->hasMany(DepartmentAdmin::class);
+    }
+
+    public function admissionsAsPatient(): HasMany
+    {
+        return $this->hasMany(Admission::class, 'patient_user_id');
     }
 
     public function hasRole(string ...$roles): bool
