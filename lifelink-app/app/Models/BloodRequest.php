@@ -14,6 +14,7 @@ class BloodRequest extends Model
         'patient_id',
         'admission_id',
         'department_id',
+        'blood_bank_id',
         'requested_by_user_id',
         'blood_group_needed',
         'component_type',
@@ -41,6 +42,11 @@ class BloodRequest extends Model
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function bloodBank(): BelongsTo
+    {
+        return $this->belongsTo(BloodBank::class);
     }
 
     public function requestedBy(): BelongsTo

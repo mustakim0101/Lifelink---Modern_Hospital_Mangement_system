@@ -19,7 +19,7 @@
 <div class="wrap">
     <div class="card">
         <h1>LifeLink UI Starter</h1>
-        <p class="small">Frontend pages for backend features completed up to Phase 5 Issue 15.</p>
+        <p class="small">Frontend pages for backend features completed up to Phase 6 Issue 16.</p>
 
         <div class="grid">
             <a class="box" href="/ui/auth">
@@ -57,6 +57,10 @@
             <a class="box" href="/ui/patient-portal">
                 <strong>Patient Portal</strong><br>
                 View records, manage appointments, and request blood.
+            </a>
+            <a class="box" href="/ui/blood-bank-schema">
+                <strong>Blood Bank Schema</strong><br>
+                Manage blood banks, donor profiles, and inventory schema data.
             </a>
         </div>
     </div>

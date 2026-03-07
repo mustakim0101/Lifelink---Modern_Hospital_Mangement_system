@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Admin\ApplicationReviewController;
 use App\Http\Controllers\Api\Admin\AccountControlController;
+use App\Http\Controllers\Api\BloodBankSchemaController;
 use App\Http\Controllers\Api\DoctorClinicalController;
 use App\Http\Controllers\Api\JobApplicationController;
 use App\Http\Controllers\Api\NurseCareController;
@@ -97,4 +98,15 @@ Route::prefix('patient')->middleware(['auth:api', 'active.user', 'role:Patient']
     Route::post('/appointments/{appointment}/cancel', [PatientPortalController::class, 'cancelAppointment']);
     Route::post('/blood-requests', [PatientPortalController::class, 'requestBlood']);
     Route::get('/blood-requests', [PatientPortalController::class, 'myBloodRequests']);
+});
+
+Route::prefix('blood/schema')->middleware(['auth:api', 'active.user', 'role:Admin,ITWorker'])->group(function () {
+    Route::get('/overview', [BloodBankSchemaController::class, 'overview']);
+    Route::get('/banks', [BloodBankSchemaController::class, 'banks']);
+    Route::post('/banks', [BloodBankSchemaController::class, 'createBank']);
+    Route::get('/donor-profiles', [BloodBankSchemaController::class, 'donorProfiles']);
+    Route::post('/donor-profiles', [BloodBankSchemaController::class, 'upsertDonorProfile']);
+    Route::get('/inventory', [BloodBankSchemaController::class, 'inventory']);
+    Route::post('/inventory', [BloodBankSchemaController::class, 'upsertInventory']);
+    Route::get('/requests', [BloodBankSchemaController::class, 'requests']);
 });

@@ -1715,3 +1715,125 @@ Expected:
 - appointment booking returns `201`, then appears in list
 - blood request returns `201`, then appears in request history
 - patient-only routes reject non-patient tokens with `403`
+
+---
+
+## Phase 6 - Issue 16 (Implemented)
+
+Issue: Blood bank schema  
+Commit message target: `feat(blood): migrations for donors, inventory, requests`  
+Branch target: `dev`
+
+### New files created (Issue 16)
+- `lifelink-app/database/migrations/2026_03_08_000600_create_blood_banks_table.php`
+- `lifelink-app/database/migrations/2026_03_08_000610_create_donor_profiles_table.php`
+- `lifelink-app/database/migrations/2026_03_08_000620_create_blood_inventory_table.php`
+- `lifelink-app/database/migrations/2026_03_08_000630_add_blood_bank_id_to_blood_requests_table.php`
+- `lifelink-app/app/Models/BloodBank.php`
+- `lifelink-app/app/Models/BloodInventory.php`
+- `lifelink-app/app/Models/DonorProfile.php`
+- `lifelink-app/app/Http/Controllers/Api/BloodBankSchemaController.php`
+- `lifelink-app/resources/views/ui/blood-bank-schema.blade.php`
+
+### Existing files updated (Issue 16)
+- `lifelink-app/app/Models/User.php`
+- `lifelink-app/app/Models/BloodRequest.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/README.md`
+
+### Schema updates
+1. `blood_banks`
+   - `bank_name` (unique), `location`, `is_active`, timestamps
+2. `donor_profiles`
+   - `donor_id` (PK + FK -> `users.id`)
+   - `blood_group`, `last_donation_date`, `is_eligible`, `notes`, timestamps
+3. `blood_inventory`
+   - `blood_bank_id` (FK -> `blood_banks.id`)
+   - `blood_group`, `component_type`, `units_available`, `last_updated_at`, timestamps
+   - unique key on (`blood_bank_id`, `blood_group`, `component_type`)
+4. `blood_requests` extended
+   - added nullable `blood_bank_id` (FK -> `blood_banks.id`) with null-on-delete
+
+### API endpoints added
+Admin/IT role (`role:Admin,ITWorker`):
+- `GET /api/blood/schema/overview`
+- `GET /api/blood/schema/banks`
+- `POST /api/blood/schema/banks`
+- `GET /api/blood/schema/donor-profiles`
+- `POST /api/blood/schema/donor-profiles`
+- `GET /api/blood/schema/inventory`
+- `POST /api/blood/schema/inventory`
+- `GET /api/blood/schema/requests`
+
+### Blood schema actions implemented
+1. Blood bank creation and listing.
+2. Donor profile upsert/list with donor-role auto-attach.
+3. Inventory upsert/list per bank + blood group + component.
+4. Blood request listing with optional bank/status filters.
+5. Overview endpoint with schema-level counts and request status summary.
+
+### UI added / modernized
+- `GET /ui/blood-bank-schema`
+  - modern responsive schema dashboard for admin/IT
+  - token context (`ADMIN_TOKEN` / `USER_TOKEN`) and one-click refresh
+  - quick forms for bank creation, donor profile upsert, inventory upsert
+  - live tables for banks, donors, inventory, and blood requests
+  - request status chips and API response log
+
+Also updated:
+- `/ui` index page now includes `Blood Bank Schema` entry and progress note up to Issue 16.
+
+### Verification evidence
+Executed in Docker app container:
+1. `docker compose exec app php artisan migrate --force`
+2. `docker compose exec app php artisan route:list --path=api/blood/schema`
+3. `docker compose exec app php artisan route:list --path=ui/blood-bank-schema`
+4. `docker compose exec app php artisan migrate:status`
+5. `docker compose exec app php artisan test`
+
+Observed results:
+- blood schema routes listed correctly
+- blood schema migrations marked `Ran`
+- tests passed
+
+---
+
+## Run + Verify Now (Up to Issue 16)
+
+Use from project root:  
+`J:\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start and migrate
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose exec app php artisan jwt:secret --force`
+4. `docker compose exec app php artisan config:clear`
+5. `docker compose exec app php artisan migrate --force`
+
+### 2) Confirm Issue 16 routes
+1. `docker compose exec app php artisan route:list --path=api/blood/schema`
+2. `docker compose exec app php artisan route:list --path=ui/blood-bank-schema`
+
+### 3) Browser verification flow (Blood schema)
+1. Open `/ui/auth`
+   - login admin user (or IT worker)
+2. Open `/ui/blood-bank-schema`
+   - use `ADMIN_TOKEN` or `USER_TOKEN`
+   - click `Refresh All`
+3. Create one blood bank and verify it appears in banks table
+4. Upsert one donor profile (existing user id + blood group) and verify donor table
+5. Upsert inventory row (bank + blood group + component + units) and verify inventory table
+6. Verify requests table loads existing patient blood requests with `200`
+
+Expected:
+- all schema endpoints respond without authorization errors for Admin/IT tokens
+- create/upsert actions return success and refresh tables
+- schema snapshot counters update after successful writes
+
+### 4) Common Postman pitfalls (Issue 16)
+1. Use `POST /api/blood/schema/banks` to create a bank.
+   `GET /api/blood/schema/banks` only lists banks.
+2. If `POST /api/blood/schema/inventory` says `The selected bank id is invalid`, create/list banks first and use a real `id` from `GET /api/blood/schema/banks`.
+3. For GET endpoints (`overview`, `banks`, `donor-profiles`, `inventory`, `requests`), keep request body empty and pass filters in query params.
