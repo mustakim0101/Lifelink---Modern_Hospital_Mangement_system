@@ -34,4 +34,9 @@ class Department extends Model
     {
         return $this->hasMany(DepartmentAdmin::class);
     }
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
 }
