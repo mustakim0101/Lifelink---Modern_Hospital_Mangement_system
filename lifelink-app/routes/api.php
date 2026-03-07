@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Admin\ApplicationReviewController;
 use App\Http\Controllers\Api\Admin\AccountControlController;
 use App\Http\Controllers\Api\JobApplicationController;
+use App\Http\Controllers\Api\ItBedAllocationController;
 use App\Http\Controllers\Api\WardCatalogController;
 use Illuminate\Support\Facades\Route;
 
@@ -51,3 +52,14 @@ Route::prefix('ward')->middleware(['auth:api', 'active.user', 'role:Admin,ITWork
     Route::post('/care-units', [WardCatalogController::class, 'storeCareUnit']);
     Route::post('/beds', [WardCatalogController::class, 'storeBed']);
 });
+
+Route::prefix('ward/it')->middleware(['auth:api', 'active.user', 'role:Admin,ITWorker'])->group(function () {
+    Route::get('/departments', [ItBedAllocationController::class, 'myDepartments']);
+    Route::get('/admissions', [ItBedAllocationController::class, 'admissions']);
+    Route::get('/available-beds', [ItBedAllocationController::class, 'availableBeds']);
+    Route::post('/admissions', [ItBedAllocationController::class, 'createAdmission']);
+    Route::post('/assign-bed', [ItBedAllocationController::class, 'assignBed']);
+});
+
+Route::post('/ward/it/department-admins', [ItBedAllocationController::class, 'assignDepartmentToItWorker'])
+    ->middleware(['auth:api', 'active.user', 'role:Admin']);

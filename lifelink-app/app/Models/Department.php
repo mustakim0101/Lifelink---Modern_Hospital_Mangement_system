@@ -24,4 +24,14 @@ class Department extends Model
     {
         return $this->hasMany(CareUnit::class);
     }
+
+    public function admissions(): HasMany
+    {
+        return $this->hasMany(Admission::class);
+    }
+
+    public function departmentAdmins(): HasMany
+    {
+        return $this->hasMany(DepartmentAdmin::class);
+    }
 }

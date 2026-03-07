@@ -1018,3 +1018,117 @@ Expected:
 - Bed create returns `201` and `bed.id`
 - Bed list shows unit + department info
 - Summary returns grouped totals by `department`, `unit_type`, `status`
+
+---
+
+## Phase 4 - Issue 10 (Implemented)
+
+Issue: IT worker bed assignment  
+Commit message target: `feat(beds): it-worker dashboard for bed allocation`  
+Branch target: `dev`
+
+### New files created (Issue 10)
+- `lifelink-app/database/migrations/2026_03_07_000320_create_department_admins_table.php`
+- `lifelink-app/database/migrations/2026_03_07_000330_create_admissions_table.php`
+- `lifelink-app/database/migrations/2026_03_07_000340_create_bed_assignments_table.php`
+- `lifelink-app/app/Models/DepartmentAdmin.php`
+- `lifelink-app/app/Models/Admission.php`
+- `lifelink-app/app/Models/BedAssignment.php`
+- `lifelink-app/app/Http/Controllers/Api/ItBedAllocationController.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+
+### Existing files updated (Issue 10)
+- `lifelink-app/app/Models/User.php`
+- `lifelink-app/app/Models/Department.php`
+- `lifelink-app/app/Models/Bed.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/README.md`
+
+### Schema implemented
+1. `department_admins`
+   - maps IT workers to departments (`user_id`, `department_id`)
+2. `admissions`
+   - stores admitted patient records for bed allocation flow
+3. `bed_assignments`
+   - stores bed assignment history with active assignment tracked by `released_at = null`
+
+### Backend APIs added (Issue 10)
+Admin/ITWorker:
+- `GET /api/ward/it/departments`
+- `GET /api/ward/it/admissions`
+- `POST /api/ward/it/admissions`
+- `GET /api/ward/it/available-beds?departmentId=...&unitType=...`
+- `POST /api/ward/it/assign-bed`
+
+Admin only:
+- `POST /api/ward/it/department-admins`
+
+### UI added
+- `GET /ui/it-bed-allocation`
+  - assign IT worker to department (admin flow)
+  - create admission
+  - list admissions
+  - list available beds
+  - assign bed to admission
+
+### Allocation flow (Issue 10)
+IT/Admin token
+-> create admission (`/ward/it/admissions`)
+-> fetch available beds in department (`/ward/it/available-beds`)
+-> assign bed (`/ward/it/assign-bed`)
+-> bed status changes `Available -> Occupied`
+-> admission gets active assignment payload
+
+### Live verification evidence
+Verified by direct API run:
+- created admin
+- registered patient
+- created available NICU bed
+- created admission
+- assigned bed
+- received successful assignment payload with `bed_code` and `unit_type`
+
+---
+
+## Run + Verify Now (Up to Issue 10)
+
+Use from project root:  
+`F:\31 projects\db project\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start and prepare
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose exec app php artisan jwt:secret --force`
+4. `docker compose exec app php artisan config:clear`
+5. `docker compose exec app php artisan migrate --force`
+
+### 2) Confirm new routes
+1. `docker compose exec app php artisan route:list --path=api/ward/it`
+2. `docker compose exec app php artisan route:list --path=ui/it-bed-allocation`
+
+Expected API routes:
+- `GET api/ward/it/departments`
+- `GET api/ward/it/admissions`
+- `POST api/ward/it/admissions`
+- `GET api/ward/it/available-beds`
+- `POST api/ward/it/assign-bed`
+- `POST api/ward/it/department-admins`
+
+### 3) Browser flow (recommended)
+1. Open `http://localhost:8000/ui/auth` and login/create admin + create patient user.
+2. Open `http://localhost:8000/ui/ward-setup` and ensure at least one care unit + one available bed exists.
+3. Open `http://localhost:8000/ui/it-bed-allocation`:
+   - use `ADMIN_TOKEN`
+   - create admission (`patientUserId`, `departmentId`, `careLevelRequested`, `diagnosis`)
+   - load available beds for the department
+   - assign bed using `admissionId` + `bedId`
+
+### 4) Expected success results
+- Admission create -> `201` with `admission.id`
+- Assign bed -> `200` with message `Bed assigned`
+- Response includes:
+  - `admission.active_bed_assignment.bed_code`
+  - `admission.active_bed_assignment.unit_type`
+- `GET /api/ward/beds?status=Available` count decreases for that unit/department.
