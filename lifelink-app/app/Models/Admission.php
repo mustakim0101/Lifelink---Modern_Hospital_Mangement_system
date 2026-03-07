@@ -53,4 +53,9 @@ class Admission extends Model
     {
         return $this->hasMany(MedicalRecord::class);
     }
+
+    public function vitalSignLogs(): HasMany
+    {
+        return $this->hasMany(NurseVitalSignLog::class);
+    }
 }

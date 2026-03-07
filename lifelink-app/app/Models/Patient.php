@@ -37,9 +37,18 @@ class Patient extends Model
         return $this->hasMany(Appointment::class, 'patient_id', 'patient_id');
     }
 
+    public function admissions(): HasMany
+    {
+        return $this->hasMany(Admission::class, 'patient_user_id', 'patient_id');
+    }
+
     public function medicalRecords(): HasMany
     {
         return $this->hasMany(MedicalRecord::class, 'patient_id', 'patient_id');
     }
-}
 
+    public function vitalSignLogs(): HasMany
+    {
+        return $this->hasMany(NurseVitalSignLog::class, 'patient_id', 'patient_id');
+    }
+}

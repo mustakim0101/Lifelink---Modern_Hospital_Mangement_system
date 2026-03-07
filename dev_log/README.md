@@ -1443,3 +1443,128 @@ Expected:
 - doctor bed request returns `201` with admission payload
 - doctor bed request list includes created request
 - doctor patients list includes linked patient(s)
+
+---
+
+## Phase 5 - Issue 14 (Implemented)
+
+Issue: Nurse care dashboard  
+Commit message target: `feat(clinical): nurse view for dept-wise patient monitoring`  
+Branch target: `dev`
+
+### New files created (Issue 14)
+- `lifelink-app/database/migrations/2026_03_07_000400_create_nurses_table.php`
+- `lifelink-app/database/migrations/2026_03_07_000410_create_nurse_vital_sign_logs_table.php`
+- `lifelink-app/app/Models/Nurse.php`
+- `lifelink-app/app/Models/NurseVitalSignLog.php`
+- `lifelink-app/app/Http/Controllers/Api/NurseCareController.php`
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+
+### Existing files updated (Issue 14)
+- `lifelink-app/app/Models/User.php`
+- `lifelink-app/app/Models/Department.php`
+- `lifelink-app/app/Models/Patient.php`
+- `lifelink-app/app/Models/Admission.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/README.md`
+
+### Schema updates
+1. `nurses`
+   - `nurse_id` (PK + FK -> `users.id`)
+   - `department_id` (FK -> `departments.id`)
+   - `ward_assignment_note`, `is_active`, timestamps
+2. `nurse_vital_sign_logs`
+   - `admission_id` (FK -> `admissions.id`, cascade delete)
+   - `patient_id` (FK -> `patients.patient_id`)
+   - `nurse_id` (FK -> `nurses.nurse_id`)
+   - `measured_at`, `temperature_c`, `pulse_bpm`, `systolic_bp`, `diastolic_bp`, `respiration_rate`, `spo2_percent`, `note`
+   - MSSQL-safe FK design used to avoid multiple cascade path error.
+
+### API endpoints added
+Admin (`role:Admin`):
+- `POST /api/admin/nurses/profile` (upsert nurse profile for a Nurse-role user)
+
+Nurse (`role:Nurse`):
+- `GET /api/nurse/profile`
+- `GET /api/nurse/patients`
+- `GET /api/nurse/admissions/{admission}`
+- `GET /api/nurse/admissions/{admission}/vitals`
+- `POST /api/nurse/admissions/{admission}/vitals`
+
+### Nurse actions implemented
+1. Nurse profile view by logged-in nurse.
+2. Department-wise admission/patient monitoring with search and status filters.
+3. Admission detail panel with bed assignment + linked medical record history.
+4. Vital signs logging with validations (including BP consistency and metric presence).
+5. Vital signs history retrieval per admission.
+
+### UI added / modernized
+- `GET /ui/nurse-dashboard`
+  - modern interactive dashboard layout (responsive cards + animated gradient surface)
+  - token context + admin nurse profile setup panel
+  - department patient monitor list with quick status badges
+  - selected admission detail summary
+  - quick vital-sign entry form and live refresh actions
+  - recent vitals + medical records tables
+
+Also updated:
+- `/ui` index page now includes Nurse Dashboard entry and marks progress up to Issue 14.
+
+### Verification evidence
+Executed in Docker app container:
+1. `docker compose exec app php artisan route:list --path=api/admin/nurses/profile`
+2. `docker compose exec app php artisan route:list --path=api/nurse`
+3. `docker compose exec app php artisan route:list --path=ui/nurse-dashboard`
+4. `docker compose exec app php artisan migrate --force`
+5. `docker compose exec app php artisan migrate:status`
+6. `docker compose exec app php artisan test`
+
+Observed results:
+- new nurse routes listed correctly
+- nurse migrations applied (`2026_03_07_000400`, `2026_03_07_000410`)
+- tests passed (`2 passed`)
+
+---
+
+## Run + Verify Now (Up to Issue 14)
+
+Use from project root:  
+`J:\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start and migrate
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose exec app php artisan jwt:secret --force`
+4. `docker compose exec app php artisan config:clear`
+5. `docker compose exec app php artisan migrate --force`
+
+### 2) Confirm Issue 14 routes
+1. `docker compose exec app php artisan route:list --path=api/admin/nurses/profile`
+2. `docker compose exec app php artisan route:list --path=api/nurse`
+3. `docker compose exec app php artisan route:list --path=ui/nurse-dashboard`
+
+### 3) Browser verification flow (Nurse)
+1. Open `/ui/auth`
+   - register/login admin user
+   - register nurse-candidate user
+2. Use existing Issue 8 flow to approve candidate as `Nurse`
+   - `/ui/applications` submit `appliedRole=Nurse`
+   - `/ui/application-reviews` approve
+3. Open `/ui/nurse-dashboard`
+   - use `ADMIN_TOKEN`
+   - upsert nurse profile (nurse user id + department id)
+4. Login as nurse from `/ui/auth` (sets `USER_TOKEN`)
+5. Back to `/ui/nurse-dashboard` use `USER_TOKEN`
+   - `GET /nurse/profile`
+   - `GET /nurse/patients`
+   - select one admission from patient list
+   - submit vital sign log
+   - refresh vitals table
+
+Expected:
+- nurse profile returns configured department and active state
+- patients endpoint returns only nurse department admissions
+- admission details show bed assignment + medical records
+- vital log creation returns `201` and appears in recent vitals list
