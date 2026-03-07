@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Admin\ApplicationReviewController;
 use App\Http\Controllers\Api\Admin\AccountControlController;
 use App\Http\Controllers\Api\BloodBankSchemaController;
+use App\Http\Controllers\Api\DonorDashboardController;
 use App\Http\Controllers\Api\DoctorClinicalController;
 use App\Http\Controllers\Api\JobApplicationController;
 use App\Http\Controllers\Api\NurseCareController;
@@ -98,6 +99,22 @@ Route::prefix('patient')->middleware(['auth:api', 'active.user', 'role:Patient']
     Route::post('/appointments/{appointment}/cancel', [PatientPortalController::class, 'cancelAppointment']);
     Route::post('/blood-requests', [PatientPortalController::class, 'requestBlood']);
     Route::get('/blood-requests', [PatientPortalController::class, 'myBloodRequests']);
+});
+
+Route::prefix('donor')->middleware(['auth:api', 'active.user'])->group(function () {
+    Route::post('/enroll', [DonorDashboardController::class, 'enroll']);
+});
+
+Route::prefix('donor')->middleware(['auth:api', 'active.user', 'role:Donor'])->group(function () {
+    Route::get('/dashboard', [DonorDashboardController::class, 'dashboard']);
+    Route::get('/profile', [DonorDashboardController::class, 'profile']);
+    Route::get('/banks', [DonorDashboardController::class, 'banks']);
+    Route::get('/availability', [DonorDashboardController::class, 'availabilities']);
+    Route::post('/availability', [DonorDashboardController::class, 'upsertAvailability']);
+    Route::get('/health-checks', [DonorDashboardController::class, 'healthChecks']);
+    Route::post('/health-checks', [DonorDashboardController::class, 'logHealthCheck']);
+    Route::get('/donations', [DonorDashboardController::class, 'donations']);
+    Route::post('/donations', [DonorDashboardController::class, 'logDonation']);
 });
 
 Route::prefix('blood/schema')->middleware(['auth:api', 'active.user', 'role:Admin,ITWorker'])->group(function () {

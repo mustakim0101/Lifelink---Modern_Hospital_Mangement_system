@@ -29,4 +29,9 @@ class BloodBank extends Model
     {
         return $this->hasMany(BloodRequest::class);
     }
+
+    public function donations(): HasMany
+    {
+        return $this->hasMany(BloodDonation::class);
+    }
 }

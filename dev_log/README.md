@@ -1837,3 +1837,91 @@ Expected:
    `GET /api/blood/schema/banks` only lists banks.
 2. If `POST /api/blood/schema/inventory` says `The selected bank id is invalid`, create/list banks first and use a real `id` from `GET /api/blood/schema/banks`.
 3. For GET endpoints (`overview`, `banks`, `donor-profiles`, `inventory`, `requests`), keep request body empty and pass filters in query params.
+
+---
+
+## Phase 6 - Issue 17 (Implemented)
+
+Issue: Donor dashboard & tracking  
+Commit message target: `feat(blood): donor availability, weight, temp, bag logging`  
+Branch target: `dev`
+
+### New files created (Issue 17)
+- `lifelink-app/database/migrations/2026_03_08_000700_create_donor_availabilities_table.php`
+- `lifelink-app/database/migrations/2026_03_08_000710_create_donor_health_checks_table.php`
+- `lifelink-app/database/migrations/2026_03_08_000720_create_blood_donations_table.php`
+- `lifelink-app/app/Models/DonorAvailability.php`
+- `lifelink-app/app/Models/DonorHealthCheck.php`
+- `lifelink-app/app/Models/BloodDonation.php`
+- `lifelink-app/app/Http/Controllers/Api/DonorDashboardController.php`
+- `lifelink-app/resources/views/ui/donor-dashboard.blade.php`
+
+### Existing files updated (Issue 17)
+- `lifelink-app/app/Models/DonorProfile.php`
+- `lifelink-app/app/Models/BloodBank.php`
+- `lifelink-app/app/Models/BloodRequest.php`
+- `lifelink-app/app/Models/User.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/README.md`
+
+### Schema updates
+1. `donor_availabilities`
+   - `donor_id` FK -> `donor_profiles.donor_id`
+   - `week_start_date`, `is_available`, `max_bags_possible`, `notes`, timestamps
+   - unique key on (`donor_id`, `week_start_date`)
+2. `donor_health_checks`
+   - `donor_id` FK -> `donor_profiles.donor_id`
+   - `check_datetime`, `weight_kg`, `temperature_c`, `hemoglobin`, `notes`
+   - `checked_by_user_id` FK -> `users.id` (nullable)
+3. `blood_donations`
+   - `donor_id` FK -> `donor_profiles.donor_id`
+   - `blood_bank_id` FK -> `blood_banks.id`
+   - `donation_datetime`, `blood_group`, `component_type`, `units_donated`
+   - optional links to `blood_requests` and `donor_health_checks`
+   - tracks `recorded_by_user_id`
+
+### API endpoints added
+Donor role (`role:Donor`):
+- `GET /api/donor/dashboard`
+- `GET /api/donor/profile`
+- `GET /api/donor/banks`
+- `GET /api/donor/availability`
+- `POST /api/donor/availability`
+- `GET /api/donor/health-checks`
+- `POST /api/donor/health-checks`
+- `GET /api/donor/donations`
+- `POST /api/donor/donations`
+
+Authenticated user bootstrap:
+- `POST /api/donor/enroll` (enables Donor role for current user + creates donor profile)
+
+### Donor tracking actions implemented
+1. Donor weekly availability upsert/list with max bags.
+2. Donor health check logging (weight, temperature, optional hemoglobin).
+3. Donor eligibility flag update from health check vitals.
+4. Donation bag logging per blood bank/component/group.
+5. Inventory auto-increment on successful donation log.
+6. Donor dashboard summary (stats + latest records + request pressure by blood group).
+7. Self-enroll endpoint for authenticated users to enable Donor role and donor profile.
+
+### UI added / modernized
+- `GET /ui/donor-dashboard`
+  - modern responsive donor dashboard
+  - availability form, health check form, donation logging form
+  - live stats + history tables
+  - API response panel and token shortcuts
+
+Also updated:
+- `/ui` index page now includes `Donor Dashboard` entry and progress note up to Issue 17.
+
+### Verification flow (Issue 17)
+1. Ensure a user has `Donor` role (use Issue 16 donor profile upsert if needed).
+2. If role is missing, call `POST /api/donor/enroll` using that user's token.
+3. Login as donor and copy token.
+4. `GET /api/donor/dashboard` returns donor summary.
+5. `POST /api/donor/availability` logs weekly availability.
+6. `POST /api/donor/health-checks` logs weight/temp.
+7. `POST /api/donor/donations` logs bag units and updates inventory.
+8. `GET /api/donor/donations` shows donation history with latest record.

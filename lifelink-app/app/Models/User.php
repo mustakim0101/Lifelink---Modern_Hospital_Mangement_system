@@ -90,6 +90,26 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasOne(DonorProfile::class, 'donor_id');
     }
 
+    public function donorAvailabilities(): HasMany
+    {
+        return $this->hasMany(DonorAvailability::class, 'donor_id');
+    }
+
+    public function donorHealthChecks(): HasMany
+    {
+        return $this->hasMany(DonorHealthCheck::class, 'donor_id');
+    }
+
+    public function donorDonations(): HasMany
+    {
+        return $this->hasMany(BloodDonation::class, 'donor_id');
+    }
+
+    public function recordedBloodDonations(): HasMany
+    {
+        return $this->hasMany(BloodDonation::class, 'recorded_by_user_id');
+    }
+
     public function doctorAppointments(): HasMany
     {
         return $this->hasMany(Appointment::class, 'doctor_user_id');
