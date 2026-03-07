@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\Admin\ApplicationReviewController;
 use App\Http\Controllers\Api\Admin\AccountControlController;
 use App\Http\Controllers\Api\DoctorClinicalController;
 use App\Http\Controllers\Api\JobApplicationController;
+use App\Http\Controllers\Api\NurseCareController;
 use App\Http\Controllers\Api\ItBedAllocationController;
 use App\Http\Controllers\Api\WardCatalogController;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +30,7 @@ Route::prefix('admin')->middleware(['auth:api', 'active.user', 'role:Admin'])->g
     Route::post('/users/{user}/unfreeze', [AccountControlController::class, 'unfreeze']);
     Route::get('/users/{user}/status', [AccountControlController::class, 'status']);
     Route::post('/doctors/profile', [DoctorClinicalController::class, 'upsertDoctorProfile']);
+    Route::post('/nurses/profile', [NurseCareController::class, 'upsertNurseProfile']);
 });
 
 Route::prefix('admin')->middleware(['auth:api', 'active.user', 'role:Admin,ITWorker'])->group(function () {
@@ -74,4 +76,12 @@ Route::prefix('doctor')->middleware(['auth:api', 'active.user', 'role:Doctor'])-
     Route::post('/appointments/{appointment}/cancel', [DoctorClinicalController::class, 'cancelAppointment']);
     Route::post('/bed-requests', [DoctorClinicalController::class, 'createBedRequest']);
     Route::get('/bed-requests', [DoctorClinicalController::class, 'myBedRequests']);
+});
+
+Route::prefix('nurse')->middleware(['auth:api', 'active.user', 'role:Nurse'])->group(function () {
+    Route::get('/profile', [NurseCareController::class, 'profile']);
+    Route::get('/patients', [NurseCareController::class, 'patients']);
+    Route::get('/admissions/{admission}', [NurseCareController::class, 'admissionDetail']);
+    Route::get('/admissions/{admission}/vitals', [NurseCareController::class, 'vitalSigns']);
+    Route::post('/admissions/{admission}/vitals', [NurseCareController::class, 'logVitalSigns']);
 });

@@ -80,6 +80,11 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasOne(Doctor::class, 'doctor_id');
     }
 
+    public function nurseProfile(): HasOne
+    {
+        return $this->hasOne(Nurse::class, 'nurse_id');
+    }
+
     public function doctorAppointments(): HasMany
     {
         return $this->hasMany(Appointment::class, 'doctor_user_id');
@@ -93,6 +98,11 @@ class User extends Authenticatable implements JWTSubject
     public function createdMedicalRecords(): HasMany
     {
         return $this->hasMany(MedicalRecord::class, 'created_by_user_id');
+    }
+
+    public function recordedVitalSigns(): HasMany
+    {
+        return $this->hasMany(NurseVitalSignLog::class, 'nurse_id');
     }
 
     public function hasRole(string ...$roles): bool
