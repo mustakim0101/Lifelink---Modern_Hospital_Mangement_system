@@ -58,6 +58,7 @@ Route::prefix('ward/it')->middleware(['auth:api', 'active.user', 'role:Admin,ITW
     Route::get('/admissions', [ItBedAllocationController::class, 'admissions']);
     Route::get('/available-beds', [ItBedAllocationController::class, 'availableBeds']);
     Route::post('/admissions', [ItBedAllocationController::class, 'createAdmission']);
+    Route::post('/admissions/{admission}/discharge', [ItBedAllocationController::class, 'dischargeAdmission']);
     Route::post('/assign-bed', [ItBedAllocationController::class, 'assignBed']);
 });
 

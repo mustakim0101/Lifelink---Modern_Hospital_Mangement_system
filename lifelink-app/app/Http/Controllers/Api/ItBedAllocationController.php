@@ -268,6 +268,73 @@ class ItBedAllocationController extends Controller
         return $result;
     }
 
+    public function dischargeAdmission(Request $request, Admission $admission): JsonResponse
+    {
+        $validated = $request->validate([
+            'releaseReason' => ['nullable', 'string', 'max:40'],
+        ]);
+
+        $actor = auth('api')->user();
+
+        $result = DB::transaction(function () use ($admission, $actor, $validated) {
+            $admission = Admission::query()
+                ->with(['department:id,dept_name', 'patient:id,full_name,name,email'])
+                ->lockForUpdate()
+                ->findOrFail($admission->id);
+
+            $this->ensureDepartmentAccessible($actor, $admission->department_id);
+
+            if ($admission->status !== 'Admitted') {
+                return response()->json([
+                    'message' => 'Admission is not in Admitted state.',
+                ], 409);
+            }
+
+            $activeAssignment = BedAssignment::query()
+                ->where('admission_id', $admission->id)
+                ->whereNull('released_at')
+                ->lockForUpdate()
+                ->first();
+
+            if ($activeAssignment) {
+                $bed = Bed::query()->lockForUpdate()->find($activeAssignment->bed_id);
+                if ($bed) {
+                    $bed->update(['status' => 'Available']);
+                }
+
+                $activeAssignment->update([
+                    'released_at' => now(),
+                    'released_by_user_id' => $actor->id,
+                    'release_reason' => $validated['releaseReason'] ?? 'Discharge',
+                ]);
+            }
+
+            $admission->update([
+                'status' => 'Discharged',
+                'discharge_date' => now(),
+            ]);
+
+            $admission->refresh();
+            $admission->load([
+                'department:id,dept_name',
+                'patient:id,full_name,name,email',
+                'bedAssignments' => fn ($q) => $q->whereNull('released_at')->with(['bed:id,care_unit_id,bed_code,status', 'bed.careUnit:id,department_id,unit_type,unit_name']),
+            ]);
+
+            return response()->json([
+                'message' => 'Admission discharged and bed released',
+                'admission' => $this->admissionPayload($admission),
+                'released_bed' => $activeAssignment ? [
+                    'assignment_id' => $activeAssignment->id,
+                    'bed_id' => $activeAssignment->bed_id,
+                    'released_at' => optional($activeAssignment->released_at)->toISOString(),
+                ] : null,
+            ]);
+        });
+
+        return $result;
+    }
+
     private function accessibleDepartmentIds(User $user): array
     {
         if ($user->hasRole('Admin')) {

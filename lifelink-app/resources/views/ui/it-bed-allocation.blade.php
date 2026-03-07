@@ -72,6 +72,10 @@
         <input id="assignAdmissionId" type="number" placeholder="admission id">
         <input id="assignBedId" type="number" placeholder="bed id">
         <button onclick="assignBed()">Assign Bed</button>
+        <hr>
+        <input id="dischargeAdmissionId" type="number" placeholder="admission id to discharge">
+        <input id="releaseReason" placeholder="release reason (optional, default Discharge)">
+        <button onclick="dischargeAdmission()">Discharge + Auto Release Bed</button>
     </div>
 
     <div class="card" style="margin-top:16px;">
@@ -180,6 +184,21 @@ async function assignBed() {
     const r = await call('/ward/it/assign-bed', 'POST', body);
     const bedId = r.data?.admission?.active_bed_assignment?.bed_id;
     if (bedId) localStorage.setItem('LAST_ASSIGNED_BED_ID', String(bedId));
+    const admissionId = r.data?.admission?.id;
+    if (admissionId) document.getElementById('dischargeAdmissionId').value = String(admissionId);
+    refreshCtx();
+    write(r);
+}
+
+async function dischargeAdmission() {
+    const admissionId = Number(document.getElementById('dischargeAdmissionId').value);
+    const releaseReason = document.getElementById('releaseReason').value.trim();
+    if (!admissionId) {
+        write({ status: 422, data: { message: 'discharge admission id is required' } });
+        return;
+    }
+    const body = releaseReason ? { releaseReason } : {};
+    const r = await call(`/ward/it/admissions/${admissionId}/discharge`, 'POST', body);
     refreshCtx();
     write(r);
 }
@@ -189,4 +208,3 @@ refreshCtx();
 </script>
 </body>
 </html>
-
