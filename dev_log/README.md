@@ -1132,3 +1132,94 @@ Expected API routes:
   - `admission.active_bed_assignment.bed_code`
   - `admission.active_bed_assignment.unit_type`
 - `GET /api/ward/beds?status=Available` count decreases for that unit/department.
+
+---
+
+## Phase 4 - Issue 11 (Implemented)
+
+Issue: Discharge & bed release  
+Commit message target: `feat(beds): auto-release bed on patient discharge`  
+Branch target: `dev`
+
+### New files created (Issue 11)
+- No new files required.
+
+### Existing files updated (Issue 11)
+- `lifelink-app/app/Http/Controllers/Api/ItBedAllocationController.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+- `dev_log/README.md`
+
+### Backend behavior implemented
+New API endpoint:
+- `POST /api/ward/it/admissions/{admission}/discharge`
+
+When discharge is called:
+1. Validates department access (Admin or scoped ITWorker)
+2. Checks admission is currently `Admitted`
+3. Finds active bed assignment (`released_at IS NULL`)
+4. Auto-releases assignment:
+   - sets `released_at`
+   - sets `released_by_user_id`
+   - sets `release_reason` (default `Discharge`)
+5. Sets bed status back to `Available`
+6. Sets admission status to `Discharged` with `discharge_date`
+
+### UI behavior implemented
+Updated `/ui/it-bed-allocation`:
+- Added discharge action form:
+  - admission id
+  - optional release reason
+  - `Discharge + Auto Release Bed` button
+
+### Live verification evidence
+Verified by API:
+- `POST /api/ward/it/admissions/3/discharge` returned:
+  - `message: Admission discharged and bed released`
+  - `admission.status: Discharged`
+  - `admission.active_bed_assignment: null`
+- `GET /api/ward/beds/summary` after discharge showed:
+  - Pediatrics NICU moved from `Occupied` to `Available`
+
+---
+
+## Run + Verify Now (Up to Issue 11)
+
+Use from project root:  
+`F:\31 projects\db project\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start and prepare
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose exec app php artisan jwt:secret --force`
+4. `docker compose exec app php artisan config:clear`
+5. `docker compose exec app php artisan migrate --force`
+
+### 2) Confirm routes
+1. `docker compose exec app php artisan route:list --path=api/ward/it`
+
+Expected additional route for Issue 11:
+- `POST api/ward/it/admissions/{admission}/discharge`
+
+### 3) Browser flow
+1. Open `http://localhost:8000/ui/it-bed-allocation`
+2. Use admin/it token
+3. Ensure you already have:
+   - one admitted admission with active bed assignment
+4. In discharge section:
+   - set `admission id`
+   - optional reason
+   - click `Discharge + Auto Release Bed`
+
+Expected response:
+- `message = Admission discharged and bed released`
+- `admission.status = Discharged`
+- `admission.active_bed_assignment = null`
+
+### 4) Verify bed released
+1. Open `http://localhost:8000/ui/ward-setup`
+2. Click `GET /ward/beds/summary`
+
+Expected:
+- previously assigned bed is now counted under `status = Available`
+- occupied count decreases accordingly in that department/unit
