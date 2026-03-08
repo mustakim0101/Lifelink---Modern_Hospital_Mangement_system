@@ -10,9 +10,29 @@ else
   exit 1
 fi
 
+run_sql_file() {
+  local db="$1"
+  local file="$2"
+
+  echo "[mssql-init] applying ${file} (db=${db})"
+  "$SQLCMD_BIN" -S mssql -U sa -P "$MSSQL_SA_PASSWORD" -d "$db" -i "$file"
+}
+
 for i in {1..60}; do
   if "$SQLCMD_BIN" -S mssql -U sa -P "$MSSQL_SA_PASSWORD" -Q "SELECT 1" > /dev/null 2>&1; then
-    "$SQLCMD_BIN" -S mssql -U sa -P "$MSSQL_SA_PASSWORD" -i /init/01-init.sql
+    run_sql_file master /init/01-init.sql
+
+    for file in /init/schema/*.sql; do
+      [ -f "$file" ] || continue
+      run_sql_file lifelink "$file"
+    done
+
+    for file in /init/seed/*.sql; do
+      [ -f "$file" ] || continue
+      run_sql_file lifelink "$file"
+    done
+
+    echo "[mssql-init] initialization completed"
     exit 0
   fi
 
