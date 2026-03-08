@@ -10,6 +10,7 @@ use App\Models\Department;
 use App\Models\Doctor;
 use App\Models\MedicalRecord;
 use App\Models\Patient;
+use App\Services\Sql\BloodMatchingSqlService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -21,6 +22,10 @@ class PatientPortalController extends Controller
     private const BLOOD_COMPONENTS = ['WholeBlood', 'Plasma', 'Platelets', 'RBC'];
     private const BLOOD_URGENCY = ['Normal', 'Urgent', 'Emergency'];
     private const BLOOD_STATUS = ['Pending', 'Matched', 'Approved', 'Fulfilled', 'Rejected', 'Cancelled'];
+
+    public function __construct(private readonly BloodMatchingSqlService $matchingService)
+    {
+    }
 
     public function portal(): JsonResponse
     {
@@ -310,8 +315,18 @@ class PatientPortalController extends Controller
             $query->where('status', $validated['status']);
         }
 
+        $requests = $query->get();
+        $acceptedDonorsByRequest = $this->matchingService->acceptedDonorsByRequestIds(
+            $requests->pluck('id')->all()
+        );
+
         return response()->json([
-            'blood_requests' => $query->get()->map(fn (BloodRequest $request) => $this->bloodRequestPayload($request)),
+            'blood_requests' => $requests->map(
+                fn (BloodRequest $request) => $this->bloodRequestPayload(
+                    $request,
+                    $acceptedDonorsByRequest[(int) $request->id] ?? []
+                )
+            ),
         ]);
     }
 
@@ -364,7 +379,7 @@ class PatientPortalController extends Controller
         ];
     }
 
-    private function bloodRequestPayload(BloodRequest $request): array
+    private function bloodRequestPayload(BloodRequest $request, array $acceptedDonors = []): array
     {
         return [
             'id' => $request->id,
@@ -380,6 +395,14 @@ class PatientPortalController extends Controller
             'status' => $request->status,
             'request_date' => optional($request->request_date)->toISOString(),
             'notes' => $request->notes,
+            'accepted_donors' => array_map(fn (array $donor) => [
+                'donor_id' => $donor['donor_id'],
+                'donor_name' => $donor['donor_name'],
+                'donor_email' => $donor['donor_email'],
+                'donor_blood_group' => $donor['donor_blood_group'],
+                'match_status' => $donor['match_status'],
+                'responded_at' => $donor['responded_at'],
+            ], $acceptedDonors),
         ];
     }
 }

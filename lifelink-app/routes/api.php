@@ -4,7 +4,9 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Admin\ApplicationReviewController;
 use App\Http\Controllers\Api\Admin\AccountControlController;
 use App\Http\Controllers\Api\BloodBankSchemaController;
+use App\Http\Controllers\Api\BloodMatchingController;
 use App\Http\Controllers\Api\DonorDashboardController;
+use App\Http\Controllers\Api\DonorNotificationController;
 use App\Http\Controllers\Api\DoctorClinicalController;
 use App\Http\Controllers\Api\JobApplicationController;
 use App\Http\Controllers\Api\NurseCareController;
@@ -115,6 +117,9 @@ Route::prefix('donor')->middleware(['auth:api', 'active.user', 'role:Donor'])->g
     Route::post('/health-checks', [DonorDashboardController::class, 'logHealthCheck']);
     Route::get('/donations', [DonorDashboardController::class, 'donations']);
     Route::post('/donations', [DonorDashboardController::class, 'logDonation']);
+    Route::get('/notifications', [DonorNotificationController::class, 'index']);
+    Route::post('/notifications/{notification}/read', [DonorNotificationController::class, 'markRead']);
+    Route::post('/notifications/{notification}/respond', [DonorNotificationController::class, 'respond']);
 });
 
 Route::prefix('blood/schema')->middleware(['auth:api', 'active.user', 'role:Admin,ITWorker'])->group(function () {
@@ -126,4 +131,11 @@ Route::prefix('blood/schema')->middleware(['auth:api', 'active.user', 'role:Admi
     Route::get('/inventory', [BloodBankSchemaController::class, 'inventory']);
     Route::post('/inventory', [BloodBankSchemaController::class, 'upsertInventory']);
     Route::get('/requests', [BloodBankSchemaController::class, 'requests']);
+});
+
+Route::prefix('blood/matching')->middleware(['auth:api', 'active.user', 'role:Admin,ITWorker'])->group(function () {
+    Route::get('/requests', [BloodMatchingController::class, 'requests']);
+    Route::get('/requests/{bloodRequest}/suggestions', [BloodMatchingController::class, 'suggestions']);
+    Route::post('/requests/{bloodRequest}/notify', [BloodMatchingController::class, 'notify']);
+    Route::get('/requests/{bloodRequest}/matches', [BloodMatchingController::class, 'matches']);
 });

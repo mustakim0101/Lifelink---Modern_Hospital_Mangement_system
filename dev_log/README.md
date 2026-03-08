@@ -2055,3 +2055,66 @@ About “others won’t notice”:
 - They will notice in workflow.
 - If you keep migrations as source of truth and add SQL dumps only as reference, team workflow stays the same (`artisan migrate`), so minimal disruption.
 - SQL dumps then help documentation, DB review, and external sharing, but don’t control schema evolution.
+
+---
+
+## Phase 6 - Issue 18 (Implemented)
+
+Issue: Blood matching system  
+Commit message target: `feat(blood): it-worker matching with donor notifications`  
+Branch target: `dev`
+
+### SQL-first schema files created (no PHP migration)
+- `docker/mssql/init/schema/67_blood_request_matches.sql`
+- `docker/mssql/init/schema/68_donor_notifications.sql`
+
+### New backend files created
+- `lifelink-app/app/Services/Sql/BloodMatchingSqlService.php`
+- `lifelink-app/app/Http/Controllers/Api/BloodMatchingController.php`
+- `lifelink-app/app/Http/Controllers/Api/DonorNotificationController.php`
+
+### Existing backend files updated
+- `lifelink-app/routes/api.php`
+- `lifelink-app/app/Http/Controllers/Api/PatientPortalController.php`
+
+### New UI file created
+- `lifelink-app/resources/views/ui/blood-matching.blade.php`
+
+### Existing UI/routes/docs files updated
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/README.md`
+
+### Feature summary (Issue 18)
+1. Added `blood_request_matches` table to store donor matching score, compatibility label, selection actor, notification/response timestamps, and match status lifecycle (`Suggested/Notified/Accepted/Declined/Completed`).
+2. Added `donor_notifications` table to store donor-facing notifications per blood request/match with read and response tracking.
+3. Added SQL service (`BloodMatchingSqlService`) for raw-SQL-only matching operations:
+   - IT/Admin blood request list with inventory + match counters
+   - compatibility-based donor suggestion query (blood group + eligibility + weekly availability)
+   - donor notification dispatch and match upsert
+   - match timeline retrieval
+   - donor inbox, read, and accept/decline response handling
+   - accepted donor lookup map for patient request view
+4. Added IT/Admin matching APIs:
+   - `GET /api/blood/matching/requests`
+   - `GET /api/blood/matching/requests/{bloodRequest}/suggestions`
+   - `POST /api/blood/matching/requests/{bloodRequest}/notify`
+   - `GET /api/blood/matching/requests/{bloodRequest}/matches`
+5. Added donor notification APIs:
+   - `GET /api/donor/notifications`
+   - `POST /api/donor/notifications/{notification}/read`
+   - `POST /api/donor/notifications/{notification}/respond`
+6. Updated patient blood request response (`GET /api/patient/blood-requests`) to include `accepted_donors` so patient can see confirmed donor info after donor acceptance.
+7. Added modern interactive IT-worker UI page:
+   - `GET /ui/blood-matching`
+   - request filtering, donor suggestion cards, selective/auto notify actions, match timeline table, live API response panel.
+
+### Verification performed
+- Syntax checks passed:
+  - `php -l lifelink-app/app/Services/Sql/BloodMatchingSqlService.php`
+  - `php -l lifelink-app/app/Http/Controllers/Api/BloodMatchingController.php`
+  - `php -l lifelink-app/app/Http/Controllers/Api/DonorNotificationController.php`
+  - `php -l lifelink-app/app/Http/Controllers/Api/PatientPortalController.php`
+  - `php -l lifelink-app/routes/api.php`
+  - `php -l lifelink-app/routes/web.php`
+- `php artisan route:list` could not be executed in this local shell because local PHP is `8.2.12` while project dependencies require `>=8.3.0` (run inside project Docker/container PHP to verify route registration).
