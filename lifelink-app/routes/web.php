@@ -29,3 +29,4 @@ Route::view('/ui/nurse-dashboard', 'ui.nurse-dashboard');
 Route::view('/ui/patient-portal', 'ui.patient-portal');
 Route::view('/ui/blood-bank-schema', 'ui.blood-bank-schema');
 Route::view('/ui/donor-dashboard', 'ui.donor-dashboard');
+Route::view('/ui/blood-matching', 'ui.blood-matching');

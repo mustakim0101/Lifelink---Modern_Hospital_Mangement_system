@@ -19,7 +19,7 @@
 <div class="wrap">
     <div class="card">
         <h1>LifeLink UI Starter</h1>
-        <p class="small">Frontend pages for backend features completed up to Phase 6 Issue 17.</p>
+        <p class="small">Frontend pages for backend features completed up to Phase 6 Issue 18.</p>
 
         <div class="grid">
             <a class="box" href="/ui/auth">
@@ -65,6 +65,10 @@
             <a class="box" href="/ui/donor-dashboard">
                 <strong>Donor Dashboard</strong><br>
                 Manage donor availability, health checks, and donation bag logging.
+            </a>
+            <a class="box" href="/ui/blood-matching">
+                <strong>Blood Matching Center</strong><br>
+                IT worker donor matching with notification tracking and response monitoring.
             </a>
         </div>
     </div>
