@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Department;
-use App\Models\JobApplication;
-use App\Models\Role;
+use App\Services\Sql\JobApplicationSqlService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class JobApplicationController extends Controller
 {
+    public function __construct(private readonly JobApplicationSqlService $sqlService)
+    {
+    }
+
     public function submit(Request $request): JsonResponse
     {
         $user = auth('api')->user();
@@ -22,13 +25,9 @@ class JobApplicationController extends Controller
             'applied_department_id' => ['nullable', 'integer', 'exists:departments,id'],
         ]);
 
-        $role = $this->resolveRole($validated);
-        $department = $this->resolveDepartment($validated);
-
-        $existingPending = JobApplication::query()
-            ->where('user_id', $user->id)
-            ->where('status', 'Pending')
-            ->exists();
+        $roleId = $this->sqlService->resolveRoleId($validated);
+        $departmentId = $this->sqlService->resolveDepartmentId($validated);
+        $existingPending = $this->sqlService->hasPendingApplication((int) $user->id);
 
         if ($existingPending) {
             return response()->json([
@@ -36,19 +35,13 @@ class JobApplicationController extends Controller
             ], 409);
         }
 
-        $application = JobApplication::query()->create([
-            'user_id' => $user->id,
-            'applied_role_id' => $role->id,
-            'applied_department_id' => $department?->id,
-            'status' => 'Pending',
-            'applied_at' => now(),
-        ]);
-
-        $this->assignApplicantRole($user->id);
+        $applicationId = $this->sqlService->createApplication((int) $user->id, $roleId, $departmentId);
+        $this->sqlService->assignApplicantRole((int) $user->id);
+        $application = $this->sqlService->getLatestApplication((int) $user->id);
 
         return response()->json([
             'message' => 'Application submitted',
-            'application' => $this->applicationPayload($application->fresh(['appliedRole', 'department'])),
+            'application' => $this->applicationPayload($applicationId, $application),
         ], 201);
     }
 
@@ -56,12 +49,8 @@ class JobApplicationController extends Controller
     {
         $user = auth('api')->user();
 
-        $applications = JobApplication::query()
-            ->with(['appliedRole', 'department'])
-            ->where('user_id', $user->id)
-            ->orderByDesc('applied_at')
-            ->get()
-            ->map(fn (JobApplication $application) => $this->applicationPayload($application));
+        $applications = collect($this->sqlService->getMyApplications((int) $user->id))
+            ->map(fn ($application) => $this->applicationPayload((int) $application->id, $application));
 
         return response()->json([
             'applications' => $applications,
@@ -72,83 +61,38 @@ class JobApplicationController extends Controller
     {
         $user = auth('api')->user();
 
-        $application = JobApplication::query()
-            ->with(['appliedRole', 'department'])
-            ->where('user_id', $user->id)
-            ->orderByDesc('applied_at')
-            ->first();
+        $application = $this->sqlService->getLatestApplication((int) $user->id);
 
         return response()->json([
-            'latestApplication' => $application ? $this->applicationPayload($application) : null,
+            'latestApplication' => $application ? $this->applicationPayload((int) $application->id, $application) : null,
         ]);
     }
 
-    private function resolveRole(array $validated): Role
+    private function applicationPayload(int $applicationId, object $application): array
     {
-        if (isset($validated['applied_role_id'])) {
-            return Role::query()->findOrFail($validated['applied_role_id']);
-        }
-
-        if (isset($validated['appliedRole'])) {
-            return Role::query()->firstOrCreate(
-                ['role_name' => $validated['appliedRole']],
-                ['description' => $validated['appliedRole'].' role']
-            );
-        }
-
-        return Role::query()->firstOrCreate(
-            ['role_name' => 'ITWorker'],
-            ['description' => 'ITWorker role']
-        );
+        return [
+            'id' => $applicationId,
+            'status' => $application->status,
+            'applied_at' => $this->toIso($application->applied_at ?? null),
+            'applied_role' => $application->applied_role,
+            'applied_department_id' => $application->applied_department_id,
+            'applied_department' => $application->applied_department,
+            'reviewed_by_user_id' => $application->reviewed_by_user_id,
+            'reviewed_at' => $this->toIso($application->reviewed_at ?? null),
+            'review_notes' => $application->review_notes,
+        ];
     }
 
-    private function resolveDepartment(array $validated): ?Department
+    private function toIso(mixed $value): ?string
     {
-        $departmentId = $validated['departmentId'] ?? $validated['applied_department_id'] ?? null;
-
-        if (! $departmentId) {
+        if ($value === null) {
             return null;
         }
 
-        return Department::query()->findOrFail($departmentId);
-    }
-
-    private function assignApplicantRole(int $userId): void
-    {
-        $applicantRole = Role::query()->firstOrCreate(
-            ['role_name' => 'Applicant'],
-            ['description' => 'Applicant role']
-        );
-
-        $exists = \DB::table('user_roles')
-            ->where('user_id', $userId)
-            ->where('role_id', $applicantRole->id)
-            ->exists();
-
-        if ($exists) {
-            return;
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format(DATE_ATOM);
         }
 
-        \DB::table('user_roles')->insert([
-            'user_id' => $userId,
-            'role_id' => $applicantRole->id,
-            'assigned_at' => now(),
-            'assigned_by_user_id' => null,
-        ]);
-    }
-
-    private function applicationPayload(JobApplication $application): array
-    {
-        return [
-            'id' => $application->id,
-            'status' => $application->status,
-            'applied_at' => optional($application->applied_at)->toISOString(),
-            'applied_role' => $application->appliedRole?->role_name,
-            'applied_department_id' => $application->applied_department_id,
-            'applied_department' => $application->department?->dept_name,
-            'reviewed_by_user_id' => $application->reviewed_by_user_id,
-            'reviewed_at' => optional($application->reviewed_at)->toISOString(),
-            'review_notes' => $application->review_notes,
-        ];
+        return Carbon::parse((string) $value)->toISOString();
     }
 }

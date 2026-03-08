@@ -1925,3 +1925,133 @@ Also updated:
 6. `POST /api/donor/health-checks` logs weight/temp.
 7. `POST /api/donor/donations` logs bag units and updates inventory.
 8. `GET /api/donor/donations` shows donation history with latest record.
+
+---
+
+## Pre-Issue 18 Verification + Fixes (2026-03-08)
+
+### Scope reviewed
+- Re-checked implemented work for Issues **9-17**:
+  - bed/ward schema and allocation/discharge
+  - doctor/nurse/patient clinical APIs
+  - blood bank schema and donor tracking APIs
+
+### Runtime verification executed
+1. `docker compose up -d --build`
+2. `docker compose exec app php artisan migrate --force`
+3. `docker compose exec app php artisan route:list --path=api`
+4. `docker compose exec app php artisan test`
+
+Result:
+- API routes loaded successfully (68 API routes found, including ward/doctor/nurse/patient/donor/blood schema groups).
+- Migrations succeeded for all Issue 9-17 tables.
+- Current test suite passed (`2 passed`).
+
+### Bug found and fixed
+- **Problem:** `mssql-init` failed at startup with:
+  - `/init/init-db.sh: line 2: set: pipefail: invalid option name`
+- **Root cause:** `docker/mssql/init/init-db.sh` had Windows line endings (CRLF), which broke `set -euo pipefail` in Linux container.
+- **Fix applied:** normalized script content/line endings in:
+  - `docker/mssql/init/init-db.sh`
+- **Verification after fix:**
+  - Recreated init service container.
+  - `lifelink_mssql_init` now exits cleanly with exit code `0`.
+
+- **Problem:** intermittent `502 Bad Gateway` from Nginx after app container recreation.
+- **Root cause:** Nginx upstream name was not configured for Docker DNS re-resolution.
+- **Fix applied:** updated:
+  - `docker/nginx/default.conf`
+  - added Docker DNS resolver (`127.0.0.11`)
+  - changed `fastcgi_pass` to variable-based upstream (`$php_upstream`)
+- **Verification after fix:**
+  - restarted `web` container
+  - `GET /` and `POST /api/auth/login` both return `200`
+
+---
+
+## SQL-First Transition (Pre-Issue 18)
+
+### Objective
+- Make raw SQL files the primary table-creation path (instead of `php artisan migrate`).
+- Start converting Eloquent-heavy data-manipulation paths to raw SQL service style.
+
+### New SQL-first structure
+- `docker/mssql/init/01-init.sql` (database bootstrap)
+- `docker/mssql/init/schema/*.sql` (separate table schema files)
+- `docker/mssql/init/seed/*.sql` (reference/dummy data)
+
+### SQL init runner update
+- Updated `docker/mssql/init/init-db.sh` to:
+  1. wait for SQL Server readiness
+  2. run `01-init.sql` on `master`
+  3. run all `schema/*.sql` on `lifelink` in filename order
+  4. run all `seed/*.sql` on `lifelink` in filename order
+
+### Raw SQL service layer added
+- New folder: `lifelink-app/app/Services/Sql/`
+- Added:
+  - `JobApplicationSqlService.php`
+  - `ApplicationReviewSqlService.php`
+
+### Controller integration (raw SQL path)
+- Updated:
+  - `lifelink-app/app/Http/Controllers/Api/JobApplicationController.php`
+  - `lifelink-app/app/Http/Controllers/Api/Admin/ApplicationReviewController.php`
+- These now use SQL service classes for core fetch/manipulate flows.
+
+### Verification (clean start, no migrate command)
+1. `docker compose down -v`
+2. `docker compose up -d --build`
+3. SQL init logs show schema + seed execution complete.
+4. DB table count check:
+   - `SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'`
+   - Result: `28`
+5. API smoke checks passed:
+   - `POST /api/dev/create-admin`
+   - `POST /api/applications`
+   - `GET /api/admin/applications?status=Pending`
+   - `POST /api/admin/applications/{id}/approve`
+6. `php artisan test` passed (`2 passed`).
+
+
+
+
+
+
+
+
+
+
+
+
+
+  --------------------------------------------------------------------------------------
+  ---------------------------------------------------------------------------------------
+                                  #MUSA finding
+
+Yes, based on your current code/schema:
+
+- `Department` -> has many `CareUnit` (ward/ICU/NICU/CCU)
+- `CareUnit` -> has many `Bed`
+
+So:
+- Neurology can have 50 beds
+- Cardiology can have another separate 50 beds
+- They are separate because each bed belongs to a care unit, and each care unit belongs to one department.
+
+For your second question:
+- Ward and bed are not the same.
+- In your model, ward/ICU/NICU are `care_units` (containers/units).
+- Beds are inside a care unit.
+- So one ward usually has many beds.
+
+If you switch from migrations-first to raw-SQL-first:
+- You’d need to stop relying on Laravel migrations as the primary schema history.
+- Add ordered SQL files (create tables, alter tables, seeds) and a deployment process to run them safely.
+- Replace `php artisan migrate` workflow with SQL execution workflow in CI/deploy.
+- Handle rollback/version tracking yourself (or add a custom migration tracking table/tool).
+
+About “others won’t notice”:
+- They will notice in workflow.
+- If you keep migrations as source of truth and add SQL dumps only as reference, team workflow stays the same (`artisan migrate`), so minimal disruption.
+- SQL dumps then help documentation, DB review, and external sharing, but don’t control schema evolution.
