@@ -196,3 +196,11 @@ LifeLink is a comprehensive hospital management system built with **Laravel Blad
 | **20** | **API documentation** | `docs: swagger/openapi documentation for all endpoints` | `dev` |
 | **21** | **Deployment preparation** | `chore: deployment config and environment setup` | `dev` |
 
+---
+
+## ⚠️⚠️⚠️
+###this project is made with RAW SQL Schemas, you may find migration but current step uses :
+- Schema source of truth: raw SQL in docker/mssql/init/schema
+- Startup source of truth: docker compose up
+- Models: active Laravel application layer, keep them
+- Migrations: retained for reference/history, not primary setup path

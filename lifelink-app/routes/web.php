@@ -19,6 +19,8 @@ Route::get('/', function () {
 
 Route::view('/ui', 'ui.index');
 Route::view('/ui/auth', 'ui.auth');
+Route::view('/ui/dashboard', 'ui.dashboard');
+Route::view('/ui/dev-tools', 'ui.dev-tools');
 Route::view('/ui/applications', 'ui.applications');
 Route::view('/ui/admin-users', 'ui.admin-users');
 Route::view('/ui/application-reviews', 'ui.application-reviews');
