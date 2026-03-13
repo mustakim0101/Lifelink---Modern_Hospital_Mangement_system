@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
+# Bootstrap the MSSQL schema and seed data once the server accepts connections.
 if [ -x /opt/mssql-tools18/bin/sqlcmd ]; then
   SQLCMD_BIN=/opt/mssql-tools18/bin/sqlcmd
 elif [ -x /opt/mssql-tools/bin/sqlcmd ]; then
