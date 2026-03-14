@@ -22,9 +22,9 @@
         <p class="small">Frontend pages for backend features completed up to Phase 6 Issue 18.</p>
 
         <div class="grid">
-            <a class="box" href="/ui/auth">
-                <strong>Auth Page</strong><br>
-                Register, login, create admin, token preview.
+            <a class="box" href="/ui/login">
+                <strong>Login Page</strong><br>
+                Separate login and registration entry pages.
             </a>
             <a class="box" href="/ui/applications">
                 <strong>Applications Page</strong><br>

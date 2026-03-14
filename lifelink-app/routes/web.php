@@ -18,7 +18,11 @@ Route::get('/', function () {
 });
 
 Route::view('/ui', 'ui.index');
-Route::view('/ui/auth', 'ui.auth');
+Route::redirect('/ui/auth', '/ui/login');
+Route::view('/ui/login', 'ui.auth', ['mode' => 'login']);
+Route::view('/ui/register/patient', 'ui.auth', ['mode' => 'patient']);
+Route::view('/ui/register/donor', 'ui.auth', ['mode' => 'donor']);
+Route::view('/ui/register/applicant', 'ui.auth', ['mode' => 'applicant']);
 Route::view('/ui/dashboard', 'ui.dashboard');
 Route::view('/ui/dev-tools', 'ui.dev-tools');
 Route::view('/ui/applications', 'ui.applications');

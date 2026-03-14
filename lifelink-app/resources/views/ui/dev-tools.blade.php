@@ -225,7 +225,7 @@
             'USER_TOKEN', 'PATIENT_ID', 'PATIENT_EMAIL',
             'CURRENT_USER_ID', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES'
         ].forEach(key => localStorage.removeItem(key));
-        window.location.href = '/ui/auth';
+        window.location.href = '/ui/login';
     }
 
     const roles = JSON.parse(localStorage.getItem('CURRENT_USER_ROLES') || '[]');

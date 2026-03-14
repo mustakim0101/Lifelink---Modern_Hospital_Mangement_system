@@ -1,558 +1,502 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LifeLink Nurse Care Dashboard</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
+@extends('ui.layouts.app')
 
-        :root {
-            --bg-a: #eef6ff;
-            --bg-b: #fef8ee;
-            --ink: #14233a;
-            --muted: #5f718c;
-            --card: rgba(255, 255, 255, 0.82);
-            --line: rgba(20, 35, 58, 0.12);
-            --teal: #0d9488;
-            --teal-dark: #0b746b;
-            --orange: #f97316;
-            --alert: #dc2626;
-            --ok: #16a34a;
-            --shadow: 0 18px 35px rgba(16, 29, 57, 0.12);
+@section('title', 'Nurse Dashboard')
+@section('workspace_label', 'Nurse monitoring workspace')
+@section('hero_badge', 'Nurse Care')
+@section('hero_title', 'Monitor department patients and log vital signs from one workspace.')
+@section('hero_description', 'This dashboard is for the working nurse after admin has already approved the account and assigned the nurse profile to a department.')
+@section('meta_title', 'Nurse Workflow')
+@section('meta_copy', 'Department monitoring and bedside updates')
+
+@push('styles')
+<style>
+    :root {
+        --nurse-ink: #14233a;
+        --nurse-muted: #5f718c;
+        --nurse-card: rgba(255, 255, 255, 0.92);
+        --nurse-line: rgba(20, 35, 58, 0.12);
+        --nurse-teal: #0d9488;
+        --nurse-teal-dark: #0b746b;
+        --nurse-orange: #f97316;
+        --nurse-alert: #dc2626;
+        --nurse-ok: #16a34a;
+        --nurse-shadow: 0 18px 35px rgba(16, 29, 57, 0.12);
+    }
+
+    .nurse-grid,
+    .nurse-control-grid,
+    .nurse-stat-grid,
+    .nurse-summary-grid,
+    .nurse-actions,
+    .nurse-split {
+        display: grid;
+        gap: 12px;
+    }
+
+    .nurse-grid {
+        gap: 14px;
+    }
+
+    .nurse-panel {
+        border: 1px solid var(--nurse-line);
+        background: var(--nurse-card);
+        border-radius: 18px;
+        box-shadow: var(--nurse-shadow);
+        padding: 16px;
+    }
+
+    .nurse-panel h3 {
+        margin: 0;
+    }
+
+    .nurse-note {
+        margin: 6px 0 0;
+        color: var(--nurse-muted);
+        font-size: 0.94rem;
+        line-height: 1.7;
+    }
+
+    .nurse-split {
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+
+    .nurse-col-4 { grid-column: span 4; }
+    .nurse-col-5 { grid-column: span 5; }
+    .nurse-col-7 { grid-column: span 7; }
+    .nurse-col-12 { grid-column: span 12; }
+
+    .nurse-control-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-top: 12px;
+    }
+
+    .nurse-label {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--nurse-muted);
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .nurse-input,
+    .nurse-select,
+    .nurse-textarea {
+        width: 100%;
+        border: 1px solid rgba(20, 35, 58, 0.2);
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 12px;
+        padding: 11px 12px;
+        font: inherit;
+        color: var(--nurse-ink);
+        outline: none;
+    }
+
+    .nurse-input:focus,
+    .nurse-select:focus,
+    .nurse-textarea:focus {
+        border-color: var(--nurse-teal);
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+    }
+
+    .nurse-textarea {
+        min-height: 90px;
+        resize: vertical;
+    }
+
+    .nurse-actions {
+        grid-template-columns: repeat(3, max-content);
+        margin-top: 12px;
+        justify-content: start;
+    }
+
+    .nurse-button {
+        border: 0;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font: inherit;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .nurse-button.primary { background: var(--nurse-teal); color: #fff; }
+    .nurse-button.primary:hover { background: var(--nurse-teal-dark); }
+    .nurse-button.soft { background: rgba(20, 35, 58, 0.08); color: var(--nurse-ink); }
+    .nurse-button.warm { background: var(--nurse-orange); color: #fff; }
+
+    .nurse-stat-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        margin-top: 12px;
+    }
+
+    .nurse-stat,
+    .nurse-summary,
+    .nurse-pill,
+    .nurse-list-item {
+        border: 1px solid var(--nurse-line);
+        background: rgba(255, 255, 255, 0.86);
+        border-radius: 14px;
+    }
+
+    .nurse-stat {
+        padding: 12px;
+        text-align: center;
+    }
+
+    .nurse-stat strong {
+        display: block;
+        font-size: 1.5rem;
+    }
+
+    .nurse-stat span {
+        color: var(--nurse-muted);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        font-weight: 800;
+    }
+
+    .nurse-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+        max-height: 520px;
+        overflow: auto;
+        padding-right: 4px;
+    }
+
+    .nurse-list-item {
+        padding: 12px;
+        cursor: pointer;
+    }
+
+    .nurse-list-item.is-active {
+        border-color: rgba(13, 148, 136, 0.44);
+        background: rgba(13, 148, 136, 0.08);
+    }
+
+    .nurse-item-head,
+    .nurse-item-meta {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .nurse-item-head strong {
+        font-size: 1rem;
+    }
+
+    .nurse-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 9px;
+        font-size: 0.74rem;
+        font-weight: 800;
+    }
+
+    .nurse-pill.live { color: var(--nurse-ok); background: rgba(22, 163, 74, 0.12); }
+    .nurse-pill.off { color: var(--nurse-alert); background: rgba(220, 38, 38, 0.1); }
+    .nurse-pill.bed { color: var(--nurse-teal-dark); background: rgba(13, 148, 136, 0.12); }
+
+    .nurse-mini {
+        border-radius: 999px;
+        background: rgba(20, 35, 58, 0.08);
+        color: var(--nurse-ink);
+        font-size: 0.74rem;
+        padding: 4px 8px;
+        font-weight: 700;
+    }
+
+    .nurse-section-title {
+        margin: 14px 0 8px;
+        color: var(--nurse-muted);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 800;
+    }
+
+    .nurse-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .nurse-summary {
+        padding: 10px 11px;
+    }
+
+    .nurse-summary small {
+        display: block;
+        color: var(--nurse-muted);
+        font-size: 0.72rem;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 800;
+    }
+
+    .nurse-summary strong {
+        font-size: 0.95rem;
+        word-break: break-word;
+    }
+
+    .nurse-table-wrap {
+        overflow: auto;
+        border: 1px solid var(--nurse-line);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .nurse-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+    }
+
+    .nurse-table th,
+    .nurse-table td {
+        padding: 9px 10px;
+        border-bottom: 1px solid rgba(20, 35, 58, 0.08);
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .nurse-table th {
+        background: rgba(246, 250, 255, 0.95);
+        color: var(--nurse-muted);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .nurse-console {
+        margin: 12px 0 0;
+        min-height: 140px;
+        max-height: 300px;
+        overflow: auto;
+        border-radius: 14px;
+        border: 1px solid var(--nurse-line);
+        background: #11203a;
+        color: #d7e3ff;
+        padding: 12px;
+        font-size: 12px;
+    }
+
+    @media (max-width: 1100px) {
+        .nurse-col-4,
+        .nurse-col-5,
+        .nurse-col-7 {
+            grid-column: span 12;
         }
 
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            color: var(--ink);
-            font-family: "Plus Jakarta Sans", "Trebuchet MS", sans-serif;
-            background:
-                radial-gradient(circle at 18% 12%, rgba(13, 148, 136, 0.18), transparent 48%),
-                radial-gradient(circle at 82% 10%, rgba(249, 115, 22, 0.16), transparent 44%),
-                linear-gradient(145deg, var(--bg-a), var(--bg-b));
+        .nurse-stat-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
         }
+    }
 
-        h1, h2, h3, h4 {
-            margin: 0;
-            font-family: "Space Grotesk", "Century Gothic", sans-serif;
-            letter-spacing: -0.01em;
+    @media (max-width: 780px) {
+        .nurse-control-grid,
+        .nurse-summary-grid,
+        .nurse-stat-grid,
+        .nurse-actions {
+            grid-template-columns: 1fr;
         }
+    }
+</style>
+@endpush
 
-        .wrap {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 22px 16px 34px;
-        }
+@section('sidebar_nav')
+    <a class="is-active" href="/ui/nurse-dashboard">
+        <strong>Nurse Dashboard</strong>
+        <span>Current area</span>
+    </a>
+    <a href="/ui/patient-portal">
+        <strong>Patient Portal</strong>
+        <span>Patient-side workflow</span>
+    </a>
+    <a href="/ui/doctor-dashboard">
+        <strong>Doctor Dashboard</strong>
+        <span>Clinical counterpart</span>
+    </a>
+@endsection
 
-        .topline {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 14px;
-        }
-
-        .topline a {
-            text-decoration: none;
-            color: var(--teal-dark);
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        .status-pill {
-            padding: 8px 12px;
-            border-radius: 999px;
-            background: rgba(13, 148, 136, 0.12);
-            color: var(--teal-dark);
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .hero {
-            margin-bottom: 16px;
-            padding: 16px 18px;
-            border-radius: 18px;
-            background: linear-gradient(120deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.6));
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            box-shadow: var(--shadow);
-            animation: rise 0.45s ease both;
-        }
-
-        .hero h1 { font-size: clamp(22px, 3.1vw, 32px); }
-        .hero p { margin: 8px 0 0; color: var(--muted); max-width: 760px; line-height: 1.45; font-size: 14px; }
-
-        .grid {
-            display: grid;
-            gap: 14px;
-            grid-template-columns: repeat(12, minmax(0, 1fr));
-        }
-
-        .card {
-            border: 1px solid var(--line);
-            background: var(--card);
-            backdrop-filter: blur(8px);
-            border-radius: 16px;
-            box-shadow: var(--shadow);
-            padding: 14px;
-            animation: rise 0.5s ease both;
-        }
-
-        .card h3 { font-size: 17px; margin-bottom: 6px; }
-        .hint { color: var(--muted); font-size: 12px; line-height: 1.35; margin: 0; }
-
-        .col-4 { grid-column: span 4; }
-        .col-5 { grid-column: span 5; }
-        .col-7 { grid-column: span 7; }
-        .col-12 { grid-column: span 12; }
-
-        .control-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        label {
-            display: block;
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--muted);
-            margin-bottom: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            border: 1px solid rgba(20, 35, 58, 0.2);
-            background: rgba(255, 255, 255, 0.85);
-            border-radius: 11px;
-            padding: 10px 11px;
-            font: inherit;
-            color: var(--ink);
-            outline: none;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            border-color: var(--teal);
-            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
-        }
-
-        textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-
-        .btn-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        button {
-            border: 0;
-            border-radius: 12px;
-            padding: 10px 13px;
-            font: inherit;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform 0.14s ease, box-shadow 0.14s ease, background 0.2s ease;
-        }
-
-        button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 16px rgba(16, 29, 57, 0.16);
-        }
-
-        .btn-primary { background: var(--teal); color: #fff; }
-        .btn-primary:hover { background: var(--teal-dark); }
-        .btn-soft { background: rgba(20, 35, 58, 0.1); color: var(--ink); }
-        .btn-orange { background: var(--orange); color: #fff; }
-
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .stat {
-            border: 1px solid var(--line);
-            background: rgba(255, 255, 255, 0.86);
-            border-radius: 12px;
-            padding: 10px;
-            text-align: center;
-        }
-
-        .stat .num {
-            font-family: "Space Grotesk", "Century Gothic", sans-serif;
-            font-size: 21px;
-            font-weight: 700;
-        }
-
-        .stat .lbl {
-            margin-top: 3px;
-            color: var(--muted);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .patient-list {
-            margin-top: 10px;
-            display: grid;
-            gap: 8px;
-            max-height: 470px;
-            overflow: auto;
-            padding-right: 4px;
-        }
-
-        .patient-item {
-            border: 1px solid var(--line);
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 12px;
-            padding: 10px;
-            cursor: pointer;
-            transition: border-color 0.2s ease, transform 0.12s ease;
-        }
-
-        .patient-item:hover {
-            border-color: rgba(13, 148, 136, 0.45);
-            transform: translateY(-1px);
-        }
-
-        .patient-item.active {
-            border-color: var(--teal);
-            background: rgba(13, 148, 136, 0.07);
-        }
-
-        .patient-head {
-            display: flex;
-            justify-content: space-between;
-            gap: 8px;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-
-        .patient-name { font-size: 15px; font-weight: 700; }
-
-        .tag {
-            display: inline-flex;
-            align-items: center;
-            border-radius: 999px;
-            padding: 4px 8px;
-            font-size: 11px;
-            font-weight: 700;
-        }
-
-        .tag.live { background: rgba(22, 163, 74, 0.14); color: var(--ok); }
-        .tag.off { background: rgba(220, 38, 38, 0.13); color: var(--alert); }
-        .tag.bed { background: rgba(13, 148, 136, 0.14); color: var(--teal-dark); }
-
-        .meta-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 6px;
-        }
-
-        .mini {
-            border-radius: 8px;
-            background: rgba(20, 35, 58, 0.08);
-            color: var(--ink);
-            font-size: 11px;
-            padding: 3px 7px;
-        }
-
-        .section-title {
-            margin-top: 12px;
-            margin-bottom: 8px;
-            font-size: 13px;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 700;
-        }
-
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
-        }
-
-        .summary {
-            background: rgba(255, 255, 255, 0.82);
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            padding: 8px 9px;
-        }
-
-        .summary small { display: block; color: var(--muted); font-size: 11px; margin-bottom: 2px; }
-        .summary strong { font-size: 13px; line-height: 1.25; word-break: break-word; }
-
-        .table-wrap {
-            overflow: auto;
-            border: 1px solid var(--line);
-            border-radius: 11px;
-            background: rgba(255, 255, 255, 0.85);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-
-        th, td {
-            padding: 8px;
-            border-bottom: 1px solid rgba(20, 35, 58, 0.09);
-            text-align: left;
-            white-space: nowrap;
-        }
-
-        th {
-            position: sticky;
-            top: 0;
-            z-index: 1;
-            background: rgba(246, 250, 255, 0.95);
-            color: var(--muted);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        pre {
-            margin: 10px 0 0;
-            min-height: 130px;
-            max-height: 280px;
-            overflow: auto;
-            border-radius: 12px;
-            border: 1px solid var(--line);
-            background: #11203a;
-            color: #d7e3ff;
-            padding: 11px;
-            font-size: 12px;
-        }
-
-        .line-break { border-top: 1px dashed rgba(20, 35, 58, 0.18); margin: 10px 0; }
-
-        @keyframes rise {
-            from { opacity: 0; transform: translateY(8px) scale(0.99); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        @media (max-width: 1050px) {
-            .col-4, .col-5, .col-7 { grid-column: span 12; }
-            .stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        }
-
-        @media (max-width: 700px) {
-            .control-grid, .summary-grid { grid-template-columns: 1fr; }
-            .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .btn-row button { flex: 1 1 100%; }
-            .topline { align-items: flex-start; flex-direction: column; }
-        }
-    </style>
-</head>
-<body>
-<div class="wrap">
-    <div class="topline">
-        <a href="/ui"><- Back to UI Home</a>
-        <div class="status-pill">Phase 5 Issue 14: Nurse Care Dashboard</div>
+@section('sidebar')
+    <div class="app-shell__sidebar-card">
+        <strong>Role notes</strong>
+        <p>Admin must finish nurse setup from the admin dashboard first. This page is only for the nurse's own daily work after that setup exists.</p>
     </div>
+    <div class="app-shell__sidebar-card">
+        <strong>Expected flow</strong>
+        <p>Order: admin approves nurse application, admin assigns department, nurse logs in here, nurse loads department patients, nurse records vitals for admitted patients.</p>
+    </div>
+@endsection
 
-    <section class="hero">
-        <h1>Nurse Department Monitor</h1>
-        <p>Track department admissions, view bed placement quickly, and log patient vital signs in a focused single screen.</p>
-    </section>
-
-    <section class="grid">
-        <div class="card col-4">
-            <h3>Token Context</h3>
-            <p class="hint">Use <code>ADMIN_TOKEN</code> to configure nurse profiles and <code>USER_TOKEN</code> for nurse actions.</p>
-            <div class="control-grid">
-                <div>
-                    <label for="adminTokenInput">Admin token</label>
-                    <input id="adminTokenInput" placeholder="Bearer token for admin">
-                </div>
-                <div>
-                    <label for="nurseTokenInput">Nurse token</label>
-                    <input id="nurseTokenInput" placeholder="Bearer token for nurse">
+@section('content')
+    <div class="nurse-grid">
+        <div class="nurse-split">
+            <div class="nurse-panel nurse-col-4">
+                <h3>Nurse session</h3>
+                <p class="nurse-note">Use the logged-in nurse token here. If profile loading fails, it usually means admin has not finished nurse setup yet.</p>
+                <label class="nurse-label" for="nurseTokenInput">Nurse token</label>
+                <input id="nurseTokenInput" class="nurse-input" placeholder="Bearer token for nurse">
+                <div class="nurse-actions">
+                    <button class="nurse-button soft" type="button" onclick="useStoredUserToken()">Use USER_TOKEN</button>
                 </div>
             </div>
-            <div class="btn-row">
-                <button class="btn-soft" onclick="useStoredAdminToken()">Use ADMIN_TOKEN</button>
-                <button class="btn-soft" onclick="useStoredUserToken()">Use USER_TOKEN</button>
+
+            <div class="nurse-panel nurse-col-4">
+                <h3>What "load profile" means</h3>
+                <p class="nurse-note">This checks the nurse profile that admin created for your account. The profile contains your department assignment, and that department is what limits which patients you can see here.</p>
+                <div class="nurse-actions">
+                    <button class="nurse-button soft" type="button" onclick="loadNurseProfile()">Load profile</button>
+                </div>
+            </div>
+
+            <div class="nurse-panel nurse-col-4">
+                <h3>Department filters</h3>
+                <p class="nurse-note">This does not filter other nurses. It filters the patient admissions inside your own assigned department so you can focus on admitted cases, discharged cases, or a specific patient/bed search.</p>
+                <div class="nurse-control-grid">
+                    <div>
+                        <label class="nurse-label" for="statusFilter">Admission status</label>
+                        <select id="statusFilter" class="nurse-select">
+                            <option value="">All</option>
+                            <option value="Admitted">Admitted</option>
+                            <option value="Discharged">Discharged</option>
+                            <option value="Transferred">Transferred</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="nurse-label" for="queryFilter">Search</label>
+                        <input id="queryFilter" class="nurse-input" placeholder="Name, email, diagnosis, bed code">
+                    </div>
+                </div>
+                <div class="nurse-actions">
+                    <button class="nurse-button primary" type="button" onclick="loadPatients()">Refresh patients</button>
+                </div>
             </div>
         </div>
 
-        <div class="card col-4">
-            <h3>Admin Setup Nurse Profile</h3>
-            <p class="hint">A user must already have <code>Nurse</code> role before profile setup.</p>
-            <div class="control-grid">
-                <div>
-                    <label for="nurseUserId">Nurse user ID</label>
-                    <input id="nurseUserId" type="number" placeholder="e.g. 17">
-                </div>
-                <div>
-                    <label for="nurseDepartmentId">Department ID</label>
-                    <input id="nurseDepartmentId" type="number" placeholder="e.g. 1">
-                </div>
-            </div>
-            <label for="wardAssignmentNote">Ward assignment note</label>
-            <input id="wardAssignmentNote" placeholder="Optional ward / shift note">
-            <div class="btn-row">
-                <button class="btn-primary" onclick="upsertNurseProfile()">Upsert Nurse Profile</button>
+        <div class="nurse-panel">
+            <h3>Department snapshot</h3>
+            <div class="nurse-stat-grid">
+                <div class="nurse-stat"><strong id="stTotal">0</strong><span>Total</span></div>
+                <div class="nurse-stat"><strong id="stActive">0</strong><span>Admitted</span></div>
+                <div class="nurse-stat"><strong id="stBed">0</strong><span>Has bed</span></div>
+                <div class="nurse-stat"><strong id="stNoBed">0</strong><span>No bed</span></div>
+                <div class="nurse-stat"><strong id="stMonitored">0</strong><span>Monitored 24h</span></div>
             </div>
         </div>
 
-        <div class="card col-4">
-            <h3>Nurse Filters</h3>
-            <p class="hint">Use quick filters to monitor only relevant admissions.</p>
-            <div class="control-grid">
-                <div>
-                    <label for="statusFilter">Admission status</label>
-                    <select id="statusFilter">
-                        <option value="">All</option>
-                        <option value="Admitted">Admitted</option>
-                        <option value="Discharged">Discharged</option>
-                        <option value="Transferred">Transferred</option>
-                        <option value="Cancelled">Cancelled</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="queryFilter">Search</label>
-                    <input id="queryFilter" placeholder="Name, email, diagnosis, bed code">
-                </div>
-            </div>
-            <div class="btn-row">
-                <button class="btn-soft" onclick="loadNurseProfile()">Load Profile</button>
-                <button class="btn-primary" onclick="loadPatients()">Refresh Patients</button>
-            </div>
-        </div>
-
-        <div class="card col-12">
-            <h3>Department Snapshot</h3>
-            <div class="stat-grid">
-                <div class="stat"><div class="num" id="stTotal">0</div><div class="lbl">Total</div></div>
-                <div class="stat"><div class="num" id="stActive">0</div><div class="lbl">Admitted</div></div>
-                <div class="stat"><div class="num" id="stBed">0</div><div class="lbl">Has Bed</div></div>
-                <div class="stat"><div class="num" id="stNoBed">0</div><div class="lbl">No Bed</div></div>
-                <div class="stat"><div class="num" id="stMonitored">0</div><div class="lbl">Monitored 24h</div></div>
-            </div>
-        </div>
-
-        <div class="card col-5">
-            <h3>Patient Monitoring List</h3>
-            <p class="hint">Click a patient admission to open full monitoring details on the right.</p>
-            <div id="patientList" class="patient-list"></div>
-        </div>
-
-        <div class="card col-7">
-            <h3>Admission Monitor</h3>
-            <p class="hint">Selected admission details, latest vitals, and quick record access.</p>
-
-            <div class="section-title">Selected Admission</div>
-            <div id="admissionSummary" class="summary-grid"></div>
-
-            <div class="line-break"></div>
-
-            <div class="section-title">Log Vital Signs</div>
-            <div class="control-grid">
-                <div>
-                    <label for="vAdmissionId">Admission ID</label>
-                    <input id="vAdmissionId" type="number" placeholder="auto-filled on selection">
-                </div>
-                <div>
-                    <label for="vPatientUserId">Patient User ID</label>
-                    <input id="vPatientUserId" type="number" placeholder="auto-filled on selection">
-                </div>
-            </div>
-            <div class="control-grid">
-                <div>
-                    <label for="vTemp">Temperature (C)</label>
-                    <input id="vTemp" type="number" step="0.1" placeholder="37.2">
-                </div>
-                <div>
-                    <label for="vPulse">Pulse (bpm)</label>
-                    <input id="vPulse" type="number" placeholder="76">
-                </div>
-            </div>
-            <div class="control-grid">
-                <div>
-                    <label for="vSys">Systolic BP</label>
-                    <input id="vSys" type="number" placeholder="120">
-                </div>
-                <div>
-                    <label for="vDia">Diastolic BP</label>
-                    <input id="vDia" type="number" placeholder="80">
-                </div>
-            </div>
-            <div class="control-grid">
-                <div>
-                    <label for="vResp">Respiration</label>
-                    <input id="vResp" type="number" placeholder="16">
-                </div>
-                <div>
-                    <label for="vSpo2">SpO2 (%)</label>
-                    <input id="vSpo2" type="number" placeholder="98">
-                </div>
-            </div>
-            <label for="vNote">Note</label>
-            <textarea id="vNote" placeholder="Optional notes for this vital-sign entry"></textarea>
-            <div class="btn-row">
-                <button class="btn-orange" onclick="logVitals()">Save Vital Signs</button>
-                <button class="btn-soft" onclick="loadSelectedAdmissionVitals()">Refresh Vitals</button>
+        <div class="nurse-split">
+            <div class="nurse-panel nurse-col-5">
+                <h3>Patient monitoring list</h3>
+                <p class="nurse-note">Select an admission to open monitoring detail, recent vitals, and linked records.</p>
+                <div id="patientList" class="nurse-list"></div>
             </div>
 
-            <div class="section-title">Recent Vitals</div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Temp</th>
-                        <th>Pulse</th>
-                        <th>BP</th>
-                        <th>Resp</th>
-                        <th>SpO2</th>
-                        <th>Nurse</th>
-                    </tr>
-                    </thead>
-                    <tbody id="vitalsBody"></tbody>
-                </table>
-            </div>
+            <div class="nurse-panel nurse-col-7">
+                <h3>Admission monitor</h3>
+                <p class="nurse-note">This is where you record temperature, pulse, blood pressure, respiration, and SpO2 for the selected admitted patient. Those values are saved into the nurse vital-sign log table for that admission.</p>
 
-            <div class="section-title">Recent Medical Records</div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                    <tr>
-                        <th>Datetime</th>
-                        <th>Diagnosis</th>
-                        <th>Treatment</th>
-                        <th>Created By</th>
-                    </tr>
-                    </thead>
-                    <tbody id="recordsBody"></tbody>
-                </table>
+                <div class="nurse-section-title">Selected admission</div>
+                <div id="admissionSummary" class="nurse-summary-grid"></div>
+
+                <div class="nurse-section-title">Log vital signs</div>
+                <div class="nurse-control-grid">
+                    <div>
+                        <label class="nurse-label" for="vAdmissionId">Admission ID</label>
+                        <input id="vAdmissionId" class="nurse-input" type="number" placeholder="Auto-filled on selection">
+                    </div>
+                    <div>
+                        <label class="nurse-label" for="vPatientUserId">Patient user ID</label>
+                        <input id="vPatientUserId" class="nurse-input" type="number" placeholder="Auto-filled on selection">
+                    </div>
+                </div>
+                <div class="nurse-control-grid">
+                    <div>
+                        <label class="nurse-label" for="vTemp">Temperature (C)</label>
+                        <input id="vTemp" class="nurse-input" type="number" step="0.1" placeholder="37.2">
+                    </div>
+                    <div>
+                        <label class="nurse-label" for="vPulse">Pulse (bpm)</label>
+                        <input id="vPulse" class="nurse-input" type="number" placeholder="76">
+                    </div>
+                </div>
+                <div class="nurse-control-grid">
+                    <div>
+                        <label class="nurse-label" for="vSys">Systolic BP</label>
+                        <input id="vSys" class="nurse-input" type="number" placeholder="120">
+                    </div>
+                    <div>
+                        <label class="nurse-label" for="vDia">Diastolic BP</label>
+                        <input id="vDia" class="nurse-input" type="number" placeholder="80">
+                    </div>
+                </div>
+                <div class="nurse-control-grid">
+                    <div>
+                        <label class="nurse-label" for="vResp">Respiration</label>
+                        <input id="vResp" class="nurse-input" type="number" placeholder="16">
+                    </div>
+                    <div>
+                        <label class="nurse-label" for="vSpo2">SpO2 (%)</label>
+                        <input id="vSpo2" class="nurse-input" type="number" placeholder="98">
+                    </div>
+                </div>
+                <label class="nurse-label" for="vNote">Note</label>
+                <textarea id="vNote" class="nurse-textarea" placeholder="Optional notes for this vital-sign entry"></textarea>
+                <div class="nurse-actions">
+                    <button class="nurse-button warm" type="button" onclick="logVitals()">Save vital signs</button>
+                    <button class="nurse-button soft" type="button" onclick="loadSelectedAdmissionVitals()">Refresh vitals</button>
+                </div>
+
+                <div class="nurse-section-title">Recent vitals</div>
+                <div class="nurse-table-wrap">
+                    <table class="nurse-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Temp</th>
+                                <th>Pulse</th>
+                                <th>BP</th>
+                                <th>Resp</th>
+                                <th>SpO2</th>
+                                <th>Nurse</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vitalsBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="nurse-section-title">Recent medical records</div>
+                <div class="nurse-table-wrap">
+                    <table class="nurse-table">
+                        <thead>
+                            <tr>
+                                <th>Datetime</th>
+                                <th>Diagnosis</th>
+                                <th>Treatment</th>
+                                <th>Created by</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsBody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <div class="card col-12">
-            <h3>API Response Log</h3>
-            <p class="hint">Latest request/response is shown here for quick debugging.</p>
-            <pre id="out"></pre>
+        <div class="nurse-panel">
+            <h3>API response log</h3>
+            <p class="nurse-note">Keeping raw request and response output visible while the role workflow is still being polished.</p>
+            <pre id="out" class="nurse-console"></pre>
         </div>
-    </section>
-</div>
+    </div>
+@endsection
 
+@push('scripts')
 <script>
 const API = '/api';
 const out = document.getElementById('out');
@@ -562,15 +506,11 @@ const state = {
     patients: [],
     selectedAdmissionId: null,
     selectedPatientUserId: null,
-    selectedDetail: null
+    selectedDetail: null,
 };
 
 function write(data) {
     out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-}
-
-function useStoredAdminToken() {
-    document.getElementById('adminTokenInput').value = localStorage.getItem('ADMIN_TOKEN') || '';
 }
 
 function useStoredUserToken() {
@@ -585,36 +525,28 @@ function buildUrl(path, query = null) {
 }
 
 async function call(path, method = 'GET', body = null, tokenType = 'nurse', query = null) {
-    const token = tokenType === 'admin'
-        ? document.getElementById('adminTokenInput').value.trim()
-        : document.getElementById('nurseTokenInput').value.trim();
+    const token = document.getElementById('nurseTokenInput').value.trim();
 
     if (!token) {
         return { status: 401, data: { message: `${tokenType} token missing` } };
     }
 
     const headers = {
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
     };
 
     const res = await fetch(buildUrl(path, query), {
         method,
         headers,
-        body: body ? JSON.stringify(body) : undefined
+        body: body ? JSON.stringify(body) : undefined,
     });
 
     const text = await res.text();
     let data = text;
     try { data = JSON.parse(text); } catch {}
     return { status: res.status, data };
-}
-
-function badgeForStatus(status) {
-    return status === 'Admitted'
-        ? '<span class="tag live">Admitted</span>'
-        : `<span class="tag off">${escapeHtml(status || 'Unknown')}</span>`;
 }
 
 function escapeHtml(value) {
@@ -635,36 +567,42 @@ function renderStats(stats = null) {
     document.getElementById('stMonitored').textContent = stats?.monitored_last_24h ?? 0;
 }
 
+function badgeForStatus(status) {
+    return status === 'Admitted'
+        ? '<span class="nurse-pill live">Admitted</span>'
+        : `<span class="nurse-pill off">${escapeHtml(status || 'Unknown')}</span>`;
+}
+
 function renderPatients() {
     const holder = document.getElementById('patientList');
     if (!state.patients.length) {
-        holder.innerHTML = '<div class="hint">No admissions found for this filter.</div>';
+        holder.innerHTML = '<div class="nurse-note">No admissions found for this filter.</div>';
         return;
     }
 
-    holder.innerHTML = state.patients.map((p) => {
-        const active = Number(state.selectedAdmissionId) === Number(p.id) ? 'active' : '';
-        const bed = p.active_bed_assignment
-            ? `<span class="tag bed">${escapeHtml(p.active_bed_assignment.bed_code || 'Assigned')}</span>`
-            : '<span class="mini">No bed assigned</span>';
+    holder.innerHTML = state.patients.map((patient) => {
+        const isActive = Number(state.selectedAdmissionId) === Number(patient.id) ? 'is-active' : '';
+        const bed = patient.active_bed_assignment
+            ? `<span class="nurse-pill bed">${escapeHtml(patient.active_bed_assignment.bed_code || 'Assigned')}</span>`
+            : '<span class="nurse-mini">No bed assigned</span>';
 
-        const latest = p.latest_vital_sign
-            ? `<span class="mini">Last vitals: ${new Date(p.latest_vital_sign.measured_at).toLocaleString()}</span>`
-            : '<span class="mini">No vitals yet</span>';
+        const latest = patient.latest_vital_sign
+            ? `<span class="nurse-mini">Last vitals: ${new Date(patient.latest_vital_sign.measured_at).toLocaleString()}</span>`
+            : '<span class="nurse-mini">No vitals yet</span>';
 
         return `
-            <article class="patient-item ${active}" onclick="selectAdmission(${Number(p.id)}, ${Number(p.patient_user_id)})">
-                <div class="patient-head">
-                    <div class="patient-name">${escapeHtml(p.patient_name || 'Unknown Patient')}</div>
-                    ${badgeForStatus(p.status)}
+            <article class="nurse-list-item ${isActive}" onclick="selectAdmission(${Number(patient.id)}, ${Number(patient.patient_user_id)})">
+                <div class="nurse-item-head">
+                    <strong>${escapeHtml(patient.patient_name || 'Unknown patient')}</strong>
+                    ${badgeForStatus(patient.status)}
                 </div>
-                <div class="hint">${escapeHtml(p.diagnosis || 'No diagnosis')}</div>
-                <div class="meta-row">
-                    <span class="mini">Admission #${Number(p.id)}</span>
-                    <span class="mini">${escapeHtml(p.care_level_assigned || p.care_level_requested || 'Care TBD')}</span>
+                <p class="nurse-note">${escapeHtml(patient.diagnosis || 'No diagnosis')}</p>
+                <div class="nurse-item-meta">
+                    <span class="nurse-mini">Admission #${Number(patient.id)}</span>
+                    <span class="nurse-mini">${escapeHtml(patient.care_level_assigned || patient.care_level_requested || 'Care TBD')}</span>
                     ${bed}
                 </div>
-                <div class="meta-row">${latest}</div>
+                <div class="nurse-item-meta" style="margin-top: 6px;">${latest}</div>
             </article>
         `;
     }).join('');
@@ -673,19 +611,19 @@ function renderPatients() {
 function renderAdmissionSummary(admission) {
     const root = document.getElementById('admissionSummary');
     if (!admission) {
-        root.innerHTML = '<div class="hint">Select an admission from the left panel.</div>';
+        root.innerHTML = '<div class="nurse-note">Select an admission from the left panel.</div>';
         return;
     }
 
     root.innerHTML = `
-        <div class="summary"><small>Patient</small><strong>${escapeHtml(admission.patient_name || '-')}</strong></div>
-        <div class="summary"><small>Blood Group</small><strong>${escapeHtml(admission.blood_group || '-')}</strong></div>
-        <div class="summary"><small>Department</small><strong>${escapeHtml(admission.department || '-')}</strong></div>
-        <div class="summary"><small>Status</small><strong>${escapeHtml(admission.status || '-')}</strong></div>
-        <div class="summary"><small>Diagnosis</small><strong>${escapeHtml(admission.diagnosis || '-')}</strong></div>
-        <div class="summary"><small>Bed</small><strong>${escapeHtml(admission.active_bed_assignment?.bed_code || 'Not assigned')}</strong></div>
-        <div class="summary"><small>Unit</small><strong>${escapeHtml(admission.active_bed_assignment?.unit_type || admission.care_level_requested || '-')}</strong></div>
-        <div class="summary"><small>Admit Date</small><strong>${admission.admit_date ? new Date(admission.admit_date).toLocaleString() : '-'}</strong></div>
+        <div class="nurse-summary"><small>Patient</small><strong>${escapeHtml(admission.patient_name || '-')}</strong></div>
+        <div class="nurse-summary"><small>Blood group</small><strong>${escapeHtml(admission.blood_group || '-')}</strong></div>
+        <div class="nurse-summary"><small>Department</small><strong>${escapeHtml(admission.department || '-')}</strong></div>
+        <div class="nurse-summary"><small>Status</small><strong>${escapeHtml(admission.status || '-')}</strong></div>
+        <div class="nurse-summary"><small>Diagnosis</small><strong>${escapeHtml(admission.diagnosis || '-')}</strong></div>
+        <div class="nurse-summary"><small>Bed</small><strong>${escapeHtml(admission.active_bed_assignment?.bed_code || 'Not assigned')}</strong></div>
+        <div class="nurse-summary"><small>Unit</small><strong>${escapeHtml(admission.active_bed_assignment?.unit_type || admission.care_level_requested || '-')}</strong></div>
+        <div class="nurse-summary"><small>Admit date</small><strong>${admission.admit_date ? new Date(admission.admit_date).toLocaleString() : '-'}</strong></div>
     `;
 }
 
@@ -696,15 +634,15 @@ function renderVitals(vitals = []) {
         return;
     }
 
-    body.innerHTML = vitals.map((v) => `
+    body.innerHTML = vitals.map((vital) => `
         <tr>
-            <td>${v.measured_at ? new Date(v.measured_at).toLocaleString() : '-'}</td>
-            <td>${v.temperature_c ?? '-'}</td>
-            <td>${v.pulse_bpm ?? '-'}</td>
-            <td>${v.systolic_bp && v.diastolic_bp ? `${v.systolic_bp}/${v.diastolic_bp}` : '-'}</td>
-            <td>${v.respiration_rate ?? '-'}</td>
-            <td>${v.spo2_percent ?? '-'}</td>
-            <td>${escapeHtml(v.nurse_name || '-')}</td>
+            <td>${vital.measured_at ? new Date(vital.measured_at).toLocaleString() : '-'}</td>
+            <td>${vital.temperature_c ?? '-'}</td>
+            <td>${vital.pulse_bpm ?? '-'}</td>
+            <td>${vital.systolic_bp && vital.diastolic_bp ? `${vital.systolic_bp}/${vital.diastolic_bp}` : '-'}</td>
+            <td>${vital.respiration_rate ?? '-'}</td>
+            <td>${vital.spo2_percent ?? '-'}</td>
+            <td>${escapeHtml(vital.nurse_name || '-')}</td>
         </tr>
     `).join('');
 }
@@ -716,52 +654,42 @@ function renderRecords(records = []) {
         return;
     }
 
-    body.innerHTML = records.map((r) => `
+    body.innerHTML = records.map((record) => `
         <tr>
-            <td>${r.record_datetime ? new Date(r.record_datetime).toLocaleString() : '-'}</td>
-            <td>${escapeHtml(r.diagnosis || '-')}</td>
-            <td>${escapeHtml(r.treatment_plan || '-')}</td>
-            <td>${escapeHtml(r.created_by || '-')}</td>
+            <td>${record.record_datetime ? new Date(record.record_datetime).toLocaleString() : '-'}</td>
+            <td>${escapeHtml(record.diagnosis || '-')}</td>
+            <td>${escapeHtml(record.treatment_plan || '-')}</td>
+            <td>${escapeHtml(record.created_by || '-')}</td>
         </tr>
     `).join('');
 }
 
-async function upsertNurseProfile() {
-    const payload = {
-        userId: Number(document.getElementById('nurseUserId').value),
-        departmentId: Number(document.getElementById('nurseDepartmentId').value),
-        wardAssignmentNote: document.getElementById('wardAssignmentNote').value.trim() || null
-    };
-    const res = await call('/admin/nurses/profile', 'POST', payload, 'admin');
-    write(res);
-}
-
 async function loadNurseProfile() {
-    const res = await call('/nurse/profile');
-    if (res.status < 300 && res.data?.nurse) {
-        state.nurse = res.data.nurse;
+    const result = await call('/nurse/profile');
+    if (result.status < 300 && result.data?.nurse) {
+        state.nurse = result.data.nurse;
     }
-    write(res);
+    write(result);
 }
 
 async function loadPatients() {
     const status = document.getElementById('statusFilter').value.trim();
-    const q = document.getElementById('queryFilter').value.trim();
+    const queryValue = document.getElementById('queryFilter').value.trim();
     const query = {};
     if (status) query.status = status;
-    if (q) query.q = q;
+    if (queryValue) query.q = queryValue;
 
-    const res = await call('/nurse/patients', 'GET', null, 'nurse', query);
-    if (res.status < 300) {
-        state.patients = Array.isArray(res.data?.patients) ? res.data.patients : [];
-        renderStats(res.data?.stats || null);
+    const result = await call('/nurse/patients', 'GET', null, 'nurse', query);
+    if (result.status < 300) {
+        state.patients = Array.isArray(result.data?.patients) ? result.data.patients : [];
+        renderStats(result.data?.stats || null);
         renderPatients();
     } else {
         state.patients = [];
         renderStats(null);
         renderPatients();
     }
-    write(res);
+    write(result);
 }
 
 async function selectAdmission(admissionId, patientUserId) {
@@ -779,14 +707,14 @@ async function loadAdmissionDetail() {
         return;
     }
 
-    const res = await call(`/nurse/admissions/${state.selectedAdmissionId}`, 'GET', null, 'nurse', { vitalsLimit: 10, recordsLimit: 10 });
-    if (res.status < 300) {
-        state.selectedDetail = res.data;
-        renderAdmissionSummary(res.data?.admission || null);
-        renderVitals(res.data?.vital_sign_logs || []);
-        renderRecords(res.data?.medical_records || []);
+    const result = await call(`/nurse/admissions/${state.selectedAdmissionId}`, 'GET', null, 'nurse', { vitalsLimit: 10, recordsLimit: 10 });
+    if (result.status < 300) {
+        state.selectedDetail = result.data;
+        renderAdmissionSummary(result.data?.admission || null);
+        renderVitals(result.data?.vital_sign_logs || []);
+        renderRecords(result.data?.medical_records || []);
     }
-    write(res);
+    write(result);
 }
 
 async function loadSelectedAdmissionVitals() {
@@ -796,18 +724,18 @@ async function loadSelectedAdmissionVitals() {
         return;
     }
 
-    const res = await call(`/nurse/admissions/${admissionId}/vitals`, 'GET', null, 'nurse', { limit: 10 });
-    if (res.status < 300) {
-        renderVitals(res.data?.vital_sign_logs || []);
+    const result = await call(`/nurse/admissions/${admissionId}/vitals`, 'GET', null, 'nurse', { limit: 10 });
+    if (result.status < 300) {
+        renderVitals(result.data?.vital_sign_logs || []);
     }
-    write(res);
+    write(result);
 }
 
 function maybeNumber(id) {
     const value = document.getElementById(id).value.trim();
     if (!value) return null;
-    const n = Number(value);
-    return Number.isFinite(n) ? n : null;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
 }
 
 async function logVitals() {
@@ -826,13 +754,13 @@ async function logVitals() {
         diastolicBp: maybeNumber('vDia'),
         respirationRate: maybeNumber('vResp'),
         spo2Percent: maybeNumber('vSpo2'),
-        note: document.getElementById('vNote').value.trim() || null
+        note: document.getElementById('vNote').value.trim() || null,
     };
 
-    const res = await call(`/nurse/admissions/${admissionId}/vitals`, 'POST', payload, 'nurse');
-    write(res);
+    const result = await call(`/nurse/admissions/${admissionId}/vitals`, 'POST', payload, 'nurse');
+    write(result);
 
-    if (res.status < 300) {
+    if (result.status < 300) {
         await loadAdmissionDetail();
         await loadPatients();
     }
@@ -843,8 +771,6 @@ renderPatients();
 renderAdmissionSummary(null);
 renderVitals([]);
 renderRecords([]);
-useStoredAdminToken();
 useStoredUserToken();
 </script>
-</body>
-</html>
+@endpush

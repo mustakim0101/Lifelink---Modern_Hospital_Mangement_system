@@ -8,6 +8,7 @@ use App\Models\Bed;
 use App\Models\BedAssignment;
 use App\Models\Department;
 use App\Models\DepartmentAdmin;
+use App\Models\Doctor;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -86,6 +87,7 @@ class ItBedAllocationController extends Controller
         $validated = $request->validate([
             'patientUserId' => ['required', 'integer', 'exists:users,id'],
             'departmentId' => ['required', 'integer', 'exists:departments,id'],
+            'admittedByDoctorId' => ['nullable', 'integer', 'exists:users,id'],
             'diagnosis' => ['required', 'string', 'max:255'],
             'careLevelRequested' => ['required', 'string', Rule::in(self::CARE_LEVELS)],
             'notes' => ['nullable', 'string'],
@@ -101,9 +103,27 @@ class ItBedAllocationController extends Controller
             ], 422);
         }
 
+        $doctorId = null;
+        if (! empty($validated['admittedByDoctorId'])) {
+            $doctorProfile = Doctor::query()
+                ->where('doctor_id', $validated['admittedByDoctorId'])
+                ->where('department_id', $validated['departmentId'])
+                ->where('is_active', true)
+                ->first();
+
+            if (! $doctorProfile) {
+                return response()->json([
+                    'message' => 'Selected doctor is not active in this department.',
+                ], 422);
+            }
+
+            $doctorId = (int) $doctorProfile->doctor_id;
+        }
+
         $admission = Admission::query()->create([
             'patient_user_id' => $validated['patientUserId'],
             'department_id' => $validated['departmentId'],
+            'admitted_by_doctor_id' => $doctorId,
             'diagnosis' => $validated['diagnosis'],
             'care_level_requested' => $validated['careLevelRequested'],
             'status' => 'Admitted',
@@ -158,6 +178,90 @@ class ItBedAllocationController extends Controller
 
         return response()->json([
             'admissions' => $query->get()->map(fn (Admission $admission) => $this->admissionPayload($admission)),
+        ]);
+    }
+
+    public function doctors(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'departmentId' => ['nullable', 'integer', 'exists:departments,id'],
+            'q' => ['nullable', 'string', 'max:120'],
+        ]);
+
+        $actor = auth('api')->user();
+        $query = Doctor::query()
+            ->with(['user:id,full_name,name,email', 'department:id,dept_name'])
+            ->where('is_active', true)
+            ->orderBy('doctor_id');
+
+        if ($actor->hasRole('ITWorker') && ! $actor->hasRole('Admin')) {
+            $query->whereIn('department_id', $this->accessibleDepartmentIds($actor));
+        }
+
+        if (isset($validated['departmentId'])) {
+            $this->ensureDepartmentAccessible($actor, $validated['departmentId']);
+            $query->where('department_id', $validated['departmentId']);
+        }
+
+        if (! empty($validated['q'])) {
+            $term = trim($validated['q']);
+            $query->whereHas('user', function ($userQuery) use ($term) {
+                $userQuery->where('full_name', 'like', '%'.$term.'%')
+                    ->orWhere('name', 'like', '%'.$term.'%')
+                    ->orWhere('email', 'like', '%'.$term.'%');
+            });
+        }
+
+        return response()->json([
+            'doctors' => $query->get()->map(fn (Doctor $doctor) => [
+                'doctor_id' => $doctor->doctor_id,
+                'full_name' => $doctor->user?->full_name ?? $doctor->user?->name,
+                'email' => $doctor->user?->email,
+                'department_id' => $doctor->department_id,
+                'department' => $doctor->department?->dept_name,
+            ]),
+        ]);
+    }
+
+    public function patients(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'q' => ['nullable', 'string', 'max:120'],
+            'departmentId' => ['nullable', 'integer', 'exists:departments,id'],
+        ]);
+
+        $actor = auth('api')->user();
+        if (isset($validated['departmentId']) && ! $actor->hasRole('Admin')) {
+            $this->ensureDepartmentAccessible($actor, $validated['departmentId']);
+        }
+
+        $query = User::query()
+            ->with('patientProfile:patient_id,blood_group')
+            ->whereHas('roles', fn ($roleQuery) => $roleQuery->where('role_name', 'Patient'))
+            ->orderBy('id');
+
+        if (! empty($validated['q'])) {
+            $term = trim($validated['q']);
+            $query->where(function ($userQuery) use ($term) {
+                $userQuery->where('full_name', 'like', '%'.$term.'%')
+                    ->orWhere('name', 'like', '%'.$term.'%')
+                    ->orWhere('email', 'like', '%'.$term.'%');
+            });
+        }
+
+        if (isset($validated['departmentId'])) {
+            $query->whereHas('admissions', function ($admissionQuery) use ($validated) {
+                $admissionQuery->where('department_id', $validated['departmentId']);
+            });
+        }
+
+        return response()->json([
+            'patients' => $query->limit(100)->get()->map(fn (User $user) => [
+                'patient_user_id' => $user->id,
+                'full_name' => $user->full_name ?? $user->name,
+                'email' => $user->email,
+                'blood_group' => $user->patientProfile?->blood_group,
+            ]),
         ]);
     }
 
@@ -377,6 +481,7 @@ class ItBedAllocationController extends Controller
             'patient_email' => $admission->patient?->email,
             'department_id' => $admission->department_id,
             'department' => $admission->department?->dept_name,
+            'admitted_by_doctor_id' => $admission->admitted_by_doctor_id,
             'diagnosis' => $admission->diagnosis,
             'care_level_requested' => $admission->care_level_requested,
             'care_level_assigned' => $admission->care_level_assigned,

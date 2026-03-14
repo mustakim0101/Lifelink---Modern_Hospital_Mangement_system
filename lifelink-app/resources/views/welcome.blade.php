@@ -667,7 +667,7 @@
                 <a href="#modules">Services</a>
                 <a href="#departments">Departments</a>
                 <a href="#donate">Donate Blood</a>
-                <a id="auth-nav-link" href="/ui/auth#login">Login / Register</a>
+                <a id="auth-nav-link" href="/ui/login">Login / Register</a>
                 <a id="session-nav-link" class="cta" href="/ui">Explore UI</a>
             </nav>
         </div>
@@ -686,7 +686,7 @@
                     </p>
 
                     <div class="hero-actions">
-                        <a class="button button-primary" href="/ui/auth">Start With Login</a>
+                        <a class="button button-primary" href="/ui/login">Start With Login</a>
                         <a class="button button-secondary" href="#modules">View Core Modules</a>
                         <a class="button button-secondary" href="#donate">See Donor Flow</a>
                     </div>
@@ -866,7 +866,7 @@
                         </div>
 
                         <div class="auth-actions">
-                            <a class="button button-light" href="/ui/auth#login">Login</a>
+                            <a class="button button-light" href="/ui/login">Login</a>
                             <a class="button button-secondary" href="/ui/dashboard">Dashboard preview</a>
                         </div>
                     </article>
@@ -876,7 +876,7 @@
                         <h4>Register as patient</h4>
                         <p>Create a standard user account for appointments, records, and patient-side blood request access.</p>
                         <div class="auth-actions">
-                            <a class="button button-secondary" href="/ui/auth#patient">Patient registration</a>
+                            <a class="button button-secondary" href="/ui/register/patient">Patient registration</a>
                         </div>
                     </article>
 
@@ -885,7 +885,7 @@
                         <h4>Register as blood donor</h4>
                         <p>Create the account and initialize the donor profile so the person can later log in and continue donor actions.</p>
                         <div class="auth-actions">
-                            <a class="button button-secondary" href="/ui/auth#donor">Donor registration</a>
+                            <a class="button button-secondary" href="/ui/register/donor">Donor registration</a>
                         </div>
                     </article>
 
@@ -894,7 +894,7 @@
                         <h4>Register as job applicant</h4>
                         <p>Create the account and start the application journey so the user can later log in and track approval status.</p>
                         <div class="auth-actions">
-                            <a class="button button-secondary" href="/ui/auth#applicant">Applicant registration</a>
+                            <a class="button button-secondary" href="/ui/register/applicant">Applicant registration</a>
                         </div>
                     </article>
                 </div>
@@ -940,7 +940,7 @@
                     </p>
 
                     <div class="route-links">
-                        <a href="/ui/auth">Auth Page</a>
+                        <a href="/ui/login">Login Page</a>
                         <a href="/ui">UI Directory</a>
                         <a href="#modules">System Overview</a>
                     </div>
