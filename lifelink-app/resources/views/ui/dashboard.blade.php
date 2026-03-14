@@ -299,9 +299,9 @@
             <aside class="hero-side">
                 <div class="panel primary-card">
                     <h2 id="primary-title">Primary destination</h2>
-                    <p id="primary-copy">Sign in through the authentication page first to unlock the correct workflow area.</p>
+                    <p id="primary-copy">Sign in through the login page first to unlock the correct workflow area.</p>
                     <div class="action-links">
-                        <a id="primary-link" class="primary" href="/ui/auth">Open auth page</a>
+                        <a id="primary-link" class="primary" href="/ui/login">Open login page</a>
                     </div>
                 </div>
 
@@ -318,7 +318,7 @@
         <section id="action-grid" class="main-grid"></section>
 
         <div id="session-warning" class="notice hidden">
-            No valid local session was found. Return to the auth page and log in again before using the authenticated mode.
+            No valid local session was found. Return to the login page and log in again before using the authenticated mode.
         </div>
     </div>
 
@@ -417,9 +417,10 @@
         userEmail.textContent = email || 'Logged-in user';
         roleList.textContent = roles.join(', ');
 
-        const preferredRole = ['Admin', 'ITWorker', 'Doctor', 'Nurse', 'Patient', 'Donor', 'Applicant']
+        const preferredRole = ['Admin', 'ITWorker', 'Doctor', 'Nurse', 'Donor', 'Applicant', 'Patient']
             .find(role => roles.includes(role));
         const config = roleConfig[preferredRole] || roleConfig.Patient;
+        const currentPath = window.location.pathname;
 
         welcomeLine.textContent = `Welcome back, ${config.label}.`;
         welcomeCopy.textContent = `This dashboard organizes your next steps around the ${config.label.toLowerCase()} workflow and related tools already built in the system.`;
@@ -453,6 +454,12 @@
         if (roles.includes('Admin') || roles.includes('ITWorker')) {
             adminToolsCard.classList.remove('hidden');
         }
+
+        if (currentPath === '/ui/dashboard') {
+            setTimeout(() => {
+                window.location.href = config.primaryHref;
+            }, 1200);
+        }
     }
 
     function logoutSession() {
@@ -462,7 +469,7 @@
             'CURRENT_USER_ID', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES'
         ].forEach(key => localStorage.removeItem(key));
 
-        window.location.href = '/ui/auth';
+        window.location.href = '/ui/login';
     }
     </script>
 </body>

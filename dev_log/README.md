@@ -2427,3 +2427,358 @@ What changed in the new version:
 5. system stores session token and role info
 6. user is redirected to role-aware dashboard
 7. if user returns to landing page while logged in, page now shows dashboard/logout state instead of public registration-first state
+
+---
+
+## UI Progress Log - Dedicated Auth Pages and Shared Patient Workspace
+
+### What changed
+The auth and authenticated UI flow moved one step closer to the design roadmap:
+
+1. Login, patient registration, donor registration, and applicant registration are now separate public pages.
+2. Successful login now redirects users into the correct role workspace instead of always pushing everyone through the same generic auth hub.
+3. The first shared authenticated layout was created and the patient portal was migrated into it.
+
+### Why this change was needed
+The previous public flow still had a prototype limitation:
+- all four entry buttons effectively led into the same combined auth page
+- the page had multiple cards on one screen, but it still felt like one developer tool surface
+- that was not aligned with the intended product flow where each registration path should feel intentional and context-specific
+
+This also blocked the next UI phase:
+- it was difficult to build a real authenticated product shell while login and registration still behaved like one prototype page with hash targets
+
+### New public entry flow
+Public auth entry is now split like this:
+- `/ui/login`
+- `/ui/register/patient`
+- `/ui/register/donor`
+- `/ui/register/applicant`
+
+Behavior now:
+- existing users go to the single login page
+- patient registration opens only patient-related form inputs
+- donor registration opens only donor-related form inputs
+- applicant registration opens only applicant-related form inputs
+
+### Auth redirect behavior
+Login no longer always points users to the same place.
+
+New behavior:
+- Admin -> `/ui/admin-users`
+- IT Worker -> `/ui/it-bed-allocation`
+- Doctor -> `/ui/doctor-dashboard`
+- Nurse -> `/ui/nurse-dashboard`
+- Patient -> `/ui/patient-portal`
+- Donor -> `/ui/donor-dashboard`
+- Applicant -> `/ui/applications`
+
+Registration behavior now:
+- account/profile/application setup completes
+- transient session state is cleared
+- user is redirected back to `/ui/login`
+- login page is prefilled with the recently used email
+- user then signs in and is sent to the correct role workspace
+
+### Shared authenticated layout work started
+The first reusable authenticated app shell was added.
+
+Purpose of the new shell:
+- provide one consistent top bar
+- provide one sidebar area
+- provide one page hero/header pattern
+- provide shared session-aware workspace framing
+- reduce the feeling that each role page is a disconnected prototype
+
+First page migrated into that shell:
+- patient portal
+
+So this marks the start of the authenticated layout phase, not just another isolated page redesign.
+
+### Files changed for this milestone
+- Updated: `lifelink-app/routes/web.php`
+- Updated: `lifelink-app/resources/views/welcome.blade.php`
+- Updated: `lifelink-app/resources/views/ui/auth.blade.php`
+- Updated: `lifelink-app/resources/views/ui/index.blade.php`
+- Updated: `lifelink-app/resources/views/ui/dashboard.blade.php`
+- Updated: `lifelink-app/resources/views/ui/dev-tools.blade.php`
+- Updated: `lifelink-app/resources/views/ui/doctor-dashboard.blade.php`
+- Updated: `lifelink-app/resources/views/ui/applications.blade.php`
+- Updated: `lifelink-app/resources/views/ui/patient-portal.blade.php`
+- Added: `lifelink-app/resources/views/ui/layouts/app.blade.php`
+
+### Result after this milestone
+The UI flow now looks like this:
+1. visitor lands on public home
+2. visitor chooses:
+   - login
+   - patient registration
+   - donor registration
+   - applicant registration
+3. each public path opens its own dedicated page
+4. registration completes without keeping the user logged in
+5. user signs in through `/ui/login`
+6. system detects the user role from session data
+7. user is redirected to the correct role page
+8. patient portal now renders inside a shared authenticated workspace shell
+
+### Next likely UI target
+Continue the same authenticated layout migration for:
+- donor dashboard
+- doctor dashboard
+- nurse dashboard
+- IT worker pages
+- admin utility pages
+
+### Redirect priority correction
+During donor flow testing, a donor account still landed on the patient portal after login.
+
+Cause:
+- base registration currently assigns the `Patient` role first
+- donor registration then adds the `Donor` role
+- redirect priority was checking `Patient` before `Donor`
+
+Effect:
+- accounts with both `Patient` and `Donor` were being routed to `/ui/patient-portal`
+- applicant accounts with both `Patient` and `Applicant` could have the same class of issue
+
+Fix:
+- updated role redirect priority so more specific post-registration roles win over the base patient role
+- new priority order:
+  - Admin
+  - ITWorker
+  - Doctor
+  - Nurse
+  - Donor
+  - Applicant
+  - Patient
+
+Files updated for this correction:
+- `lifelink-app/resources/views/ui/auth.blade.php`
+- `lifelink-app/resources/views/ui/dashboard.blade.php`
+- `lifelink-app/resources/views/ui/layouts/app.blade.php`
+
+### Shared authenticated layout migration continued
+The authenticated shell migration now includes a third role page:
+- doctor dashboard
+
+What changed in this step:
+- `doctor-dashboard` was refit into the shared authenticated layout
+- the old standalone prototype wrapper was removed
+- doctor actions now sit inside the same shell structure already used by:
+  - patient portal
+  - donor dashboard
+
+Doctor page behavior preserved:
+- admin token input for doctor profile setup
+- doctor token input for doctor-facing actions
+- doctor profile fetch
+- doctor patients fetch
+- doctor appointment list and cancellation
+- doctor bed request creation
+- doctor bed request listing
+
+Why this matters:
+- the shared authenticated layout is now proven across:
+  - self-service patient flow
+  - donor workflow
+  - clinical staff workflow
+- this reduces risk before moving into nurse, IT, and admin-heavy screens
+
+Files updated in this step:
+- `lifelink-app/resources/views/ui/doctor-dashboard.blade.php`
+
+Updated next likely UI target:
+- nurse dashboard
+- IT worker pages
+- admin utility pages
+
+### Applicant flow correction and admin landing update
+The applicant flow needed one more correction after testing:
+- typing `Doctor` into the applicant form created the right application record
+- but the UI language around that flow was still too close to a role-selection flow instead of a role-application flow
+
+Clarified intended behavior:
+- applying for `Doctor`, `Nurse`, or `ITWorker` should **not** send the user to that role dashboard immediately
+- after login, the applicant should land in an applicant status workspace
+- only after admin approval assigns the real role should later login redirect the user into the real staff dashboard
+
+What changed in this step:
+1. Applicant role entry on registration changed from free-text input to a dropdown.
+2. Department entry on applicant registration changed from raw numeric input to a department dropdown populated from a public departments endpoint.
+3. The old `Department ID (optional)` applicant input was removed from the visible public form.
+4. The applicant landing page was redesigned as a status-focused applicant workspace instead of a raw prototype submission page.
+5. The admin landing page was redesigned into a clearer admin control center with account-control actions and a direct path to application reviews.
+
+Applicant registration UI behavior now:
+- role is selected from:
+  - Doctor
+  - Nurse
+  - IT Worker
+- department is selected from a user-friendly dropdown
+- department field only appears when the selected role needs a department context
+
+Applicant login behavior now:
+- applicant users land on `/ui/applications`
+- that page now acts as an applicant waiting/status dashboard
+- it shows:
+  - current application status
+  - applied role
+  - applied department
+  - review note if present
+  - application history
+
+Admin flow note:
+- admin approval still remains the point where the actual role is assigned
+- so this UI now matches the backend approval design more closely
+
+Files updated in this step:
+- `lifelink-app/routes/api.php`
+- `lifelink-app/resources/views/ui/auth.blade.php`
+- `lifelink-app/resources/views/ui/applications.blade.php`
+- `lifelink-app/resources/views/ui/admin-users.blade.php`
+
+Updated next likely UI target:
+- application reviews page redesign
+- nurse dashboard migration
+- IT worker pages
+
+### Admin review workflow cleanup and applicant department rule update
+The earlier applicant approval flow was functionally correct, but it was still too operator-heavy for normal admin use.
+
+Reported friction:
+- admin had to open application reviews
+- load pending applications
+- inspect the raw API response to find the application id
+- manually copy that id into a second review form
+- then approve or reject
+
+That made the review step feel like an API testing page instead of an admin workflow.
+
+What changed in this step:
+1. The application review page was redesigned into a card-based queue.
+2. Pending applications now load as visible review cards instead of forcing admins to search inside raw JSON first.
+3. Each card now shows the applicant name, email, applied role, department, status, applied time, and existing review note.
+4. Each card includes direct actions:
+   - select
+   - approve
+   - reject
+5. The manual review form and raw API response panel were kept for debugging and fallback use.
+6. Applicant registration was tightened so only doctor applicants choose a preferred department during public registration.
+7. Nurse and IT worker applicants no longer choose department during registration; that assignment is intended to be handled later by admin review or admin-side setup.
+
+Why this change matches the schema and workflow better:
+- doctor profiles are department-bound and it is reasonable for doctor applicants to express department preference early
+- nurse and IT worker department scope can be assigned more safely by admin after review
+- this reduces unnecessary public-form complexity and keeps control with admin for staff placement
+
+Files updated in this step:
+- `lifelink-app/resources/views/ui/auth.blade.php`
+- `lifelink-app/resources/views/ui/application-reviews.blade.php`
+
+Resulting admin flow now:
+1. admin logs in
+2. admin opens `/ui/application-reviews`
+3. pending applications load as review cards
+4. admin scans visible applicants directly on the page
+5. admin selects, approves, or rejects from the card workflow
+6. raw API output still remains available below for technical verification
+
+### Shared shell migration completed for nurse and IT worker dashboards
+The nurse and IT worker role pages were still using older standalone prototype layouts even after patient, donor, doctor, applicant, and admin pages had started moving into the shared authenticated shell.
+
+What changed in this step:
+1. `nurse-dashboard` was moved into the shared authenticated app shell.
+2. The nurse page kept its existing role behavior:
+   - admin nurse-profile setup
+   - department patient monitoring
+   - admission detail loading
+   - vital-sign logging
+   - recent vitals and medical record display
+3. Nurse profile setup was made friendlier by switching department selection to a dropdown instead of only raw numeric entry.
+4. `it-bed-allocation` was rebuilt into a fuller IT operations workspace inside the shared authenticated shell.
+5. The IT page now combines two earlier prototype responsibilities:
+   - ward setup
+   - bed allocation and admission operations
+6. The IT dashboard now includes:
+   - IT department assignment
+   - care unit creation
+   - bed creation
+   - admission creation
+   - admissions queue cards
+   - available bed cards
+   - discharge and release actions
+   - reference tables for care units and beds
+
+Why this matters:
+- nurse and IT workflows now feel like part of the same product instead of isolated test pages
+- IT work is no longer split awkwardly across two disconnected pages for normal use
+- the shared authenticated shell now covers major patient, donor, doctor, nurse, admin, applicant, and IT-facing flows
+
+Files updated in this step:
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+
+### Admin-only staff setup moved back to admin dashboard
+After reviewing the flow, nurse and IT department assignment did not belong on the nurse or IT worker dashboards.
+
+Corrected workflow:
+1. applicant applies
+2. admin reviews pending application
+3. admin adds review note
+4. admin approves or rejects
+5. if approved as Nurse or IT Worker, admin completes department-linked setup from the admin dashboard
+6. only after that does the staff user work from their own operational dashboard
+
+What changed in this step:
+1. Admin dashboard was expanded to show pending applicant cards directly.
+2. Each pending card now includes:
+   - applicant identity
+   - role
+   - department if present
+   - review note area
+   - approve button
+   - reject button
+3. Admin dashboard now also includes:
+   - nurse department setup
+   - IT worker department assignment
+4. Nurse dashboard no longer presents admin-only nurse setup controls.
+5. IT worker dashboard no longer presents admin-only IT department assignment controls.
+6. Nurse and IT copy was rewritten to explain the order of work more clearly.
+
+Why this is better:
+- admin provisioning now stays on the admin side
+- nurse dashboard is now only for nurse-side patient monitoring and vital logging
+- IT dashboard is now only for IT-side ward/admission/bed operations after admin setup is complete
+
+Files updated in this step:
+- `lifelink-app/resources/views/ui/admin-users.blade.php`
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+
+### IT admission doctor context and simpler doctor setup
+After the workflow review, two more corrections were needed:
+
+1. IT workers should not be forced to memorize doctor ids when creating an admission.
+2. Doctor setup was carrying unnecessary extra fields for this project scope.
+
+What changed in this step:
+1. IT admission creation now supports an optional `admittedByDoctorId`.
+2. The IT dashboard now includes a doctor lookup/search panel so IT can load doctors from the hospital database and pick one directly into the admission form.
+3. The IT dashboard now also includes a patient lookup/search panel so patient ids can be found more easily before creating an admission.
+4. Doctor-facing setup was removed from the doctor dashboard.
+5. Admin dashboard now includes doctor department setup alongside nurse and IT setup.
+6. Doctor setup was simplified so specialization and license inputs are no longer required in the UI.
+
+Important model clarification:
+- doctor id is not a second separate human-managed id
+- the `doctors.doctor_id` value is the same as the existing `users.id` for that account
+- approving an applicant does not create a brand new identity number for the same person
+- admin setup creates the doctor profile row that reuses that same user id
+
+Files updated in this step:
+- `lifelink-app/app/Http/Controllers/Api/ItBedAllocationController.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/resources/views/ui/admin-users.blade.php`
+- `lifelink-app/resources/views/ui/doctor-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`

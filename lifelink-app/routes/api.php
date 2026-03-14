@@ -13,7 +13,17 @@ use App\Http\Controllers\Api\NurseCareController;
 use App\Http\Controllers\Api\PatientPortalController;
 use App\Http\Controllers\Api\ItBedAllocationController;
 use App\Http\Controllers\Api\WardCatalogController;
+use App\Models\Department;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/public/departments', function () {
+    return response()->json([
+        'departments' => Department::query()
+            ->where('is_active', true)
+            ->orderBy('dept_name')
+            ->get(['id', 'dept_name']),
+    ]);
+});
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -64,6 +74,8 @@ Route::prefix('ward')->middleware(['auth:api', 'active.user', 'role:Admin,ITWork
 
 Route::prefix('ward/it')->middleware(['auth:api', 'active.user', 'role:Admin,ITWorker'])->group(function () {
     Route::get('/departments', [ItBedAllocationController::class, 'myDepartments']);
+    Route::get('/doctors', [ItBedAllocationController::class, 'doctors']);
+    Route::get('/patients', [ItBedAllocationController::class, 'patients']);
     Route::get('/admissions', [ItBedAllocationController::class, 'admissions']);
     Route::get('/available-beds', [ItBedAllocationController::class, 'availableBeds']);
     Route::post('/admissions', [ItBedAllocationController::class, 'createAdmission']);
