@@ -223,7 +223,7 @@
         [
             'ADMIN_TOKEN', 'ADMIN_USER_ID', 'ADMIN_EMAIL',
             'USER_TOKEN', 'PATIENT_ID', 'PATIENT_EMAIL',
-            'CURRENT_USER_ID', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES'
+            'CURRENT_USER_ID', 'CURRENT_USER_FULL_NAME', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES'
         ].forEach(key => localStorage.removeItem(key));
         window.location.href = '/ui/login';
     }

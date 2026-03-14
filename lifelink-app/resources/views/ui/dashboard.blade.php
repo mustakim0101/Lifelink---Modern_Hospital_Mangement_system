@@ -394,6 +394,8 @@
         }
     };
 
+    const fullName = localStorage.getItem('CURRENT_USER_FULL_NAME') || '';
+    const userId = localStorage.getItem('CURRENT_USER_ID') || '';
     const email = localStorage.getItem('CURRENT_USER_EMAIL') || '';
     const roles = JSON.parse(localStorage.getItem('CURRENT_USER_ROLES') || '[]');
     const token = localStorage.getItem('USER_TOKEN') || '';
@@ -414,7 +416,11 @@
         userEmail.textContent = 'No active session';
         roleList.textContent = 'None';
     } else {
-        userEmail.textContent = email || 'Logged-in user';
+        const summaryParts = [];
+        if (fullName) summaryParts.push(fullName);
+        if (userId) summaryParts.push(`#${userId}`);
+        if (email) summaryParts.push(email);
+        userEmail.textContent = summaryParts.join(' | ') || 'Logged-in user';
         roleList.textContent = roles.join(', ');
 
         const preferredRole = ['Admin', 'ITWorker', 'Doctor', 'Nurse', 'Donor', 'Applicant', 'Patient']
@@ -466,7 +472,7 @@
         [
             'ADMIN_TOKEN', 'ADMIN_USER_ID', 'ADMIN_EMAIL',
             'USER_TOKEN', 'PATIENT_ID', 'PATIENT_EMAIL',
-            'CURRENT_USER_ID', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES'
+            'CURRENT_USER_ID', 'CURRENT_USER_FULL_NAME', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES'
         ].forEach(key => localStorage.removeItem(key));
 
         window.location.href = '/ui/login';

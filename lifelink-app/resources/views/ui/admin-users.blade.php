@@ -4,7 +4,7 @@
 @section('workspace_label', 'Admin operations workspace')
 @section('hero_badge', 'Admin Mode')
 @section('hero_title', 'Approve staff applications and finish staff setup from one place.')
-@section('hero_description', 'This page now handles the real admin flow: review pending applicants, leave review notes, approve or reject, and then assign department-linked setup for nurse and IT worker accounts.')
+@section('hero_description', 'This page now handles the real admin flow: review pending applicants, leave review notes, approve or reject, and then finish doctor, nurse, or IT worker setup with the correct approved user id.')
 @section('meta_title', 'Admin Control Center')
 @section('meta_copy', 'Account state, staff approval, and role setup')
 
@@ -203,7 +203,7 @@
 @section('sidebar')
     <div class="app-shell__sidebar-card">
         <strong>Admin order of work</strong>
-        <p>1. Check pending applications. 2. Leave a note and approve or reject. 3. If approved as Nurse or IT worker, finish department-linked setup here before that staff member starts using their own dashboard.</p>
+        <p>1. Check pending applications. 2. Leave a note and approve or reject. 3. Use the approved user id, not the application id, to finish doctor, nurse, or IT worker setup here before that staff member starts using their own dashboard.</p>
     </div>
 
     <div class="app-shell__sidebar-card">
@@ -245,14 +245,14 @@
 
         <div class="admin-card">
             <h3>Pending applicant cards</h3>
-            <p class="admin-hint">Each pending card includes a notes area so admin can leave a review note before approving or rejecting. For Nurse and IT Worker approvals, use the setup cards below after approval.</p>
+            <p class="admin-hint">Each pending card includes a notes area so admin can leave a review note before approving or rejecting. Cards show both the application id and the linked user id so setup uses the right identifier.</p>
             <div id="pendingCards" class="admin-card-grid" style="margin-top: 12px;"></div>
         </div>
 
         <div class="admin-row">
             <div class="admin-card">
                 <h3>Doctor department setup</h3>
-                <p class="admin-hint">Doctor ids are not new ids. The doctor profile uses the same user id as the approved account. Use this to confirm the department selected during application and create the doctor profile row.</p>
+                <p class="admin-hint">Doctor ids are not new ids. The doctor profile uses the same user id as the approved account. Approving a doctor now auto-fills this form with the correct user id and selected department.</p>
                 <div class="admin-controls">
                     <div>
                         <label class="admin-label" for="doctorUserId">Doctor user ID</label>
@@ -418,6 +418,7 @@ function renderPendingCards() {
             </div>
             <div class="admin-pending-meta">
                 <span class="admin-chip">Application #${application.id}</span>
+                <span class="admin-chip">User #${escapeHtml(application.user?.id || 'Unknown')}</span>
                 <span class="admin-chip">${escapeHtml(application.applied_role || 'Unknown role')}</span>
                 <span class="admin-chip">${escapeHtml(application.applied_department || 'No department chosen')}</span>
             </div>
@@ -446,11 +447,37 @@ function applicationNote(applicationId) {
     return field ? field.value.trim() : '';
 }
 
+function prefillSetupFromApplication(application) {
+    if (!application) return;
+
+    const role = application.applied_role;
+    const userId = application.user?.id || '';
+    const departmentId = application.applied_department_id || '';
+
+    if (role === 'Nurse') {
+        document.getElementById('nurseUserId').value = String(userId || '');
+        document.getElementById('nurseDepartmentId').value = departmentId ? String(departmentId) : '';
+    }
+
+    if (role === 'Doctor') {
+        document.getElementById('doctorUserId').value = String(userId || '');
+        document.getElementById('doctorDepartmentId').value = departmentId ? String(departmentId) : '';
+    }
+
+    if (role === 'ITWorker') {
+        document.getElementById('itUserId').value = String(userId || '');
+        document.getElementById('itDepartmentId').value = departmentId ? String(departmentId) : '';
+    }
+}
+
 async function approveApplication(applicationId) {
     const review_notes = applicationNote(applicationId);
     const body = review_notes ? { review_notes } : {};
     const result = await call(`/admin/applications/${applicationId}/approve`, 'POST', body);
     write(result);
+    if (result.status < 300 && result.data?.application) {
+        prefillSetupFromApplication(result.data.application);
+    }
     await loadPendingApplications();
 }
 
@@ -465,25 +492,7 @@ async function rejectApplication(applicationId) {
 function prefillSetup(applicationId) {
     const application = state.pendingApplications.find((item) => Number(item.id) === Number(applicationId));
     if (!application) return;
-    const role = application.applied_role;
-    const userId = application.user?.id || '';
-    const departmentName = application.applied_department || '';
-    const department = state.departments.find((item) => item.dept_name === departmentName);
-
-    if (role === 'Nurse') {
-        document.getElementById('nurseUserId').value = String(userId);
-        document.getElementById('nurseDepartmentId').value = department ? String(department.id) : '';
-    }
-
-    if (role === 'Doctor') {
-        document.getElementById('doctorUserId').value = String(userId);
-        document.getElementById('doctorDepartmentId').value = department ? String(department.id) : '';
-    }
-
-    if (role === 'ITWorker') {
-        document.getElementById('itUserId').value = String(userId);
-        document.getElementById('itDepartmentId').value = department ? String(department.id) : '';
-    }
+    prefillSetupFromApplication(application);
 }
 
 async function upsertDoctorProfile() {
