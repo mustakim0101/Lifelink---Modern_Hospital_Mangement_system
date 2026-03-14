@@ -389,6 +389,7 @@
         const roles = Array.isArray(user.roles) ? user.roles : [];
         localStorage.setItem('USER_TOKEN', responseData.token || '');
         localStorage.setItem('CURRENT_USER_ID', String(user.id || ''));
+        localStorage.setItem('CURRENT_USER_FULL_NAME', user.fullName || '');
         localStorage.setItem('CURRENT_USER_EMAIL', user.email || submittedEmail || '');
         localStorage.setItem('CURRENT_USER_ROLES', JSON.stringify(roles));
         if (roles.includes('Admin')) {
@@ -408,12 +409,12 @@
     }
 
     function clearTransientSession() {
-        ['ADMIN_TOKEN', 'ADMIN_USER_ID', 'ADMIN_EMAIL', 'USER_TOKEN', 'CURRENT_USER_ID', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES']
+        ['ADMIN_TOKEN', 'ADMIN_USER_ID', 'ADMIN_EMAIL', 'USER_TOKEN', 'CURRENT_USER_ID', 'CURRENT_USER_FULL_NAME', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES']
             .forEach(key => localStorage.removeItem(key));
     }
 
     function clearStorage() {
-        ['ADMIN_TOKEN', 'ADMIN_USER_ID', 'ADMIN_EMAIL', 'USER_TOKEN', 'PATIENT_ID', 'PATIENT_EMAIL', 'CURRENT_USER_ID', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES', 'LAST_USED_EMAIL']
+        ['ADMIN_TOKEN', 'ADMIN_USER_ID', 'ADMIN_EMAIL', 'USER_TOKEN', 'PATIENT_ID', 'PATIENT_EMAIL', 'CURRENT_USER_ID', 'CURRENT_USER_FULL_NAME', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES', 'LAST_USED_EMAIL']
             .forEach(key => localStorage.removeItem(key));
         refreshSessionCard();
         showMessage('info', 'Stored session cleared.');

@@ -339,8 +339,8 @@
             <div class="app-shell__hero-meta">
                 <div class="app-shell__meta-card">
                     <small>Signed in as</small>
-                    <strong id="shell-user-email">No active session</strong>
-                    <span id="shell-user-role">No role detected</span>
+                    <strong id="shell-user-name">No active session</strong>
+                    <span id="shell-user-meta">No role detected</span>
                 </div>
                 <div class="app-shell__meta-card">
                     <small>Current area</small>
@@ -380,7 +380,7 @@
             [
                 'ADMIN_TOKEN', 'ADMIN_USER_ID', 'ADMIN_EMAIL',
                 'USER_TOKEN', 'PATIENT_ID', 'PATIENT_EMAIL',
-                'CURRENT_USER_ID', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES',
+                'CURRENT_USER_ID', 'CURRENT_USER_FULL_NAME', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES',
                 'LAST_USED_EMAIL'
             ].forEach(key => localStorage.removeItem(key));
             window.location.href = '/ui/login';
@@ -391,14 +391,22 @@
     };
 
     (function hydrateShell() {
+        const fullName = localStorage.getItem('CURRENT_USER_FULL_NAME') || '';
+        const userId = localStorage.getItem('CURRENT_USER_ID') || '';
         const email = localStorage.getItem('CURRENT_USER_EMAIL') || 'No active session';
         const roles = JSON.parse(localStorage.getItem('CURRENT_USER_ROLES') || '[]');
-        const userEmail = document.getElementById('shell-user-email');
-        const userRole = document.getElementById('shell-user-role');
+        const userName = document.getElementById('shell-user-name');
+        const userMeta = document.getElementById('shell-user-meta');
         const preferredRole = window.lifeLinkShell.getPreferredRole(roles);
+        const identity = fullName || email;
+        const metaParts = [];
 
-        if (userEmail) userEmail.textContent = email;
-        if (userRole) userRole.textContent = preferredRole ? `${preferredRole} workflow` : 'No role detected';
+        if (userId) metaParts.push(`ID #${userId}`);
+        if (email) metaParts.push(email);
+        metaParts.push(preferredRole ? `${preferredRole} workflow` : 'No role detected');
+
+        if (userName) userName.textContent = identity;
+        if (userMeta) userMeta.textContent = metaParts.join(' | ');
     })();
     </script>
     @stack('scripts')
