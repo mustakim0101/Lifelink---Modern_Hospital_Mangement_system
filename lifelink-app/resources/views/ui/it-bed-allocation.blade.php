@@ -274,7 +274,7 @@
                 <input id="tokenInput" class="it-input" placeholder="IT worker token">
                 <div class="it-actions">
                     <button class="it-button soft" type="button" onclick="useUserToken()">Use USER_TOKEN</button>
-                    <button class="it-button primary" type="button" onclick="loadDepartmentsScope()">Load my departments</button>
+                    <button class="it-button primary" type="button" onclick="loadDepartmentsScope()">Reload my departments</button>
                 </div>
             </div>
 
@@ -294,6 +294,20 @@
             </div>
         </div>
 
+        <div id="bloodBankItSection" class="it-panel" style="display:none;">
+            <h3>Blood Bank operations</h3>
+            <p class="it-note">This account has Blood Bank department scope. Use the Blood Matching Center for donor matching, donor notifications, donation logging, and request-linked blood workflow actions.</p>
+            <div class="it-summary">
+                <div class="it-stat"><small>Blood Bank access</small><strong id="bloodBankScopeStatus">Locked</strong></div>
+                <div class="it-stat"><small>Blood Bank departments</small><strong id="bloodBankScopeCount">0</strong></div>
+            </div>
+            <div class="it-actions" style="margin-top: 16px;">
+                <a class="it-button primary" href="/ui/blood-matching">Open Blood Matching Center</a>
+                <a class="it-button soft" href="/ui/blood-bank-schema">Open Blood Bank Schema</a>
+            </div>
+        </div>
+
+        <div id="standardItWorkArea">
         <div class="it-split">
             <div class="it-panel it-col-6">
                 <h3>Doctor lookup for admission context</h3>
@@ -549,6 +563,7 @@
                 </div>
             </div>
         </div>
+        </div>
 
         <div class="it-panel">
             <h3>API response</h3>
@@ -572,6 +587,8 @@ const state = {
     beds: [],
     careUnits: [],
 };
+
+const BLOOD_BANK_DEPARTMENT = 'Blood Bank';
 
 function write(data) {
     out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
@@ -652,6 +669,22 @@ function syncCounters() {
     document.getElementById('careUnitCount').textContent = String(state.careUnits.length);
     document.getElementById('bedCount').textContent = String(state.beds.length);
     document.getElementById('admissionCount').textContent = String(state.admissions.length);
+}
+
+function hasBloodBankScope() {
+    return state.scopeDepartments.some((department) => String(department.dept_name || '').trim() === BLOOD_BANK_DEPARTMENT);
+}
+
+function hasNonBloodBankScope() {
+    return state.scopeDepartments.some((department) => String(department.dept_name || '').trim() !== BLOOD_BANK_DEPARTMENT);
+}
+
+function renderDepartmentMode() {
+    const bloodBankAccess = hasBloodBankScope();
+    document.getElementById('bloodBankItSection').style.display = bloodBankAccess ? '' : 'none';
+    document.getElementById('standardItWorkArea').style.display = bloodBankAccess && !hasNonBloodBankScope() ? 'none' : '';
+    document.getElementById('bloodBankScopeStatus').textContent = bloodBankAccess ? 'Enabled' : 'Locked';
+    document.getElementById('bloodBankScopeCount').textContent = String(state.scopeDepartments.filter((department) => String(department.dept_name || '').trim() === BLOOD_BANK_DEPARTMENT).length);
 }
 
 function renderDoctors() {
@@ -838,6 +871,13 @@ async function loadDepartmentsScope() {
         state.scopeDepartments = Array.isArray(result.data?.departments) ? result.data.departments : [];
         syncCounters();
         refreshCtx();
+    } else {
+        state.scopeDepartments = [];
+    }
+    renderDepartmentMode();
+
+    if (result.status < 300 && hasNonBloodBankScope()) {
+        await Promise.all([loadDoctors(), loadPatients()]);
     }
 }
 
@@ -1016,10 +1056,21 @@ function initializeEmptyTables() {
     renderBedsTable();
     syncCounters();
     refreshCtx();
+    renderDepartmentMode();
 }
 
-useUserToken();
-initializeEmptyTables();
-loadDepartmentSelectors();
+async function bootItDashboard() {
+    useUserToken();
+    initializeEmptyTables();
+    await loadDepartmentSelectors();
+
+    if (selectedToken()) {
+        await loadDepartmentsScope();
+    } else {
+        write('Login first or use USER_TOKEN so the IT dashboard can auto-load your department scope.');
+    }
+}
+
+bootItDashboard();
 </script>
 @endpush

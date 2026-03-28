@@ -58,7 +58,7 @@
                 <strong>Patient Portal</strong><br>
                 View records, manage appointments, and request blood.
             </a>
-            <a class="box" href="/ui/blood-bank-schema">
+            <a id="bloodBankSchemaLink" class="box" href="/ui/blood-bank-schema">
                 <strong>Blood Bank Schema</strong><br>
                 Manage blood banks, donor profiles, and inventory schema data.
             </a>
@@ -66,12 +66,60 @@
                 <strong>Donor Dashboard</strong><br>
                 Manage donor availability, health checks, and donation bag logging.
             </a>
-            <a class="box" href="/ui/blood-matching">
+            <a id="bloodMatchingLink" class="box" href="/ui/blood-matching">
                 <strong>Blood Matching Center</strong><br>
                 IT worker donor matching with notification tracking and response monitoring.
             </a>
         </div>
     </div>
 </div>
+<script>
+const BLOOD_BANK_DEPARTMENT = 'Blood Bank';
+const token = localStorage.getItem('USER_TOKEN') || '';
+const roles = JSON.parse(localStorage.getItem('CURRENT_USER_ROLES') || '[]');
+const bloodMatchingLink = document.getElementById('bloodMatchingLink');
+const bloodBankSchemaLink = document.getElementById('bloodBankSchemaLink');
+
+async function api(path) {
+    const response = await fetch(`/api${path}`, {
+        headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`
+        }
+    });
+
+    const text = await response.text();
+    let data = {};
+    try { data = JSON.parse(text); } catch {}
+    return { status: response.status, data };
+}
+
+async function hasBloodBankItAccess() {
+    if (roles.includes('Admin')) {
+        return true;
+    }
+
+    if (!roles.includes('ITWorker') || !token) {
+        return false;
+    }
+
+    const result = await api('/ward/it/departments');
+    if (result.status >= 300) {
+        return false;
+    }
+
+    const departments = Array.isArray(result.data?.departments) ? result.data.departments : [];
+    return departments.some(department => department?.dept_name === BLOOD_BANK_DEPARTMENT);
+}
+
+(async function applyPrototypeVisibility() {
+    const canSeeBloodTools = await hasBloodBankItAccess();
+
+    if (!roles.includes('Admin') && !canSeeBloodTools) {
+        if (bloodMatchingLink) bloodMatchingLink.style.display = 'none';
+        if (bloodBankSchemaLink) bloodBankSchemaLink.style.display = 'none';
+    }
+})();
+</script>
 </body>
 </html>

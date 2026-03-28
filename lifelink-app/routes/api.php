@@ -101,6 +101,9 @@ Route::prefix('nurse')->middleware(['auth:api', 'active.user', 'role:Nurse'])->g
     Route::get('/admissions/{admission}', [NurseCareController::class, 'admissionDetail']);
     Route::get('/admissions/{admission}/vitals', [NurseCareController::class, 'vitalSigns']);
     Route::post('/admissions/{admission}/vitals', [NurseCareController::class, 'logVitalSigns']);
+    Route::get('/blood-bank/donors', [NurseCareController::class, 'bloodBankDonors']);
+    Route::get('/blood-bank/donors/{donor}/health-checks', [NurseCareController::class, 'donorHealthChecks']);
+    Route::post('/blood-bank/donors/{donor}/health-checks', [NurseCareController::class, 'logDonorHealthCheck']);
 });
 
 Route::prefix('patient')->middleware(['auth:api', 'active.user', 'role:Patient'])->group(function () {
@@ -125,10 +128,7 @@ Route::prefix('donor')->middleware(['auth:api', 'active.user', 'role:Donor'])->g
     Route::get('/banks', [DonorDashboardController::class, 'banks']);
     Route::get('/availability', [DonorDashboardController::class, 'availabilities']);
     Route::post('/availability', [DonorDashboardController::class, 'upsertAvailability']);
-    Route::get('/health-checks', [DonorDashboardController::class, 'healthChecks']);
-    Route::post('/health-checks', [DonorDashboardController::class, 'logHealthCheck']);
     Route::get('/donations', [DonorDashboardController::class, 'donations']);
-    Route::post('/donations', [DonorDashboardController::class, 'logDonation']);
     Route::get('/notifications', [DonorNotificationController::class, 'index']);
     Route::post('/notifications/{notification}/read', [DonorNotificationController::class, 'markRead']);
     Route::post('/notifications/{notification}/respond', [DonorNotificationController::class, 'respond']);
@@ -150,4 +150,9 @@ Route::prefix('blood/matching')->middleware(['auth:api', 'active.user', 'role:Ad
     Route::get('/requests/{bloodRequest}/suggestions', [BloodMatchingController::class, 'suggestions']);
     Route::post('/requests/{bloodRequest}/notify', [BloodMatchingController::class, 'notify']);
     Route::get('/requests/{bloodRequest}/matches', [BloodMatchingController::class, 'matches']);
+    Route::get('/donors', [BloodMatchingController::class, 'donors']);
+    Route::get('/donors/{donor}/health-checks', [BloodMatchingController::class, 'donorHealthChecks']);
+    Route::post('/donations', [BloodMatchingController::class, 'logDonation']);
+    Route::post('/requests/{bloodRequest}/approve', [BloodMatchingController::class, 'approve']);
+    Route::post('/requests/{bloodRequest}/fulfill', [BloodMatchingController::class, 'fulfill']);
 });

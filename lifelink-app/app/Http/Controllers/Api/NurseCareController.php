@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admission;
+use App\Models\DonorHealthCheck;
+use App\Models\DonorProfile;
 use App\Models\MedicalRecord;
 use App\Models\Nurse;
 use App\Models\NurseVitalSignLog;
@@ -16,6 +18,7 @@ use Illuminate\Validation\Rule;
 class NurseCareController extends Controller
 {
     private const ADMISSION_STATUS = ['Admitted', 'Discharged', 'Transferred', 'Cancelled'];
+    private const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
     public function upsertNurseProfile(Request $request): JsonResponse
     {
@@ -281,6 +284,134 @@ class NurseCareController extends Controller
         ], 201);
     }
 
+    public function bloodBankDonors(Request $request): JsonResponse
+    {
+        $nurse = $this->resolveBloodBankNurse();
+
+        $validated = $request->validate([
+            'q' => ['nullable', 'string', 'max:120'],
+            'requestId' => ['nullable', 'integer', 'exists:blood_requests,id'],
+            'bloodGroup' => ['nullable', 'string', Rule::in(self::BLOOD_GROUPS)],
+            'eligible' => ['nullable', 'boolean'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:80'],
+        ]);
+
+        $query = DonorProfile::query()
+            ->with(['donor:id,full_name,name,email', 'healthChecks' => fn ($q) => $q->latest('check_datetime')->latest('id')->limit(1)])
+            ->orderBy('donor_id');
+
+        if (array_key_exists('eligible', $validated)) {
+            $query->where('is_eligible', (bool) $validated['eligible']);
+        }
+
+        if (! empty($validated['bloodGroup'])) {
+            $query->where('blood_group', $validated['bloodGroup']);
+        }
+
+        if (! empty($validated['requestId'])) {
+            $query->whereIn('donor_id', function ($q) use ($validated) {
+                $q->select('donor_id')
+                    ->from('blood_request_matches')
+                    ->where('request_id', $validated['requestId'])
+                    ->whereIn('status', ['Accepted', 'Completed']);
+            });
+        }
+
+        if (! empty($validated['q'])) {
+            $term = trim($validated['q']);
+            $query->where(function ($q) use ($term) {
+                $q->where('donor_id', 'like', '%'.$term.'%')
+                    ->orWhere('blood_group', 'like', '%'.$term.'%')
+                    ->orWhereHas('donor', function ($userQuery) use ($term) {
+                        $userQuery->where('full_name', 'like', '%'.$term.'%')
+                            ->orWhere('name', 'like', '%'.$term.'%')
+                            ->orWhere('email', 'like', '%'.$term.'%');
+                    });
+            });
+        }
+
+        $donors = $query->limit($validated['limit'] ?? 30)->get();
+
+        return response()->json([
+            'nurse' => $this->nursePayload($nurse),
+            'donors' => $donors->map(fn (DonorProfile $profile) => $this->donorPayload($profile)),
+        ]);
+    }
+
+    public function donorHealthChecks(Request $request, int $donor): JsonResponse
+    {
+        $this->resolveBloodBankNurse();
+
+        $validated = $request->validate([
+            'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $profile = DonorProfile::query()
+            ->with('donor:id,full_name,name,email')
+            ->findOrFail($donor);
+
+        $checks = DonorHealthCheck::query()
+            ->where('donor_id', $profile->donor_id)
+            ->with('checkedBy:id,full_name,name,email')
+            ->orderByDesc('check_datetime')
+            ->orderByDesc('id')
+            ->limit($validated['limit'] ?? 20)
+            ->get();
+
+        return response()->json([
+            'donor' => $this->donorPayload($profile),
+            'health_checks' => $checks->map(fn (DonorHealthCheck $check) => $this->donorHealthPayload($check)),
+        ]);
+    }
+
+    public function logDonorHealthCheck(Request $request, int $donor): JsonResponse
+    {
+        $nurse = $this->resolveBloodBankNurse();
+        $profile = DonorProfile::query()
+            ->with('donor:id,full_name,name,email')
+            ->findOrFail($donor);
+
+        $validated = $request->validate([
+            'checkDateTime' => ['nullable', 'date'],
+            'weightKg' => ['required', 'numeric', 'min:30', 'max:250'],
+            'temperatureC' => ['required', 'numeric', 'min:34', 'max:43'],
+            'hemoglobin' => ['nullable', 'numeric', 'min:5', 'max:25'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $eligibility = $this->evaluateDonorEligibility(
+            (float) $validated['weightKg'],
+            (float) $validated['temperatureC'],
+            array_key_exists('hemoglobin', $validated) ? (float) $validated['hemoglobin'] : null
+        );
+
+        $check = DonorHealthCheck::query()->create([
+            'donor_id' => $profile->donor_id,
+            'check_datetime' => $validated['checkDateTime'] ?? now(),
+            'weight_kg' => $validated['weightKg'],
+            'temperature_c' => $validated['temperatureC'],
+            'hemoglobin' => $validated['hemoglobin'] ?? null,
+            'notes' => $validated['notes'] ?? $eligibility['reason'],
+            'checked_by_user_id' => $nurse->nurse_id,
+        ]);
+
+        $profile->update([
+            'is_eligible' => $eligibility['is_eligible'],
+            'notes' => $eligibility['is_eligible'] ? $profile->notes : $eligibility['reason'],
+        ]);
+
+        $check->load('checkedBy:id,full_name,name,email');
+        $profile->refresh();
+        $profile->load('donor:id,full_name,name,email');
+
+        return response()->json([
+            'message' => 'Donor health check logged by Blood Bank nurse.',
+            'donor' => $this->donorPayload($profile),
+            'eligibility' => $eligibility,
+            'health_check' => $this->donorHealthPayload($check),
+        ], 201);
+    }
+
     private function resolveNurseProfile(): Nurse
     {
         $nurse = Nurse::query()
@@ -288,6 +419,19 @@ class NurseCareController extends Controller
             ->find(auth('api')->id());
 
         abort_unless($nurse && $nurse->is_active, 404, 'Nurse profile not configured or inactive.');
+
+        return $nurse;
+    }
+
+    private function resolveBloodBankNurse(): Nurse
+    {
+        $nurse = $this->resolveNurseProfile();
+
+        if (strcasecmp((string) $nurse->department?->dept_name, 'Blood Bank') !== 0) {
+            throw new HttpResponseException(response()->json([
+                'message' => 'Blood Bank donor screening is available only to nurses assigned to the Blood Bank department.',
+            ], 403));
+        }
 
         return $nurse;
     }
@@ -381,5 +525,52 @@ class NurseCareController extends Controller
             'spo2_percent' => $log->spo2_percent,
             'note' => $log->note,
         ];
+    }
+
+    private function donorPayload(DonorProfile $profile): array
+    {
+        $latestCheck = $profile->healthChecks->first();
+
+        return [
+            'donor_id' => $profile->donor_id,
+            'full_name' => $profile->donor?->full_name ?? $profile->donor?->name,
+            'email' => $profile->donor?->email,
+            'blood_group' => $profile->blood_group,
+            'is_eligible' => (bool) $profile->is_eligible,
+            'last_donation_date' => optional($profile->last_donation_date)->toISOString(),
+            'latest_health_check' => $latestCheck ? $this->donorHealthPayload($latestCheck) : null,
+        ];
+    }
+
+    private function donorHealthPayload(DonorHealthCheck $check): array
+    {
+        return [
+            'id' => $check->id,
+            'donor_id' => $check->donor_id,
+            'check_datetime' => optional($check->check_datetime)->toISOString(),
+            'weight_kg' => $check->weight_kg !== null ? (float) $check->weight_kg : null,
+            'temperature_c' => $check->temperature_c !== null ? (float) $check->temperature_c : null,
+            'hemoglobin' => $check->hemoglobin !== null ? (float) $check->hemoglobin : null,
+            'notes' => $check->notes,
+            'checked_by_user_id' => $check->checked_by_user_id,
+            'checked_by_name' => $check->checkedBy?->full_name ?? $check->checkedBy?->name,
+        ];
+    }
+
+    private function evaluateDonorEligibility(float $weightKg, float $temperatureC, ?float $hemoglobin = null): array
+    {
+        if ($weightKg < 45) {
+            return ['is_eligible' => false, 'reason' => 'Weight below minimum donation threshold.'];
+        }
+
+        if ($temperatureC < 36.0 || $temperatureC > 37.8) {
+            return ['is_eligible' => false, 'reason' => 'Temperature is outside donation-safe range.'];
+        }
+
+        if ($hemoglobin !== null && $hemoglobin < 12.5) {
+            return ['is_eligible' => false, 'reason' => 'Hemoglobin below donation-safe threshold.'];
+        }
+
+        return ['is_eligible' => true, 'reason' => 'Eligible based on latest Blood Bank nurse screening.'];
     }
 }

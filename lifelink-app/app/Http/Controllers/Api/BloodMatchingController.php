@@ -166,6 +166,186 @@ class BloodMatchingController extends Controller
         ]);
     }
 
+    public function donors(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'requestId' => ['nullable', 'integer', 'exists:blood_requests,id'],
+            'q' => ['nullable', 'string', 'max:120'],
+            'bloodGroup' => ['nullable', 'string', 'max:5'],
+            'eligible' => ['nullable', 'boolean'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $actor = auth('api')->user();
+        $rows = $this->matchingService->staffDonors(
+            (int) $actor->id,
+            $actor->hasRole('Admin'),
+            $validated
+        );
+
+        return response()->json([
+            'donors' => array_map(fn (object $row): array => [
+                'donor_id' => (int) $row->donor_id,
+                'donor_name' => $row->donor_name,
+                'donor_email' => $row->donor_email,
+                'blood_group' => $row->blood_group,
+                'is_eligible' => (bool) $row->is_eligible,
+                'last_donation_date' => $this->asIso($row->last_donation_date),
+                'latest_health_check_id' => $row->latest_health_check_id !== null ? (int) $row->latest_health_check_id : null,
+                'latest_health_check_at' => $this->asIso($row->latest_health_check_at),
+                'latest_checked_by_name' => $row->latest_checked_by_name,
+                'matched_request_id' => $row->matched_request_id !== null ? (int) $row->matched_request_id : null,
+                'matched_request_status' => $row->matched_request_status,
+                'matched_request_match_id' => $row->matched_request_match_id !== null ? (int) $row->matched_request_match_id : null,
+            ], $rows),
+        ]);
+    }
+
+    public function donorHealthChecks(Request $request, int $donor): JsonResponse
+    {
+        $validated = $request->validate([
+            'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $actor = auth('api')->user();
+        $rows = $this->matchingService->staffDonorHealthChecks(
+            $donor,
+            (int) $actor->id,
+            $actor->hasRole('Admin'),
+            (int) ($validated['limit'] ?? 20)
+        );
+
+        return response()->json([
+            'health_checks' => array_map(fn (object $row): array => [
+                'id' => (int) $row->id,
+                'donor_id' => (int) $row->donor_id,
+                'check_datetime' => $this->asIso($row->check_datetime),
+                'weight_kg' => $row->weight_kg !== null ? (float) $row->weight_kg : null,
+                'temperature_c' => $row->temperature_c !== null ? (float) $row->temperature_c : null,
+                'hemoglobin' => $row->hemoglobin !== null ? (float) $row->hemoglobin : null,
+                'notes' => $row->notes,
+                'checked_by_user_id' => $row->checked_by_user_id !== null ? (int) $row->checked_by_user_id : null,
+                'checked_by_name' => $row->checked_by_name,
+            ], $rows),
+        ]);
+    }
+
+    public function logDonation(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'donorId' => ['required', 'integer', 'exists:donor_profiles,donor_id'],
+            'bloodBankId' => ['required', 'integer', 'exists:blood_banks,id'],
+            'donationDateTime' => ['nullable', 'date'],
+            'bloodGroup' => ['nullable', 'string', 'max:5'],
+            'componentType' => ['nullable', 'string', 'max:30'],
+            'unitsDonated' => ['required', 'integer', 'min:1', 'max:5'],
+            'linkedRequestId' => ['nullable', 'integer', 'exists:blood_requests,id'],
+            'donorHealthCheckId' => ['required', 'integer', 'exists:donor_health_checks,id'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $actor = auth('api')->user();
+        $result = $this->matchingService->recordDonation(
+            (int) $actor->id,
+            $actor->hasRole('Admin'),
+            $validated
+        );
+
+        return response()->json([
+            'message' => 'Donation logged by Blood Bank staff and inventory updated.',
+            'donation' => $result['donation'],
+            'inventory' => $result['inventory'],
+        ], 201);
+    }
+
+    public function approve(Request $request, int $bloodRequest): JsonResponse
+    {
+        $validated = $request->validate([
+            'matchId' => ['required', 'integer'],
+            'bloodBankId' => ['nullable', 'integer', 'exists:blood_banks,id'],
+            'note' => ['nullable', 'string'],
+        ]);
+
+        $actor = auth('api')->user();
+        $result = $this->matchingService->approveMatch(
+            $bloodRequest,
+            (int) $validated['matchId'],
+            (int) $actor->id,
+            $actor->hasRole('Admin'),
+            isset($validated['bloodBankId']) ? (int) $validated['bloodBankId'] : null,
+            $validated['note'] ?? null
+        );
+
+        return response()->json([
+            'message' => 'Accepted donor approved for this blood request.',
+            'request' => [
+                'id' => (int) $result['request']->id,
+                'status' => $result['request']->status,
+                'department_id' => (int) $result['request']->department_id,
+                'department_name' => $result['request']->department_name,
+                'blood_group_needed' => $result['request']->blood_group_needed,
+                'component_type' => $result['request']->component_type,
+                'units_required' => (int) $result['request']->units_required,
+                'blood_bank_id' => $result['request']->blood_bank_id !== null ? (int) $result['request']->blood_bank_id : null,
+            ],
+            'match' => $result['match'] ? [
+                'id' => (int) $result['match']->id,
+                'request_id' => (int) $result['match']->request_id,
+                'donor_id' => (int) $result['match']->donor_id,
+                'status' => $result['match']->status,
+                'match_score' => $result['match']->match_score !== null ? (float) $result['match']->match_score : null,
+                'compatibility_label' => $result['match']->compatibility_label,
+                'selected_by_user_id' => $result['match']->selected_by_user_id !== null ? (int) $result['match']->selected_by_user_id : null,
+                'notes' => $result['match']->notes,
+            ] : null,
+        ]);
+    }
+
+    public function fulfill(Request $request, int $bloodRequest): JsonResponse
+    {
+        $validated = $request->validate([
+            'matchId' => ['nullable', 'integer'],
+            'bloodBankId' => ['nullable', 'integer', 'exists:blood_banks,id'],
+            'consumeInventory' => ['nullable', 'boolean'],
+            'note' => ['nullable', 'string'],
+        ]);
+
+        $actor = auth('api')->user();
+        $result = $this->matchingService->fulfillRequest(
+            $bloodRequest,
+            (int) $actor->id,
+            $actor->hasRole('Admin'),
+            isset($validated['matchId']) ? (int) $validated['matchId'] : null,
+            isset($validated['bloodBankId']) ? (int) $validated['bloodBankId'] : null,
+            (bool) ($validated['consumeInventory'] ?? false),
+            $validated['note'] ?? null
+        );
+
+        return response()->json([
+            'message' => 'Blood request fulfilled.',
+            'request' => [
+                'id' => (int) $result['request']->id,
+                'status' => $result['request']->status,
+                'department_id' => (int) $result['request']->department_id,
+                'department_name' => $result['request']->department_name,
+                'blood_group_needed' => $result['request']->blood_group_needed,
+                'component_type' => $result['request']->component_type,
+                'units_required' => (int) $result['request']->units_required,
+                'blood_bank_id' => $result['request']->blood_bank_id !== null ? (int) $result['request']->blood_bank_id : null,
+            ],
+            'match' => $result['match'] ? [
+                'id' => (int) $result['match']->id,
+                'request_id' => (int) $result['match']->request_id,
+                'donor_id' => (int) $result['match']->donor_id,
+                'status' => $result['match']->status,
+                'match_score' => $result['match']->match_score !== null ? (float) $result['match']->match_score : null,
+                'compatibility_label' => $result['match']->compatibility_label,
+                'selected_by_user_id' => $result['match']->selected_by_user_id !== null ? (int) $result['match']->selected_by_user_id : null,
+                'notes' => $result['match']->notes,
+            ] : null,
+        ]);
+    }
+
     private function asIso(mixed $value): ?string
     {
         if ($value === null) {

@@ -376,7 +376,7 @@
         <aside class="panel side">
             <div class="card">
                 <h3>Auth Context</h3>
-                <p class="hint">Use Admin/IT token from <code>/ui/auth</code>.</p>
+                <p class="hint">Use Admin or Blood Bank IT token from <code>/ui/auth</code>. This page is for setup, inspection, and debugging, not the main day-to-day donor workflow.</p>
                 <label for="tokenInput">Token</label>
                 <input id="tokenInput" placeholder="Bearer token">
                 <div class="btn-row">
@@ -394,6 +394,11 @@
                     <button data-status="Fulfilled" onclick="setRequestStatus('Fulfilled')">Fulfilled</button>
                     <button data-status="Rejected" onclick="setRequestStatus('Rejected')">Rejected</button>
                 </div>
+            </div>
+
+            <div class="card">
+                <h3>When to use this page</h3>
+                <p class="hint">Use this page to create a blood bank row, inspect donor and inventory tables, or debug schema data. Use <code>/ui/blood-matching</code> for request matching, donor communication, donation logging, and fulfillment.</p>
             </div>
         </aside>
 
@@ -822,7 +827,14 @@ function boot() {
     setClock();
     setInterval(setClock, 1000);
     useStoredAdminToken();
-    refreshAll();
+    if (!byId('tokenInput').value.trim()) {
+        useStoredUserToken();
+    }
+    if (byId('tokenInput').value.trim()) {
+        refreshAll();
+    } else {
+        write('Login from /ui/auth or inject ADMIN_TOKEN / USER_TOKEN to load the Blood Bank schema page.');
+    }
 }
 
 boot();

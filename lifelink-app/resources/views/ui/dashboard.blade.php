@@ -323,6 +323,8 @@
     </div>
 
     <script>
+    const BLOOD_BANK_DEPARTMENT = 'Blood Bank';
+
     const roleConfig = {
         Admin: {
             label: 'Administrator',
@@ -343,8 +345,10 @@
             cards: [
                 { title: 'Ward setup', href: '/ui/ward-setup', desc: 'Configure care units and bed structures.' },
                 { title: 'Bed allocation', href: '/ui/it-bed-allocation', desc: 'Manage admissions and assign available beds.' },
-                { title: 'Blood matching', href: '/ui/blood-matching', desc: 'Review blood requests and notify suitable donors.' },
                 { title: 'Advanced tools', href: '/ui/dev-tools', desc: 'Open controlled diagnostics for technical verification.' }
+            ],
+            bloodBankCards: [
+                { title: 'Blood matching', href: '/ui/blood-matching', desc: 'Review blood requests, notify donors, and record Blood Bank donation workflows.' }
             ]
         },
         Doctor: {
@@ -411,11 +415,47 @@
     const warning = document.getElementById('session-warning');
     const adminToolsCard = document.getElementById('admin-tools-card');
 
+    async function api(path) {
+        const response = await fetch(`/api${path}`, {
+            headers: {
+                Accept: 'application/json',
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        const text = await response.text();
+        let data = {};
+        try { data = JSON.parse(text); } catch {}
+        return { status: response.status, data };
+    }
+
+    async function hasBloodBankItAccess() {
+        if (roles.includes('Admin')) {
+            return true;
+        }
+
+        if (!roles.includes('ITWorker') || !token) {
+            return false;
+        }
+
+        const result = await api('/ward/it/departments');
+        if (result.status >= 300) {
+            return false;
+        }
+
+        const departments = Array.isArray(result.data?.departments) ? result.data.departments : [];
+        return departments.some(department => department?.dept_name === BLOOD_BANK_DEPARTMENT);
+    }
+
     if (!token || !roles.length) {
         warning.classList.remove('hidden');
         userEmail.textContent = 'No active session';
         roleList.textContent = 'None';
     } else {
+        initializeDashboard();
+    }
+
+    async function initializeDashboard() {
         const summaryParts = [];
         if (fullName) summaryParts.push(fullName);
         if (userId) summaryParts.push(`#${userId}`);
@@ -427,6 +467,7 @@
             .find(role => roles.includes(role));
         const config = roleConfig[preferredRole] || roleConfig.Patient;
         const currentPath = window.location.pathname;
+        const bloodBankItAccess = await hasBloodBankItAccess();
 
         welcomeLine.textContent = `Welcome back, ${config.label}.`;
         welcomeCopy.textContent = `This dashboard organizes your next steps around the ${config.label.toLowerCase()} workflow and related tools already built in the system.`;
@@ -438,8 +479,18 @@
         const visibleCards = [];
         roles.forEach(role => {
             const roleEntry = roleConfig[role];
-            if (roleEntry) {
-                roleEntry.cards.forEach(card => {
+            if (!roleEntry) {
+                return;
+            }
+
+            roleEntry.cards.forEach(card => {
+                if (!visibleCards.some(existing => existing.href === card.href)) {
+                    visibleCards.push(card);
+                }
+            });
+
+            if (role === 'ITWorker' && bloodBankItAccess) {
+                (roleEntry.bloodBankCards || []).forEach(card => {
                     if (!visibleCards.some(existing => existing.href === card.href)) {
                         visibleCards.push(card);
                     }

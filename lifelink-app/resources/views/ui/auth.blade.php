@@ -339,6 +339,7 @@
     const sessionRoles = document.getElementById('session-roles');
     const advancedCard = document.getElementById('advanced-card');
     const applicantRolesWithDepartment = ['Doctor'];
+    const TEST_MODE_PASSWORD = '12345678';
     const rolePriority = ['Admin', 'ITWorker', 'Doctor', 'Nurse', 'Donor', 'Applicant', 'Patient'];
     const roleDestinations = {
         Admin: '/ui/admin-users',
@@ -353,6 +354,12 @@
     function showMessage(kind, text) {
         message.className = `message show ${kind}`;
         message.textContent = text;
+    }
+
+    function applyTestModePasswords() {
+        document.querySelectorAll('input[type="password"]').forEach((input) => {
+            input.value = TEST_MODE_PASSWORD;
+        });
     }
 
     function call(path, method, body, token = null) {
@@ -591,6 +598,7 @@
     }
 
     refreshSessionCard();
+    applyTestModePasswords();
     hydrateLoginPage();
     loadApplicantDepartments();
     toggleApplicantDepartmentField();
