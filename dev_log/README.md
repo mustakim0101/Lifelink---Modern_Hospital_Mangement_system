@@ -2782,3 +2782,207 @@ Files updated in this step:
 - `lifelink-app/resources/views/ui/admin-users.blade.php`
 - `lifelink-app/resources/views/ui/doctor-dashboard.blade.php`
 - `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+
+### Blood workflow decision locked before Issue 19
+Before moving into Issue 19 testing work, the blood donation workflow was reviewed and a clearer operational model was chosen.
+
+Problem identified in the earlier blood prototype:
+- donor dashboard still included donor self-entry for staff-owned tasks
+- the workflow did not clearly separate donor actions from nurse-side or blood-operations-side actions
+- not every nurse or IT worker should automatically get blood-bank responsibilities
+
+Locked decisions:
+1. add or use `Blood Bank` as a real department
+2. do not create brand new special blood-bank roles for now
+3. keep the existing roles `Nurse` and `ITWorker`
+4. use department assignment to gate blood-bank-specific features
+5. donor dashboard should remain donor-owned:
+   - weekly availability
+   - notifications
+   - accept/decline
+   - donation history view
+6. donor self-entry should be removed for:
+   - health checks
+   - actual donation logging
+7. Blood Bank nurse should own donor health checks
+8. Blood Bank IT worker should own:
+   - matching
+   - donor notifications
+   - actual donation logging
+   - request fulfillment
+   - inventory-related handling
+9. donor visit scheduling will stay in notification text for now
+10. no major schema redesign is required for this flow
+
+Why this direction was chosen:
+- it matches the current department-based staff setup model
+- it avoids giving every nurse and every IT worker hospital-wide blood-bank powers
+- it keeps blood operations specialized without introducing more role complexity
+- it fits the existing schema better:
+  - `donor_health_checks.checked_by_user_id`
+  - `blood_donations.recorded_by_user_id`
+  - `donor_profiles.is_eligible`
+
+Locked blood workflow story:
+1. donor registers
+2. donor sets availability
+3. patient creates blood request
+4. Blood Bank IT worker opens blood matching center
+5. system suggests donors
+6. Blood Bank IT worker notifies donors
+7. donor accepts or declines
+8. donor comes physically to hospital
+9. Blood Bank nurse performs actual health check
+10. backend determines donor eligibility from nurse-entered values
+11. Blood Bank IT worker records actual donation
+12. request is fulfilled or inventory is updated depending on the donation path
+
+Additional clarification locked in this planning stage:
+- casual walk-in blood donation must remain supported
+- request-linked donation must also remain supported
+- inventory increases when new blood is collected into the bank
+- inventory decreases when existing stored blood is used to fulfill a request
+
+Documentation updated for this decision:
+- `docs/FEATURE_WORKFLOWS.md`
+- `docs/END_to_END_test_plan.md`
+- `docs/DESIGN_IDEAS.md`
+- `docker/mssql/init/seed/02-reference-departments.sql`
+
+### Blood Bank implementation pass started
+The first implementation pass for the locked Blood Bank workflow is now in code.
+
+Main implementation decisions applied:
+1. donor dashboard is now donor-only
+2. Blood Bank nurse owns donor health screening
+3. Blood Bank IT worker/admin owns blood matching, donation logging, and fulfillment-side actions
+4. Blood Bank access is feature-gated by department assignment instead of introducing brand new user roles
+5. donor eligibility is evaluated from nurse-entered screening data in code
+
+What changed in this implementation pass:
+1. donor dashboard token boot was corrected so it prefers stored `USER_TOKEN` and no longer starts with the old donor-token-only failure behavior
+2. donor-side self-entry for health checks and donation logging was removed from the donor workspace
+3. nurse API and nurse dashboard now include Blood Bank donor search, donor cards with visible ids, donor health-check history, and nurse health-check logging
+4. blood matching API and Blood Matching Center UI now include staff donor search, donor health-check loading, staff donation logging, donor approval, and request fulfillment flow
+5. Blood Bank IT access is now restricted in blood-matching SQL service to admins or IT workers assigned to the `Blood Bank` department
+6. donor suggestions now exclude donors whose last donation is still inside the 56-day cooldown window
+7. after actual donation is recorded, donor profile eligibility is set back to not-eligible so the donor is not immediately recycled into matching
+
+Files changed in this implementation pass:
+- `lifelink-app/routes/api.php`
+- `lifelink-app/app/Http/Controllers/Api/NurseCareController.php`
+- `lifelink-app/app/Http/Controllers/Api/BloodMatchingController.php`
+- `lifelink-app/app/Services/Sql/BloodMatchingSqlService.php`
+- `lifelink-app/resources/views/ui/donor-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/blood-matching.blade.php`
+
+Validation status:
+- implementation was code-reviewed in-repo
+- runtime verification is still needed against the running Docker app and current MSSQL data
+
+Follow-up UI gating completion:
+- shared dashboard navigation now checks actual Blood Bank department assignment before showing Blood Matching entry points to IT workers
+- prototype directory now also hides Blood Bank pages from non-admin users who are not assigned to Blood Bank IT scope
+
+==================================================================================
+
+bassed on my new planblood bank dept you said 
+
+"make the dashboard features conditional by department assignment:
+
+if nurse belongs to Blood Bank, show donor screening tools
+if IT worker belongs to Blood Bank, show blood matching and donation tools
+if not, hide those tools"
+
+show me in code where this condition you applied 
+or maybe you didnt applied ...
+add this part in docs folder file propriet place
+
+
+and should i test the end to end plan for blood donation you made in S:\Lifelink---Modern_Hospital_Mangement_system\docs\END_to_END_test_plan.md
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Here’s the honest status.
+
+The `Nurse -> Blood Bank only` condition is applied in code.
+
+Frontend visibility is here:
+- [nurse-dashboard.blade.php#L762](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/resources/views/ui/nurse-dashboard.blade.php#L762)
+- [nurse-dashboard.blade.php#L763](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/resources/views/ui/nurse-dashboard.blade.php#L763)
+
+That code checks:
+- `state.nurse?.department === 'Blood Bank'`
+
+Backend enforcement is here:
+- [NurseCareController.php#L426](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/app/Http/Controllers/Api/NurseCareController.php#L426)
+
+That `resolveBloodBankNurse()` method blocks non-Blood-Bank nurses from donor screening endpoints.
+
+The `IT Worker -> Blood Bank only` rule is applied mostly at access/enforcement level, not fully at shared-menu hiding level.
+
+Backend enforcement is here:
+- [BloodMatchingSqlService.php#L1103](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/app/Services/Sql/BloodMatchingSqlService.php#L1103)
+
+And it is used in blood operations methods here:
+- [BloodMatchingSqlService.php#L17](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/app/Services/Sql/BloodMatchingSqlService.php#L17)
+- [BloodMatchingSqlService.php#L94](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/app/Services/Sql/BloodMatchingSqlService.php#L94)
+- [BloodMatchingSqlService.php#L417](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/app/Services/Sql/BloodMatchingSqlService.php#L417)
+- [BloodMatchingSqlService.php#L497](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/app/Services/Sql/BloodMatchingSqlService.php#L497)
+- [BloodMatchingSqlService.php#L522](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/app/Services/Sql/BloodMatchingSqlService.php#L522)
+
+What is not fully done yet:
+- the shared navigation still exposes blood matching links in places like:
+  - [dashboard.blade.php#L346](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/resources/views/ui/dashboard.blade.php#L346)
+  - [index.blade.php#L69](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/resources/views/ui/index.blade.php#L69)
+
+So the real status is:
+- Blood Bank nurse visibility/enforcement: applied
+- Blood Bank IT backend restriction: applied
+- Blood Bank IT shared UI hiding everywhere: not fully applied yet
+
+I also added this clarification to the proper workflow doc:
+- [FEATURE_WORKFLOWS.md#L634](/s:/Lifelink---Modern_Hospital_Mangement_system/docs/FEATURE_WORKFLOWS.md#L634)
+
+About testing the blood end-to-end plan in [END_to_END_test_plan.md](/s:/Lifelink---Modern_Hospital_Mangement_system/docs/END_to_END_test_plan.md):
+- Yes, you should test it.
+- But I recommend doing it in stages, not assuming full pass yet.
+- Best order:
+  1. access/gating checks
+  2. donor dashboard flow
+  3. nurse Blood Bank screening flow
+  4. Blood Bank IT matching and donation flow
+  5. full request-fulfillment story
+
+If you want, next I can finish the missing shared-UI hiding for non-Blood-Bank IT users before you start the full blood E2E test.
+===================================================================================
+
+Blood Bank dashboard visibility correction pass
+
+Files changed in this pass:
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+- `docs/FEATURE_WORKFLOWS.md`
+
+What changed:
+- Blood Bank nurse mode now hides the regular patient-monitoring area after `Load profile` confirms `department === 'Blood Bank'`
+- Blood Bank IT mode now shows a visible Blood Bank operations block on the IT dashboard after `Load my departments` confirms `Blood Bank` scope
+- IT workers scoped only to `Blood Bank` now hide the regular ward/admission/bed workflow area on that page
+
+Blood Bank UX clarity and auto-bootstrap pass
+
+Files changed in this pass:
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+- `lifelink-app/resources/views/ui/blood-matching.blade.php`
+- `lifelink-app/resources/views/ui/blood-bank-schema.blade.php`
+- `docs/FEATURE_WORKFLOWS.md`
+
+What changed:
+- nurse dashboard now auto-loads the logged-in nurse profile from stored `USER_TOKEN` and uses the manual button as a reload action
+- IT dashboard now auto-loads assigned department scope from stored `USER_TOKEN` and uses the manual button as a reload action
+- Blood Matching Center now explains the staff workflow more clearly and shows explicit auth-state messaging when the stored token is missing or rejected
+- Blood Bank Schema page now more clearly reads as a setup/debug page instead of the main Blood Bank daily workflow page
+

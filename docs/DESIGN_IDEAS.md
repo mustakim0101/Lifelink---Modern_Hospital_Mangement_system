@@ -547,3 +547,121 @@ The UI phase should be considered complete when:
 - Admin and IT have advanced diagnostics in controlled views
 - the design is consistent across all pages
 - desktop and mobile experiences both work well
+
+---
+
+## Revision 3 - Blood Bank Department UI Direction
+
+This section records the newly locked UI/product direction for the blood donation workflow. Earlier design notes above remain preserved as design history.
+
+### New Product Decision
+The blood module should now be designed around a real `Blood Bank` department.
+
+This means:
+- do not create separate new login roles for blood bank staff right now
+- continue using existing `Nurse` and `ITWorker` roles
+- let admin assign selected nurses and IT workers to the `Blood Bank` department
+- show blood-bank-specific tools only when staff belongs to that department
+
+### Role and Department UI Behavior
+Updated role expectations:
+
+- `Donor`
+  - sees only donor-owned tools
+  - availability
+  - notifications
+  - response actions
+  - donation history
+
+- `Nurse`
+  - if assigned to a normal department, sees standard patient-monitoring tools
+  - if assigned to `Blood Bank`, also sees donor screening and health-check workflow
+
+- `ITWorker`
+  - if assigned to a normal department, sees ward/admission/bed workflow
+  - if assigned to `Blood Bank`, sees blood operations workflow such as matching, notification, donation logging, and fulfillment
+
+### Blood Module UX Direction
+The blood donation flow should feel like a guided real-world operational story, not a collection of debug forms.
+
+Target story in UI:
+1. donor becomes available
+2. patient request appears
+3. Blood Bank IT worker matches donors
+4. donor accepts
+5. Blood Bank nurse screens donor
+6. system decides eligibility
+7. Blood Bank IT worker records donation
+8. request and inventory state update visibly
+
+### Page Ownership Decision
+Current preferred page placement:
+- donor dashboard stays donor-only
+- nurse dashboard gets Blood Bank nurse tools when department = `Blood Bank`
+- `/ui/blood-matching` becomes the main blood operations center for Blood Bank IT workers and allowed admins
+
+Important clarification:
+- this does not require a brand new blood-bank page immediately
+- if `/ui/blood-matching` later becomes too crowded, a dedicated Blood Bank operations page can be added in a future pass
+
+### Donor Dashboard Design Rule
+The donor dashboard should not show staff-owned workflows anymore.
+
+Keep:
+- donor profile
+- availability
+- notifications
+- response controls
+- donation history
+
+Remove from normal donor self-entry:
+- staff health-check forms
+- actual donation logging forms
+
+### Blood Bank Nurse Experience
+When a nurse belongs to the `Blood Bank` department, the nurse dashboard should expose a blood-specific section with:
+- donor search
+- donor cards with visible ids
+- accepted-donor context when relevant
+- health-check form
+- eligibility result state
+- recent donor screening history if available
+
+Visual direction:
+- use card-based search and guided forms
+- avoid raw id memorization
+- make eligibility outcome obvious with badges such as `Eligible` or `Not Eligible`
+
+### Blood Bank IT Worker Experience
+When an IT worker belongs to `Blood Bank`, the blood matching center should support:
+- blood request list
+- compatible donor suggestions
+- donor notification actions
+- accepted donor selection
+- donation logging
+- fulfillment controls
+- inventory-aware action states
+
+Visual direction:
+- request cards should read like operational tasks
+- accepted donor cards should display donor id, blood group, response state, and readiness context
+- donation logging should appear as a deliberate staff action, not like donor self-service
+
+### Admin Experience for Blood Bank Staffing
+Admin-side UI should make Blood Bank staffing clear during setup.
+
+Desired behavior:
+- admin can assign nurse or IT worker to `Blood Bank`
+- department dropdown should clearly include `Blood Bank`
+- if more than one department is allowed for IT workers, Blood Bank assignment should still remain visible and explicit
+
+### Navigation and Information Architecture Update
+Authenticated navigation should begin to reflect department-sensitive tools.
+
+Examples:
+- normal nurse: patient monitoring links first
+- Blood Bank nurse: donor screening section becomes visible
+- normal IT worker: bed allocation and department operations first
+- Blood Bank IT worker: blood matching tools become visible
+
+This keeps the interface focused and reduces clutter for users outside the blood workflow.

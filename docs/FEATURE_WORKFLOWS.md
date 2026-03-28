@@ -479,3 +479,254 @@ This means beds are separated department by department through their care units.
 
 ### Workflow Direction for Future UI
 The UI should present these workflows as human stories, guided actions, and structured dashboards rather than raw endpoint testing pages. The goal is for someone unfamiliar with the code to understand what the hospital system is doing just by following the screens.
+
+---
+
+## Revision 3 - Blood Bank Department Workflow Decision
+
+This section is the newly locked workflow decision for the blood donation and blood request process. Older sections above are preserved as project history. This section should be treated as the current working direction for the blood module before implementation continues.
+
+### Final Decision Summary
+The project will use a real `Blood Bank` department instead of creating brand new special roles.
+
+That means:
+- keep existing roles such as `Nurse` and `ITWorker`
+- add `Blood Bank` as a department
+- let admin assign selected nurses and IT workers to that department
+- show blood-bank-specific tools only to staff assigned to `Blood Bank`
+
+This keeps the role model simpler while still giving blood operations to a specialized team.
+
+### Why This Decision Was Chosen
+This approach matches the structure already used in the project:
+- staff are already department-linked
+- admins already assign nurse and IT worker department scope
+- blood workflow needs specialized staff ownership
+- not every nurse or IT worker in every department should be able to perform blood-bank actions
+
+So instead of inventing separate roles such as `BloodBankNurse` or `BloodBankOperator`, the project will keep:
+- `Nurse`
+- `ITWorker`
+
+and use department assignment plus UI/feature gating to decide what tools appear.
+
+### Ownership of Blood Donation Steps
+The system will now treat the blood workflow like this:
+
+- `Donor`
+  - registers
+  - keeps donor profile
+  - sets weekly availability
+  - receives notifications
+  - accepts or declines requests
+  - views donation history
+
+- `Blood Bank Nurse`
+  - performs donor health screening after donor physically arrives
+  - enters the actual health-check values
+  - triggers eligibility evaluation through backend rules
+
+- `Blood Bank IT Worker`
+  - loads blood requests
+  - runs donor matching
+  - notifies donors
+  - reviews accepted donor responses
+  - records actual donation
+  - handles request fulfillment and inventory-related actions
+
+- `Admin`
+  - approves and provisions staff
+  - can also support blood workflows if admin-level tooling is allowed
+  - controls which nurses and IT workers are assigned to the `Blood Bank` department
+
+### Locked Blood Workflow Story
+This is the approved blood donation/request story for the project:
+
+1. donor registers in the system
+2. donor profile is created and donor blood group is stored
+3. donor sets weekly availability
+4. patient creates a blood request
+5. Blood Bank IT Worker opens the blood matching center
+6. system suggests compatible donors
+7. Blood Bank IT Worker sends notifications to selected donors
+8. donor logs in and accepts or declines
+9. donor physically comes to the hospital
+10. Blood Bank Nurse performs the actual donor health check
+11. backend evaluates the entered health-check values and marks donor eligible or ineligible
+12. if eligible, Blood Bank IT Worker records the actual donation
+13. if donation is casual stock donation, inventory increases
+14. if donation is linked to a patient request, staff can link it to that request
+15. request is fulfilled directly or from inventory depending on the chosen handling flow
+
+### Eligibility Decision Rule
+Eligibility should be determined from real staff-entered health check data, not donor self-entry.
+
+Planned behavior:
+- nurse enters health details such as weight, temperature, hemoglobin, and notes
+- backend checks the criteria in code
+- backend stores the health check in `donor_health_checks`
+- backend updates donor eligibility state in `donor_profiles.is_eligible`
+
+This means the system can make eligibility visible while still preserving the measured health-check record.
+
+### Donation and Inventory Handling
+The blood workflow should support two valid donation models:
+
+#### 1. Casual Blood Bank Donation
+- donor comes to donate without being tied to a specific request
+- staff records donation in `blood_donations`
+- inventory in `blood_inventory` increases
+- `linked_request_id` may stay null
+
+#### 2. Request-Driven Donation
+- donor was contacted because of a specific patient request
+- donor accepts and passes health check
+- staff records donation and can link it to the request
+- request can then be fulfilled
+- depending on implementation detail, inventory may be updated directly or the request may be fulfilled through the linked donation flow
+
+Important clarification:
+- inventory should increase when new blood is collected into the bank
+- inventory should decrease when existing stored blood is used to fulfill a request
+
+### Scheduling Decision
+No dedicated donor appointment table will be added right now.
+
+For now:
+- visit timing can live in notification message text
+- examples: `Please come tomorrow morning`, `Please come within next 3 days`
+
+This keeps the current blood flow simple and avoids schema expansion too early.
+
+### Dashboard and Page Ownership Decision
+Current intended placement:
+- donor-owned actions remain on donor dashboard
+- donor health checks should appear only for nurses assigned to `Blood Bank`
+- donation logging and request fulfillment should stay on the blood matching side for Blood Bank IT workers and allowed admins
+
+This does not necessarily require brand new pages immediately.
+
+Current preferred direction:
+- donor dashboard stays donor-focused
+- nurse dashboard gets Blood Bank nurse screening tools only when the logged-in nurse belongs to `Blood Bank`
+- existing `/ui/blood-matching` becomes the blood operations center for Blood Bank IT workers and allowed admins
+
+### Current Implementation Status For Department-Based Gating
+The department-based gating has been applied partially in code and should be understood like this:
+
+#### Applied now
+- `Nurse` side:
+  - the nurse dashboard checks the loaded nurse profile department and only shows Blood Bank donor-screening tools when `department = Blood Bank`
+  - backend also enforces this rule, so even direct API calls are blocked for non-Blood-Bank nurses
+- `ITWorker` side:
+  - blood matching, staff donor search, donation logging, request approval, and fulfillment are restricted in backend/service code to:
+    - `Admin`
+    - or `ITWorker` assigned to department `Blood Bank`
+  - so non-Blood-Bank IT workers should receive access denial on blood operations endpoints even if they try to open the page directly
+
+#### Shared UI status after follow-up pass
+- shared dashboard entry points now check actual Blood Bank department scope before showing Blood Bank tools to IT workers
+- prototype directory blood links are also hidden for non-Blood-Bank IT users and non-admin users
+- backend/service enforcement remains the source of truth even if someone manually tries the route directly
+
+#### Exact code locations
+- Nurse frontend visibility:
+  - `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+  - logic checks `state.nurse?.department === 'Blood Bank'`
+- Nurse backend enforcement:
+  - `lifelink-app/app/Http/Controllers/Api/NurseCareController.php`
+  - method `resolveBloodBankNurse()`
+- IT/Admin backend enforcement for blood operations:
+  - `lifelink-app/app/Services/Sql/BloodMatchingSqlService.php`
+  - method `assertBloodBankStaffAccess()`
+
+So the current real implementation status is:
+- Blood Bank nurse visibility and enforcement: applied
+- Blood Bank IT backend access enforcement: applied
+- Blood Bank IT shared dashboard/prototype-entry hiding: applied
+
+### Donor Dashboard Scope After Cleanup
+The donor dashboard should keep:
+- donor profile and blood profile display
+- weekly availability
+- notifications
+- accept/decline workflow
+- donation history view
+
+The donor dashboard should not keep donor self-entry for:
+- staff health checks
+- actual donation recording
+
+### Staff Visibility and Card-Based Search
+The project should continue the card-based workflow approach already used in admin setup.
+
+Recommended blood-side visibility:
+- Blood Bank staff should be able to load donor cards
+- donor cards should show donor id or linked user id clearly
+- accepted donor cards should help staff avoid memorizing ids
+- blood request cards should show enough context for matching and fulfillment
+
+### Schema Sufficiency
+No major schema redesign is required for this blood workflow.
+
+The current structure already supports:
+- shared `users` identity
+- donor profile records
+- donor availability
+- donor health checks
+- blood donations
+- blood request matching
+- donor notifications
+- blood inventory
+- request linkage
+
+Only one new reference-data change is now strongly recommended:
+- add `Blood Bank` to the departments seed data
+
+### Identity Clarification for This Workflow
+All human users in the system still come from the same `users` table.
+
+Role/profile rows reuse the same `users.id`, for example:
+- `patients.patient_id = users.id`
+- `doctors.doctor_id = users.id`
+- `nurses.nurse_id = users.id`
+- `donor_profiles.donor_id = users.id`
+
+So if someone becomes a donor, doctor, nurse, or approved staff member:
+- they do not receive a second person identity number
+- the project creates role/profile rows keyed by the existing `users.id`
+
+This same identity rule still applies for blood-bank-assigned nurses and IT workers.
+
+### Blood Bank Dashboard Visibility Clarification
+The final dashboard behavior for Blood Bank staff is now:
+
+- nurse dashboard stays on the same page, but only shows donor screening tools after the nurse presses `Load profile` and the loaded nurse profile department is `Blood Bank`
+- when the loaded nurse profile department is `Blood Bank`, the regular patient-monitoring nurse work area should be hidden for that session view
+- IT worker dashboard stays on the same page, but only shows the Blood Bank operations entry section after the IT worker presses `Load my departments` and the assigned department scope includes `Blood Bank`
+- when the IT worker is scoped only to `Blood Bank`, the regular ward/admission/bed workflow area should be hidden for that session view
+- Blood Matching Center remains the actual working page for Blood Bank IT donation workflow details at `/ui/blood-matching`
+
+This keeps the feature gate consistent with the department-loading pattern already used in the project UI.
+
+### Blood Bank Page Responsibility Clarification
+The current page split should now be treated like this:
+
+- `/ui/blood-matching` is the operational Blood Bank workflow page
+- `/ui/blood-bank-schema` is the setup, inspection, and debugging page
+
+Operational work that belongs on `/ui/blood-matching`:
+- request board review
+- donor suggestion review
+- donor notification
+- accepted donor approval
+- donation logging
+- request fulfillment
+
+Setup or schema/debug work that belongs on `/ui/blood-bank-schema`:
+- create blood bank rows
+- inspect donor profile rows
+- inspect inventory rows
+- manually upsert inventory or donor profile data for setup/debug cases
+
+The nurse and IT dashboards should auto-load department/profile scope on page boot and keep manual buttons only as reload/fallback actions.
