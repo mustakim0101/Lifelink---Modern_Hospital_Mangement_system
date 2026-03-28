@@ -8,4 +8,6 @@ IF NOT EXISTS (SELECT 1 FROM dbo.departments WHERE dept_name = N'Pediatrics')
     INSERT INTO dbo.departments (dept_name, is_active, created_at, updated_at) VALUES (N'Pediatrics', 1, SYSDATETIME(), SYSDATETIME());
 IF NOT EXISTS (SELECT 1 FROM dbo.departments WHERE dept_name = N'General Medicine')
     INSERT INTO dbo.departments (dept_name, is_active, created_at, updated_at) VALUES (N'General Medicine', 1, SYSDATETIME(), SYSDATETIME());
+IF NOT EXISTS (SELECT 1 FROM dbo.departments WHERE dept_name = N'Blood Bank')
+    INSERT INTO dbo.departments (dept_name, is_active, created_at, updated_at) VALUES (N'Blood Bank', 1, SYSDATETIME(), SYSDATETIME());
 GO
