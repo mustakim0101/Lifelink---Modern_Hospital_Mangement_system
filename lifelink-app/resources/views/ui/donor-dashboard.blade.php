@@ -1,10 +1,11 @@
 @extends('ui.layouts.app')
 
 @section('title', 'Donor Dashboard')
-@section('workspace_label', 'Blood donor workspace')
-@section('hero_badge', 'Donor Mode')
-@section('hero_title', 'Manage availability, review blood requests, and track donation history.')
-@section('hero_description', 'This donor workspace now stays focused on donor-owned actions only. Staff-entered health checks and donation logging are handled by Blood Bank nurses and Blood Bank IT workers.')
+@section('workspace_label', '')
+@section('hero_badge', '')
+@section('hero_title', 'Donor Dashboard')
+@section('hero_description', '')
+@section('hide_meta_card', '1')
 @section('meta_title', 'Donor Dashboard')
 @section('meta_copy', 'Availability, request response, and donation history')
 
@@ -217,6 +218,24 @@
 
     .donor-toast.ok { background: #166534; }
     .donor-toast.error { background: #b91c1c; }
+    .donor-hero-stats { margin-top: 12px; }
+
+    .donor-panel { display: none; }
+
+    /* Donor page layout override: full-width page with sidebar flush left */
+    .app-shell {
+        width: 100%;
+        max-width: none;
+        margin-left: 0;
+        margin-right: 0;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .app-shell__sidebar {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
 
     @media (max-width: 1100px) {
         .donor-row,
@@ -229,75 +248,64 @@
 @endpush
 
 @section('sidebar_nav')
-    <a class="is-active" href="/ui/donor-dashboard">
-        <strong>Donor Dashboard</strong>
-        <span>Current area</span>
+    <a class="is-active" href="#donor-access">
+        <strong>Access</strong>
     </a>
-    <a href="/ui/blood-matching">
-        <strong>Blood Matching</strong>
-        <span>Staff-side operations</span>
+    <a href="#donor-availability">
+        <strong>Availability</strong>
     </a>
-    <a href="/ui/patient-portal">
-        <strong>Patient Portal</strong>
-        <span>Shared shell reference</span>
+    <a href="#donor-requests">
+        <strong>Requests</strong>
+    </a>
+    <a href="#donor-history">
+        <strong>History</strong>
+    </a>
+    <a href="#donor-debug">
+        <strong>API Response</strong>
     </a>
 @endsection
 
 @section('sidebar')
-    <div class="app-shell__sidebar-card">
-        <strong>Donor-owned tasks</strong>
-        <p>This page now keeps only donor-owned actions: donor profile, weekly availability, request notifications, and donation history.</p>
-    </div>
-    <div class="app-shell__sidebar-card">
-        <strong>Staff-owned tasks</strong>
-        <p>Health screening is entered by a Blood Bank nurse, and actual donation logging is entered by Blood Bank IT/Admin staff after you physically arrive.</p>
+@endsection
+
+@section('hero_extra')
+    <div class="donor-stats donor-hero-stats">
+        <div class="donor-stat"><small>Total Donations</small><strong id="stDonations">0</strong></div>
+        <div class="donor-stat"><small>Total Units</small><strong id="stUnits">0</strong></div>
+        <div class="donor-stat"><small>Pending Requests</small><strong id="stPendingReq">0</strong></div>
+        <div class="donor-stat"><small>Week Max Bags</small><strong id="stWeekBags">0</strong></div>
     </div>
 @endsection
 
 @section('content')
     <div class="donor-grid">
-        <div class="donor-stats">
-            <div class="donor-stat"><small>Total Donations</small><strong id="stDonations">0</strong></div>
-            <div class="donor-stat"><small>Total Units</small><strong id="stUnits">0</strong></div>
-            <div class="donor-stat"><small>Pending Requests</small><strong id="stPendingReq">0</strong></div>
-            <div class="donor-stat"><small>Week Max Bags</small><strong id="stWeekBags">0</strong></div>
-        </div>
-
-        <div class="donor-row">
-            <div class="donor-card">
-                <h3>Access and donor role</h3>
-                <p class="donor-hint">This page now prefers your normal `USER_TOKEN` automatically. If donor role is not enabled yet for the logged-in user, you can initialize it here.</p>
-                <label class="donor-label" for="tokenInput">Bearer token</label>
-                <input id="tokenInput" class="donor-input" placeholder="Paste donor token">
-                <div class="donor-row" style="margin-top: 12px;">
-                    <div>
-                        <label class="donor-label" for="enrollBloodGroup">Enroll blood group</label>
-                        <select id="enrollBloodGroup" class="donor-select">
-                            <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
-                            <option>AB+</option><option>AB-</option><option selected>O+</option><option>O-</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="donor-label">Eligibility state</label>
-                        <div id="eligibilityBadge" class="donor-badge warn">Unknown</div>
-                    </div>
+        <div id="donor-access" class="donor-card ll-section donor-panel" data-display="block">
+            <h3>Access and donor role</h3>
+            <p class="donor-hint">Use USER_TOKEN first. Enable donor role if needed.</p>
+            <label class="donor-label" for="tokenInput">Bearer token</label>
+            <input id="tokenInput" class="donor-input" placeholder="Paste donor token">
+            <div class="donor-row" style="margin-top: 12px;">
+                <div>
+                    <label class="donor-label" for="enrollBloodGroup">Enroll blood group</label>
+                    <select id="enrollBloodGroup" class="donor-select">
+                        <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                        <option>AB+</option><option>AB-</option><option selected>O+</option><option>O-</option>
+                    </select>
                 </div>
-                <div class="donor-actions" style="margin-top: 12px;">
-                    <button id="btnUseUserToken" class="donor-btn donor-btn-soft" type="button" onclick="useStoredUserToken()">Use USER_TOKEN</button>
-                    <button id="btnUseDonorToken" class="donor-btn donor-btn-soft" type="button" onclick="useStoredDonorToken()">Use DONOR_TOKEN</button>
-                    <button id="btnRefresh" class="donor-btn donor-btn-main" type="button" onclick="refreshAll()">Refresh</button>
-                    <button id="btnEnroll" class="donor-btn donor-btn-soft" type="button" onclick="enrollDonorRole()">Enable Donor Role</button>
+                <div>
+                    <label class="donor-label">Eligibility state</label>
+                    <div id="eligibilityBadge" class="donor-badge warn">Unknown</div>
                 </div>
             </div>
-
-            <div class="donor-card">
-                <h3>Donor profile</h3>
-                <p class="donor-hint">This is the donor-side summary only. The latest health screening shown here is staff-entered reference, not donor self-entry.</p>
-                <div id="profileMeta" class="donor-meta">No donor profile loaded yet.</div>
+            <div class="donor-actions" style="margin-top: 12px;">
+                <button id="btnUseUserToken" class="donor-btn donor-btn-soft" type="button" onclick="useStoredUserToken()">Use USER_TOKEN</button>
+                <button id="btnUseDonorToken" class="donor-btn donor-btn-soft" type="button" onclick="useStoredDonorToken()">Use DONOR_TOKEN</button>
+                <button id="btnRefresh" class="donor-btn donor-btn-main" type="button" onclick="refreshAll()">Refresh</button>
+                <button id="btnEnroll" class="donor-btn donor-btn-soft" type="button" onclick="enrollDonorRole()">Enable Donor Role</button>
             </div>
         </div>
 
-        <div class="donor-card">
+        <div id="donor-availability" class="donor-card ll-section donor-panel" data-display="block">
             <h3>Weekly availability</h3>
             <div class="donor-row" style="margin-top: 12px;">
                 <div>
@@ -334,18 +342,16 @@
             </div>
         </div>
 
-        <div class="donor-card">
+        <div id="donor-requests" class="donor-card ll-section donor-panel" data-display="block">
             <h3>Request notifications</h3>
-            <p class="donor-hint">Accept or decline blood requests here. If you accept, the next steps happen physically at the hospital with Blood Bank staff.</p>
             <div class="donor-actions" style="margin-top: 12px;">
                 <button id="btnNotifications" class="donor-btn donor-btn-main" type="button" onclick="loadNotifications()">Refresh Notifications</button>
             </div>
             <div id="notificationsGrid" class="donor-cards" style="margin-top: 12px;"></div>
         </div>
 
-        <div class="donor-card">
+        <div id="donor-history" class="donor-card ll-section donor-panel" data-display="block">
             <h3>Donation history</h3>
-            <p class="donor-hint">This is read-only donor history. Actual donation records are now entered by Blood Bank staff after successful screening.</p>
             <div class="donor-actions" style="margin-top: 12px;">
                 <button id="btnDonations" class="donor-btn donor-btn-main" type="button" onclick="loadDonations()">Refresh Donations</button>
             </div>
@@ -359,9 +365,11 @@
             </div>
         </div>
 
-        <div class="donor-card">
-            <h3>API response</h3>
-            <pre id="out" class="donor-pre"></pre>
+        <div id="donor-debug" class="donor-card ll-section donor-panel" data-display="block">
+            <details class="ll-debug" open>
+                <summary>API response</summary>
+                <pre id="out" class="donor-pre"></pre>
+            </details>
         </div>
     </div>
 
@@ -401,6 +409,38 @@ function bootstrapToken() {
     byId('tokenInput').value = userToken || donorToken;
 }
 function hasToken() { return !!byId('tokenInput').value.trim(); }
+
+const donorPanelIds = ['donor-access', 'donor-availability', 'donor-requests', 'donor-history', 'donor-debug'];
+const donorNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[href^="#donor-"]'));
+
+function setActivePanel(panelId) {
+    donorPanelIds.forEach((id) => {
+        const panel = byId(id);
+        if (!panel) return;
+        panel.style.display = id === panelId ? (panel.dataset.display || 'block') : 'none';
+    });
+
+    donorNavLinks.forEach((link) => {
+        const targetId = (link.getAttribute('href') || '').replace('#', '');
+        link.classList.toggle('is-active', targetId === panelId);
+    });
+}
+
+function setupSidebarPanelNav() {
+    donorNavLinks.forEach((link) => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            const panelId = (link.getAttribute('href') || '').replace('#', '');
+            if (!donorPanelIds.includes(panelId)) return;
+            setActivePanel(panelId);
+            history.replaceState(null, '', `#${panelId}`);
+        });
+    });
+
+    const initialHash = (window.location.hash || '').replace('#', '');
+    const initialPanel = donorPanelIds.includes(initialHash) ? initialHash : 'donor-access';
+    setActivePanel(initialPanel);
+}
 
 async function call(path, method = 'GET', body = null, query = null, { requireToken = true } = {}) {
     const token = byId('tokenInput').value.trim();
@@ -443,23 +483,7 @@ function renderEligibility(isEligible) {
 }
 
 function renderProfile(data) {
-    if (!data?.donor) {
-        byId('profileMeta').textContent = 'No donor profile loaded yet.';
-        renderEligibility(null);
-        return;
-    }
-
-    const donor = data.donor;
-    const latestCheck = data.latest_health_check;
-    byId('profileMeta').innerHTML = `
-        <strong>${html(donor.full_name || 'Unknown donor')}</strong><br>
-        Email: ${html(donor.email || '-')}<br>
-        Donor ID: <strong>#${html(donor.donor_id)}</strong><br>
-        Blood group: <strong>${html(donor.blood_group || '-')}</strong><br>
-        Last donation: ${donor.last_donation_date ? new Date(donor.last_donation_date).toLocaleString() : 'No donation yet'}<br>
-        Latest staff health check: ${latestCheck?.check_datetime ? new Date(latestCheck.check_datetime).toLocaleString() : 'No staff check logged yet'}
-    `;
-    renderEligibility(donor.is_eligible);
+    renderEligibility(data?.donor?.is_eligible);
 }
 
 async function loadDashboard() {
@@ -648,6 +672,7 @@ async function refreshAll({ silentIfMissingToken = false } = {}) {
 }
 
 function boot() {
+    setupSidebarPanelNav();
     bootstrapToken();
     if (hasToken()) {
         refreshAll({ silentIfMissingToken: true });

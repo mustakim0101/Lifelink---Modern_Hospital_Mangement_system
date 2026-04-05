@@ -1,0 +1,106 @@
+:root {
+    --ll-space-1: 8px;
+    --ll-space-2: 12px;
+    --ll-space-3: 16px;
+    --ll-space-4: 22px;
+    --ll-space-5: 30px;
+    --ll-ink: #152e41;
+    --ll-muted: #5c7282;
+    --ll-line: rgba(21, 46, 65, 0.13);
+    --ll-surface: rgba(255, 255, 255, 0.9);
+    --ll-primary: #0f766e;
+    --ll-secondary: #1d4ed8;
+    --ll-shadow: 0 16px 34px rgba(15, 34, 48, 0.12);
+}
+
+.app-shell__content-body > * + * {
+    margin-top: var(--ll-space-3);
+}
+
+.ll-section-nav {
+    position: sticky;
+    top: 10px;
+    z-index: 8;
+    margin-bottom: var(--ll-space-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ll-space-1);
+    padding: var(--ll-space-1);
+    border: 1px solid var(--ll-line);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 8px 20px rgba(15, 34, 48, 0.08);
+}
+
+.ll-section-nav a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    color: var(--ll-muted);
+    font-size: 0.86rem;
+    font-weight: 700;
+    background: rgba(21, 46, 65, 0.04);
+}
+
+.ll-section-nav a:hover,
+.ll-section-nav a.is-active {
+    color: var(--ll-primary);
+    border-color: rgba(15, 118, 110, 0.2);
+    background: rgba(15, 118, 110, 0.1);
+}
+
+.ll-section {
+    scroll-margin-top: 68px;
+}
+
+.ll-section-title {
+    margin: 0;
+    font-size: 1.18rem;
+    color: var(--ll-ink);
+}
+
+.ll-section-copy {
+    margin: 6px 0 0;
+    color: var(--ll-muted);
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+
+.ll-debug {
+    border: 1px solid var(--ll-line);
+    border-radius: 14px;
+    background: var(--ll-surface);
+    box-shadow: var(--ll-shadow);
+    padding: var(--ll-space-2);
+}
+
+.ll-debug > summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--ll-ink);
+}
+
+.ll-debug > summary::marker {
+    color: var(--ll-secondary);
+}
+
+.ll-debug pre {
+    margin-top: var(--ll-space-2);
+}
+
+.ll-helper-tight {
+    margin: 5px 0 0;
+    color: var(--ll-muted);
+    font-size: 0.9rem;
+    line-height: 1.55;
+}
+
+@media (max-width: 780px) {
+    .ll-section-nav {
+        position: static;
+    }
+}

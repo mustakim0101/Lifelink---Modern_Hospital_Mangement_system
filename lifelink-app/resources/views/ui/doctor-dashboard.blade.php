@@ -4,7 +4,7 @@
 @section('workspace_label', 'Clinical doctor workspace')
 @section('hero_badge', 'Doctor Mode')
 @section('hero_title', 'Doctor dashboard for patient review, appointments, and bed requests.')
-@section('hero_description', 'This is the doctor-facing operational page. Admin should complete doctor setup from the admin dashboard first, and this page then handles clinical actions only.')
+@section('hero_description', 'Clinical actions only: patient view, appointments, and bed requests after admin setup.')
 @section('meta_title', 'Doctor Dashboard')
 @section('meta_copy', 'Clinical actions, appointments, and admissions support')
 
@@ -146,12 +146,18 @@
     </div>
 @endsection
 
+@section('section_nav')
+    <a href="#doctor-request" class="is-active">Bed Request</a>
+    <a href="#doctor-actions">Doctor Actions</a>
+    <a href="#doctor-debug">API Response</a>
+@endsection
+
 @section('content')
     <div class="doctor-grid">
-        <div class="doctor-split">
+        <div id="doctor-request" class="doctor-split ll-section">
             <div class="doctor-card">
                 <h3>Doctor: create bed request</h3>
-                <p class="doctor-hint">Submit admission/bed-related requests for a patient from the doctor workflow.</p>
+                <p class="doctor-hint">Submit an admission or bed request for a patient.</p>
                 <div class="doctor-row">
                     <div>
                         <label class="doctor-label" for="patientUserId">Patient user id</label>
@@ -177,11 +183,11 @@
             </div>
         </div>
 
-        <div class="doctor-card">
+        <div id="doctor-actions" class="doctor-card ll-section">
             <div class="doctor-section-title">
                 <div>
                     <h3>Doctor actions</h3>
-                    <p class="doctor-hint">Run doctor-specific API calls directly from the shared workspace while the page is still in prototype mode.</p>
+                    <p class="doctor-hint">Run doctor endpoints without leaving this page.</p>
                 </div>
             </div>
 
@@ -222,9 +228,11 @@
             </div>
         </div>
 
-        <div class="doctor-card">
-            <h3>API response</h3>
-            <pre id="out" class="doctor-response"></pre>
+        <div id="doctor-debug" class="doctor-card ll-section">
+            <details class="ll-debug" open>
+                <summary>API response</summary>
+                <pre id="out" class="doctor-response"></pre>
+            </details>
         </div>
     </div>
 @endsection

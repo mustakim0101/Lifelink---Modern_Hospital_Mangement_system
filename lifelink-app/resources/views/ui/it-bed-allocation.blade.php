@@ -4,7 +4,7 @@
 @section('workspace_label', 'IT worker operations workspace')
 @section('hero_badge', 'IT Operations')
 @section('hero_title', 'Manage department scope, ward setup, admissions, and bed assignment from one dashboard.')
-@section('hero_description', 'This page is for the approved IT worker after admin has already assigned department scope. It combines ward setup and bed operations in one place.')
+@section('hero_description', 'Department-scoped IT operations for wards, admissions, and bed assignment.')
 @section('meta_title', 'IT Workflow')
 @section('meta_copy', 'Department assignment, ward setup, admissions, and beds')
 
@@ -256,17 +256,25 @@
 @section('sidebar')
     <div class="app-shell__sidebar-card">
         <strong>IT scope</strong>
-        <p>Admin assigns the IT worker's departments from the admin dashboard. This page is the IT worker's operational page after that setup already exists.</p>
+        <p>Admin assigns departments first. This page handles day-to-day IT operations after that setup.</p>
     </div>
     <div class="app-shell__sidebar-card">
         <strong>How to use this page</strong>
-        <p>Typical order: load your departments, create care units if needed, create beds if needed, create an admission for a patient, load available beds, assign a bed, and later discharge the admission to free that bed again.</p>
+        <p>Typical order: load scope, set up units/beds, create admission, assign bed, then discharge to release bed.</p>
     </div>
+@endsection
+
+@section('section_nav')
+    <a href="#it-overview" class="is-active">Overview</a>
+    <a href="#it-directory">Doctor + Patient Lookup</a>
+    <a href="#it-admission">Admission + Bed Flow</a>
+    <a href="#it-reference">Reference Tables</a>
+    <a href="#it-debug">API Response</a>
 @endsection
 
 @section('content')
     <div class="it-grid">
-        <div class="it-split">
+        <div id="it-overview" class="it-split ll-section">
             <div class="it-panel it-col-4">
                 <h3>IT worker session</h3>
                 <p class="it-note">Use the logged-in IT worker token here. If "load my departments" returns nothing, admin has not finished your department assignment yet.</p>
@@ -280,7 +288,7 @@
 
             <div class="it-panel it-col-4">
                 <h3>What this page controls</h3>
-                <p class="it-note">Admission intake and bed assignment are about patient movement inside hospital capacity. You admit a patient into a department, then assign one available bed from that department, then later discharge the admission to release the bed.</p>
+                <p class="it-note">Admit to a department, assign an available bed, and discharge later to release capacity.</p>
             </div>
 
             <div class="it-panel it-col-4">
@@ -308,7 +316,7 @@
         </div>
 
         <div id="standardItWorkArea">
-        <div class="it-split">
+        <div id="it-directory" class="it-split ll-section">
             <div class="it-panel it-col-6">
                 <h3>Doctor lookup for admission context</h3>
                 <p class="it-note">If admission should be tied to a doctor, search doctors here and use one of their ids in the admission form. The doctor must belong to the same department as the admission.</p>
@@ -352,7 +360,7 @@
             </div>
         </div>
 
-        <div class="it-split">
+        <div id="it-admission" class="it-split ll-section">
             <div class="it-panel it-col-6">
                 <h3>Ward setup</h3>
                 <p class="it-note">Create care units and beds here instead of jumping to a separate prototype page.</p>
@@ -536,7 +544,7 @@
             </div>
         </div>
 
-        <div class="it-panel">
+        <div id="it-reference" class="it-panel ll-section">
             <h3>Reference tables</h3>
             <div class="it-table-grid">
                 <div>
@@ -565,9 +573,11 @@
         </div>
         </div>
 
-        <div class="it-panel">
-            <h3>API response</h3>
-            <pre id="out" class="it-console"></pre>
+        <div id="it-debug" class="it-panel ll-section">
+            <details class="ll-debug" open>
+                <summary>API response</summary>
+                <pre id="out" class="it-console"></pre>
+            </details>
         </div>
     </div>
 @endsection

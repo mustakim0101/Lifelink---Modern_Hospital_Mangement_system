@@ -4,7 +4,7 @@
 @section('workspace_label', 'Nurse monitoring workspace')
 @section('hero_badge', 'Nurse Care')
 @section('hero_title', 'Monitor department patients and log vital signs from one workspace.')
-@section('hero_description', 'This dashboard is for the working nurse after admin has already approved the account and assigned the nurse profile to a department.')
+@section('hero_description', 'Department-focused nurse workflow for monitoring and vital-sign logging.')
 @section('meta_title', 'Nurse Workflow')
 @section('meta_copy', 'Department monitoring and bedside updates')
 
@@ -338,9 +338,16 @@
     </div>
 @endsection
 
+@section('section_nav')
+    <a href="#nurse-overview" class="is-active">Overview</a>
+    <a href="#regularNurseWorkArea">Patient Monitoring</a>
+    <a href="#nurse-blood-bank">Blood Bank Screening</a>
+    <a href="#nurse-debug">API Response</a>
+@endsection
+
 @section('content')
     <div class="nurse-grid">
-        <div class="nurse-split">
+        <div id="nurse-overview" class="nurse-split ll-section">
             <div class="nurse-panel nurse-col-4">
                 <h3>Nurse session</h3>
                 <p class="nurse-note">Use the logged-in nurse token here. If profile loading fails, it usually means admin has not finished nurse setup yet.</p>
@@ -353,7 +360,7 @@
 
             <div class="nurse-panel nurse-col-4">
                 <h3>What "load profile" means</h3>
-                <p class="nurse-note">This checks the nurse profile that admin created for your account. The profile contains your department assignment, and that department is what limits which patients you can see here.</p>
+                <p class="nurse-note">Loads your admin-provisioned nurse profile and department scope.</p>
                 <div class="nurse-actions">
                     <button class="nurse-button soft" type="button" onclick="loadNurseProfile()">Reload profile</button>
                 </div>
@@ -361,7 +368,7 @@
 
             <div class="nurse-panel nurse-col-4">
                 <h3>Department filters</h3>
-                <p class="nurse-note">This does not filter other nurses. It filters the patient admissions inside your own assigned department so you can focus on admitted cases, discharged cases, or a specific patient/bed search.</p>
+                <p class="nurse-note">Filters admissions in your own department by status or search text.</p>
                 <div class="nurse-control-grid">
                     <div>
                         <label class="nurse-label" for="statusFilter">Admission status</label>
@@ -384,7 +391,7 @@
             </div>
         </div>
 
-        <div id="regularNurseSection" class="nurse-panel">
+        <div id="regularNurseSection" class="nurse-panel ll-section">
             <h3>Department snapshot</h3>
             <div class="nurse-stat-grid">
                 <div class="nurse-stat"><strong id="stTotal">0</strong><span>Total</span></div>
@@ -395,7 +402,7 @@
             </div>
         </div>
 
-        <div id="regularNurseWorkArea" class="nurse-split">
+        <div id="regularNurseWorkArea" class="nurse-split ll-section">
             <div class="nurse-panel nurse-col-5">
                 <h3>Patient monitoring list</h3>
                 <p class="nurse-note">Select an admission to open monitoring detail, recent vitals, and linked records.</p>
@@ -404,7 +411,7 @@
 
             <div class="nurse-panel nurse-col-7">
                 <h3>Admission monitor</h3>
-                <p class="nurse-note">This is where you record temperature, pulse, blood pressure, respiration, and SpO2 for the selected admitted patient. Those values are saved into the nurse vital-sign log table for that admission.</p>
+                <p class="nurse-note">Record vitals for the selected admission and review recent entries.</p>
 
                 <div class="nurse-section-title">Selected admission</div>
                 <div id="admissionSummary" class="nurse-summary-grid"></div>
@@ -492,9 +499,9 @@
             </div>
         </div>
 
-        <div class="nurse-panel">
+        <div id="nurse-blood-bank" class="nurse-panel ll-section">
             <h3>Blood Bank donor screening</h3>
-            <p class="nurse-note">This section activates only for nurses assigned to the Blood Bank department. Regular nurses in other departments should keep seeing only patient-monitoring work.</p>
+            <p class="nurse-note">Visible only for nurses assigned to the Blood Bank department.</p>
 
             <div id="bloodBankLocked" class="nurse-note">Load your nurse profile first to see whether Blood Bank donor screening is available for this account.</div>
             <div id="bloodBankSection" style="display:none;">
@@ -581,10 +588,11 @@
             </div>
         </div>
 
-        <div class="nurse-panel">
-            <h3>API response log</h3>
-            <p class="nurse-note">Keeping raw request and response output visible while the role workflow is still being polished.</p>
-            <pre id="out" class="nurse-console"></pre>
+        <div id="nurse-debug" class="nurse-panel ll-section">
+            <details class="ll-debug" open>
+                <summary>API response log</summary>
+                <pre id="out" class="nurse-console"></pre>
+            </details>
         </div>
     </div>
 @endsection

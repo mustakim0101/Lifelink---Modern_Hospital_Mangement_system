@@ -4,7 +4,7 @@
 @section('workspace_label', 'Admin approval workspace')
 @section('hero_badge', 'Hiring Review')
 @section('hero_title', 'Review pending applications without hunting through raw JSON.')
-@section('hero_description', 'This page keeps the raw API response visible for debugging, but the main admin flow now uses a card queue so pending applications can be reviewed directly from the page.')
+@section('hero_description', 'Run reviews from cards first and keep raw output available in a contained debug area.')
 @section('meta_title', 'Application Queue')
 @section('meta_copy', 'Approve or reject applicant role requests')
 
@@ -285,11 +285,18 @@
     </div>
 @endsection
 
+@section('section_nav')
+    <a href="#review-queue" class="is-active">Queue</a>
+    <a href="#review-cards">Cards</a>
+    <a href="#review-action">Action</a>
+    <a href="#review-debug">Context + API</a>
+@endsection
+
 @section('content')
     <div class="review-grid">
-        <div class="review-panel">
+        <div id="review-queue" class="review-panel ll-section">
             <h3>Review queue</h3>
-            <p class="review-note">Load applications by status, scan them as cards, and review directly from the selected applicant instead of copying IDs out of raw JSON.</p>
+            <p class="review-note">Filter by status, then review from cards.</p>
 
             <div class="review-toolbar" style="margin-top: 14px;">
                 <div>
@@ -324,13 +331,13 @@
             </div>
         </div>
 
-        <div class="review-panel">
+        <div id="review-cards" class="review-panel ll-section">
             <h3>Applications</h3>
             <p class="review-note">The queue below is the main admin view. Click any card to load it into the review form. Pending items are shown first when you keep the default filter.</p>
             <div id="applicationCards" class="review-card-list" style="margin-top: 14px;"></div>
         </div>
 
-        <div class="review-panel">
+        <div id="review-action" class="review-panel ll-section">
             <h3>Review action</h3>
             <p class="review-note">The manual form is still here for direct review work and debugging, but card actions now prefill it for you.</p>
 
@@ -346,15 +353,15 @@
             </div>
         </div>
 
-        <div class="review-panel">
-            <h3>Stored admin context</h3>
-            <pre id="ctx" class="review-console"></pre>
-        </div>
-
-        <div class="review-panel">
-            <h3>API response</h3>
-            <p class="review-note">Keeping the raw response visible for now, as requested.</p>
-            <pre id="out" class="review-console"></pre>
+        <div id="review-debug" class="review-panel ll-section">
+            <details class="ll-debug">
+                <summary>Stored admin context</summary>
+                <pre id="ctx" class="review-console"></pre>
+            </details>
+            <details class="ll-debug" style="margin-top: 10px;" open>
+                <summary>API response</summary>
+                <pre id="out" class="review-console"></pre>
+            </details>
         </div>
     </div>
 @endsection

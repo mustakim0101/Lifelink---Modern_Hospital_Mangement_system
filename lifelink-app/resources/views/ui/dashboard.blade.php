@@ -3,322 +3,323 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LifeLink | Authenticated Dashboard</title>
+    <title>LifeLink | Workspace Hub</title>
     <style>
         :root {
-            --bg: #edf4f7;
-            --surface: rgba(255, 255, 255, 0.84);
-            --line: rgba(22, 49, 67, 0.12);
-            --text: #153143;
-            --muted: #5d7481;
-            --primary: #0f766e;
-            --secondary: #1d4ed8;
-            --danger: #b91c1c;
-            --shadow: 0 28px 70px rgba(16, 42, 60, 0.12);
+            --hub-bg: #edf4f7;
+            --hub-surface: rgba(255, 255, 255, 0.9);
+            --hub-line: rgba(20, 45, 63, 0.12);
+            --hub-text: #143145;
+            --hub-muted: #607686;
+            --hub-primary: #0f766e;
+            --hub-secondary: #1d4ed8;
+            --hub-danger: #b91c1c;
+            --hub-shadow: 0 18px 42px rgba(16, 42, 60, 0.12);
         }
 
         * { box-sizing: border-box; }
+
         body {
             margin: 0;
+            color: var(--hub-text);
             font-family: "Segoe UI", "Trebuchet MS", sans-serif;
-            color: var(--text);
             background:
                 radial-gradient(circle at top left, rgba(29, 78, 216, 0.14), transparent 24rem),
                 radial-gradient(circle at right, rgba(15, 118, 110, 0.14), transparent 24rem),
-                linear-gradient(180deg, #f8fbfd 0%, var(--bg) 100%);
+                linear-gradient(180deg, #f8fbfd 0%, var(--hub-bg) 100%);
         }
 
         a { color: inherit; text-decoration: none; }
 
-        .shell {
-            width: min(1180px, calc(100% - 32px));
+        .hub-shell {
+            width: min(1280px, calc(100% - 24px));
             margin: 0 auto;
-            padding: 24px 0 42px;
+            padding: 16px 0 30px;
         }
 
-        .topbar {
+        .hub-topbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 16px;
-            padding: 18px 0;
+            gap: 12px;
+            margin-bottom: 14px;
         }
 
-        .brand {
+        .hub-brand {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
         }
 
-        .mark {
-            width: 46px;
-            height: 46px;
+        .hub-mark {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
             display: grid;
             place-items: center;
-            border-radius: 16px;
             color: #fff;
             font-weight: 800;
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-            box-shadow: 0 16px 28px rgba(29, 78, 216, 0.22);
+            background: linear-gradient(135deg, var(--hub-secondary), var(--hub-primary));
+            box-shadow: 0 12px 22px rgba(29, 78, 216, 0.24);
         }
 
-        .brand strong {
+        .hub-brand strong {
             display: block;
-            font-family: Georgia, "Times New Roman", serif;
-            font-size: 1.14rem;
+            font-size: 1.04rem;
         }
 
-        .brand span {
-            color: var(--muted);
-            font-size: 0.93rem;
+        .hub-brand span {
+            color: var(--hub-muted);
+            font-size: 0.9rem;
         }
 
-        .top-actions {
+        .hub-actions {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
         }
 
-        .chip,
-        .button {
+        .hub-chip {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            padding: 11px 16px;
+            min-height: 38px;
+            padding: 8px 14px;
+            border: 1px solid var(--hub-line);
             border-radius: 999px;
-            border: 1px solid var(--line);
-            background: rgba(255, 255, 255, 0.72);
+            background: rgba(255, 255, 255, 0.78);
             font-weight: 700;
             cursor: pointer;
         }
 
-        .button-primary {
-            color: #fff;
-            border: 0;
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-        }
-
-        .hero {
+        .hub-layout {
             display: grid;
-            grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
-            gap: 20px;
-            margin-top: 10px;
-        }
-
-        .panel,
-        .card,
-        .action-card {
-            border: 1px solid var(--line);
-            border-radius: 28px;
-            background: var(--surface);
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(14px);
-        }
-
-        .hero-copy {
-            padding: 34px;
-            background:
-                radial-gradient(circle at top left, rgba(249, 115, 22, 0.18), transparent 20rem),
-                linear-gradient(160deg, rgba(255, 255, 255, 0.9), rgba(229, 245, 244, 0.82));
-        }
-
-        .eyebrow {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 14px;
-            border-radius: 999px;
-            background: rgba(15, 118, 110, 0.1);
-            color: #0c615d;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            font-size: 0.8rem;
-            font-weight: 800;
-        }
-
-        .hero-copy h1 {
-            margin: 18px 0 12px;
-            font-family: Georgia, "Times New Roman", serif;
-            font-size: clamp(2rem, 3vw, 3.6rem);
-            line-height: 1.05;
-            max-width: 12ch;
-        }
-
-        .hero-copy p {
-            margin: 0;
-            color: var(--muted);
-            line-height: 1.8;
-        }
-
-        .hero-meta {
-            display: grid;
+            grid-template-columns: 290px minmax(0, 1fr);
             gap: 14px;
-            margin-top: 24px;
         }
 
-        .card {
-            padding: 18px;
+        .hub-rail,
+        .hub-main {
+            border: 1px solid var(--hub-line);
+            border-radius: 20px;
+            background: var(--hub-surface);
+            box-shadow: var(--hub-shadow);
         }
 
-        .card small {
+        .hub-rail {
+            padding: 14px;
+            align-self: start;
+            position: sticky;
+            top: 12px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .hub-main {
+            padding: 14px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .hub-block {
+            border: 1px solid var(--hub-line);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.86);
+            padding: 14px;
+        }
+
+        .hub-label {
             display: block;
             margin-bottom: 6px;
-            color: var(--muted);
+            color: var(--hub-muted);
             text-transform: uppercase;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.07em;
             font-size: 0.72rem;
             font-weight: 800;
         }
 
-        .card strong {
-            display: block;
-            font-size: 1.1rem;
-        }
-
-        .hero-side {
-            display: grid;
-            gap: 18px;
-        }
-
-        .primary-card {
-            padding: 24px;
-        }
-
-        .primary-card h2 {
-            margin: 0 0 12px;
-            font-size: 1.3rem;
-        }
-
-        .primary-card p {
+        .hub-title {
             margin: 0;
-            color: var(--muted);
-            line-height: 1.7;
+            font-size: 1.24rem;
         }
 
-        .main-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 18px;
-            margin-top: 24px;
+        .hub-copy {
+            margin: 6px 0 0;
+            color: var(--hub-muted);
+            line-height: 1.6;
+            font-size: 0.93rem;
         }
 
-        .action-card {
-            padding: 22px;
-        }
-
-        .action-card h3 {
-            margin: 0 0 10px;
-            font-size: 1.16rem;
-        }
-
-        .action-card p {
-            margin: 0;
-            color: var(--muted);
-            line-height: 1.7;
-        }
-
-        .action-links {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 18px;
-        }
-
-        .action-links a {
+        .hub-primary {
             display: inline-flex;
-            padding: 10px 14px;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 8px 14px;
+            border: 0;
             border-radius: 999px;
-            background: rgba(22, 49, 67, 0.06);
+            color: #fff;
+            background: linear-gradient(135deg, var(--hub-secondary), var(--hub-primary));
             font-weight: 700;
         }
 
-        .action-links a.primary {
-            color: #fff;
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
+        .hub-stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .hub-stat {
+            border: 1px solid var(--hub-line);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+        }
+
+        .hub-stat strong {
+            display: block;
+            font-size: 0.95rem;
+        }
+
+        .hub-stat span {
+            color: var(--hub-muted);
+            font-size: 0.82rem;
+        }
+
+        .hub-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .hub-card {
+            border: 1px solid var(--hub-line);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 14px;
+        }
+
+        .hub-card h3 {
+            margin: 0 0 8px;
+            font-size: 1rem;
+        }
+
+        .hub-card p {
+            margin: 0;
+            color: var(--hub-muted);
+            font-size: 0.9rem;
+            line-height: 1.55;
+        }
+
+        .hub-card .hub-actions {
+            margin-top: 10px;
+        }
+
+        .hub-notice {
+            padding: 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(185, 28, 28, 0.2);
+            color: var(--hub-danger);
+            background: rgba(185, 28, 28, 0.08);
         }
 
         .hidden { display: none; }
 
-        .notice {
-            margin-top: 18px;
-            padding: 18px;
-            border-radius: 20px;
-            border: 1px solid rgba(185, 28, 28, 0.18);
-            color: var(--danger);
-            background: rgba(185, 28, 28, 0.08);
-        }
+        @media (max-width: 980px) {
+            .hub-layout,
+            .hub-grid {
+                grid-template-columns: 1fr;
+            }
 
-        @media (max-width: 960px) {
-            .hero, .main-grid { grid-template-columns: 1fr; }
+            .hub-rail {
+                position: static;
+            }
         }
 
         @media (max-width: 720px) {
-            .shell { width: min(100% - 24px, 1180px); }
-            .topbar { flex-direction: column; align-items: flex-start; }
-            .hero-copy, .primary-card, .action-card, .card { padding: 20px; }
+            .hub-shell { width: min(100% - 16px, 1280px); }
+            .hub-topbar { flex-direction: column; align-items: flex-start; }
+            .hub-stats { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <div class="shell">
-        <header class="topbar">
-            <div class="brand">
-                <div class="mark">LL</div>
+    <div class="hub-shell">
+        <header class="hub-topbar">
+            <div class="hub-brand">
+                <div class="hub-mark">LL</div>
                 <div>
-                    <strong>LifeLink Dashboard</strong>
-                    <span>Authenticated mode with role-aware navigation.</span>
+                    <strong>LifeLink Workspace Hub</strong>
+                    <span>Role-aware routing and operational shortcuts.</span>
                 </div>
             </div>
-
-            <div class="top-actions">
-                <a class="chip" href="/">Public Home</a>
-                <a class="chip" href="/ui">Prototype Directory</a>
-                <button class="button" type="button" onclick="logoutSession()">Logout</button>
+            <div class="hub-actions">
+                <a class="hub-chip" href="/">Public Home</a>
+                <button class="hub-chip" type="button" onclick="logoutSession()">Logout</button>
             </div>
         </header>
 
-        <section class="hero">
-            <article class="panel hero-copy">
-                <span class="eyebrow">Authenticated Mode</span>
-                <h1 id="welcome-line">Organized access for your role.</h1>
-                <p id="welcome-copy">This dashboard reads the current session and highlights the workflow areas that matter most for the signed-in user.</p>
-
-                <div class="hero-meta">
-                    <div class="card">
-                        <small>Signed in as</small>
-                        <strong id="user-email">No active session</strong>
+        <div class="hub-layout">
+            <aside class="hub-rail">
+                <article class="hub-block">
+                    <span class="hub-label">Signed In</span>
+                    <strong id="user-email">No active session</strong>
+                    <p class="hub-copy">Identity and session summary.</p>
+                </article>
+                <article class="hub-block">
+                    <span class="hub-label">Detected Roles</span>
+                    <strong id="role-list">None</strong>
+                    <p class="hub-copy">Primary route and tools adjust to your active roles.</p>
+                </article>
+                <article id="admin-tools-card" class="hub-block hidden">
+                    <span class="hub-label">Admin / IT</span>
+                    <strong>Advanced tools</strong>
+                    <p class="hub-copy">Open diagnostics only when normal workflow pages are not enough.</p>
+                    <div class="hub-actions">
+                        <a class="hub-primary" href="/ui/dev-tools">Open advanced tools</a>
                     </div>
-                    <div class="card">
-                        <small>Detected roles</small>
-                        <strong id="role-list">None</strong>
-                    </div>
-                </div>
-            </article>
-
-            <aside class="hero-side">
-                <div class="panel primary-card">
-                    <h2 id="primary-title">Primary destination</h2>
-                    <p id="primary-copy">Sign in through the login page first to unlock the correct workflow area.</p>
-                    <div class="action-links">
-                        <a id="primary-link" class="primary" href="/ui/login">Open login page</a>
-                    </div>
-                </div>
-
-                <div id="admin-tools-card" class="panel primary-card hidden">
-                    <h2>Advanced admin and IT tools</h2>
-                    <p>Verification panels are separated from the normal user flow. Use the advanced tools page only when you need deeper inspection.</p>
-                    <div class="action-links">
-                        <a class="primary" href="/ui/dev-tools">Open advanced tools</a>
-                    </div>
-                </div>
+                </article>
             </aside>
-        </section>
 
-        <section id="action-grid" class="main-grid"></section>
+            <main class="hub-main">
+                <section class="hub-block">
+                    <span class="hub-label">Workspace Hub</span>
+                    <h1 id="welcome-line" class="hub-title">Organized access for your role.</h1>
+                    <p id="welcome-copy" class="hub-copy">This hub highlights your next operational page and related tools.</p>
+                </section>
 
-        <div id="session-warning" class="notice hidden">
-            No valid local session was found. Return to the login page and log in again before using the authenticated mode.
+                <section class="hub-block">
+                    <span class="hub-label">Primary Destination</span>
+                    <h2 id="primary-title" class="hub-title">Sign in required</h2>
+                    <p id="primary-copy" class="hub-copy">Log in first to unlock role-aware routing.</p>
+                    <div class="hub-actions" style="margin-top: 10px;">
+                        <a id="primary-link" class="hub-primary" href="/ui/login">Open login page</a>
+                    </div>
+                </section>
+
+                <section class="hub-block">
+                    <span class="hub-label">Session Snapshot</span>
+                    <div class="hub-stats">
+                        <div class="hub-stat">
+                            <strong id="session-token-state">No token</strong>
+                            <span>Token state</span>
+                        </div>
+                        <div class="hub-stat">
+                            <strong id="session-role-count">0</strong>
+                            <span>Role count</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="hub-block">
+                    <span class="hub-label">Role Shortcuts</span>
+                    <div id="action-grid" class="hub-grid"></div>
+                </section>
+
+                <div id="session-warning" class="hub-notice hidden">
+                    No valid local session found. Log in again to restore role-aware routing.
+                </div>
+            </main>
         </div>
     </div>
 
@@ -330,70 +331,70 @@
             label: 'Administrator',
             primaryLabel: 'Admin control center',
             primaryHref: '/ui/admin-users',
-            primaryCopy: 'Admins can manage user account status, review operational pages, and access advanced verification tools.',
+            primaryCopy: 'Manage account state, application decisions, and staff setup from one page.',
             cards: [
-                { title: 'User account control', href: '/ui/admin-users', desc: 'Freeze, unfreeze, and inspect user account state.' },
-                { title: 'Application reviews', href: '/ui/application-reviews', desc: 'Approve or reject role and staffing applications.' },
-                { title: 'Advanced tools', href: '/ui/dev-tools', desc: 'Open controlled raw verification and session inspection tools.' }
+                { title: 'Admin control', href: '/ui/admin-users', desc: 'Account control and profile provisioning.' },
+                { title: 'Application reviews', href: '/ui/application-reviews', desc: 'Approve or reject role applications.' },
+                { title: 'Advanced tools', href: '/ui/dev-tools', desc: 'Controlled diagnostics and raw endpoint checks.' }
             ]
         },
         ITWorker: {
             label: 'IT Worker',
-            primaryLabel: 'Operations dashboard',
+            primaryLabel: 'IT operations dashboard',
             primaryHref: '/ui/it-bed-allocation',
-            primaryCopy: 'IT Workers coordinate admissions, bed assignment, and blood matching within their allowed departments.',
+            primaryCopy: 'Manage department-scoped admissions, beds, and operational allocation flows.',
             cards: [
-                { title: 'Ward setup', href: '/ui/ward-setup', desc: 'Configure care units and bed structures.' },
-                { title: 'Bed allocation', href: '/ui/it-bed-allocation', desc: 'Manage admissions and assign available beds.' },
-                { title: 'Advanced tools', href: '/ui/dev-tools', desc: 'Open controlled diagnostics for technical verification.' }
+                { title: 'IT bed allocation', href: '/ui/it-bed-allocation', desc: 'Admission and bed assignment workflow.' },
+                { title: 'Ward setup', href: '/ui/ward-setup', desc: 'Care unit and bed structure setup.' },
+                { title: 'Advanced tools', href: '/ui/dev-tools', desc: 'Technical diagnostics for operations support.' }
             ],
             bloodBankCards: [
-                { title: 'Blood matching', href: '/ui/blood-matching', desc: 'Review blood requests, notify donors, and record Blood Bank donation workflows.' }
+                { title: 'Blood matching center', href: '/ui/blood-matching', desc: 'Request matching and donor-response operations.' }
             ]
         },
         Doctor: {
             label: 'Doctor',
             primaryLabel: 'Doctor dashboard',
             primaryHref: '/ui/doctor-dashboard',
-            primaryCopy: 'Doctors can review patients, appointments, and submit bed-related care requests.',
+            primaryCopy: 'Open clinical doctor actions for patients, appointments, and bed requests.',
             cards: [
-                { title: 'Doctor dashboard', href: '/ui/doctor-dashboard', desc: 'Manage doctor-facing patient, appointment, and request actions.' }
+                { title: 'Doctor dashboard', href: '/ui/doctor-dashboard', desc: 'Doctor-facing clinical tools.' }
             ]
         },
         Nurse: {
             label: 'Nurse',
             primaryLabel: 'Nurse dashboard',
             primaryHref: '/ui/nurse-dashboard',
-            primaryCopy: 'Nurses focus on admissions, monitoring, and patient vital sign workflows.',
+            primaryCopy: 'Open nurse monitoring workflow for department patients and vitals.',
             cards: [
-                { title: 'Nurse dashboard', href: '/ui/nurse-dashboard', desc: 'Monitor patients, admissions, and vital sign updates.' }
+                { title: 'Nurse dashboard', href: '/ui/nurse-dashboard', desc: 'Department patient monitoring and vital logs.' }
             ]
         },
         Patient: {
             label: 'Patient',
             primaryLabel: 'Patient portal',
             primaryHref: '/ui/patient-portal',
-            primaryCopy: 'Patients can review records, appointments, and blood request activity from one place.',
+            primaryCopy: 'Use one patient workspace for appointments, records, and blood requests.',
             cards: [
-                { title: 'Patient portal', href: '/ui/patient-portal', desc: 'View appointments, medical records, and blood requests.' }
+                { title: 'Patient portal', href: '/ui/patient-portal', desc: 'Patient appointments, records, and blood requests.' }
             ]
         },
         Donor: {
             label: 'Donor',
             primaryLabel: 'Donor dashboard',
             primaryHref: '/ui/donor-dashboard',
-            primaryCopy: 'Donors can update availability, health data, donation history, and notification response activity.',
+            primaryCopy: 'Manage donor availability, request response, and donation history.',
             cards: [
-                { title: 'Donor dashboard', href: '/ui/donor-dashboard', desc: 'Manage profile, availability, health checks, donations, and notifications.' }
+                { title: 'Donor dashboard', href: '/ui/donor-dashboard', desc: 'Donor profile, availability, notifications, and history.' }
             ]
         },
         Applicant: {
             label: 'Applicant',
-            primaryLabel: 'Application flow',
+            primaryLabel: 'Application workspace',
             primaryHref: '/ui/applications',
-            primaryCopy: 'Applicants can submit and follow the status of role applications.',
+            primaryCopy: 'Track application state and next steps until role approval.',
             cards: [
-                { title: 'Applications', href: '/ui/applications', desc: 'Submit and track job application progress.' }
+                { title: 'Applications', href: '/ui/applications', desc: 'Submit and track staff-role applications.' }
             ]
         }
     };
@@ -414,6 +415,8 @@
     const actionGrid = document.getElementById('action-grid');
     const warning = document.getElementById('session-warning');
     const adminToolsCard = document.getElementById('admin-tools-card');
+    const sessionTokenState = document.getElementById('session-token-state');
+    const sessionRoleCount = document.getElementById('session-role-count');
 
     async function api(path) {
         const response = await fetch(`/api${path}`, {
@@ -451,6 +454,8 @@
         warning.classList.remove('hidden');
         userEmail.textContent = 'No active session';
         roleList.textContent = 'None';
+        sessionTokenState.textContent = 'No token';
+        sessionRoleCount.textContent = '0';
     } else {
         initializeDashboard();
     }
@@ -462,6 +467,8 @@
         if (email) summaryParts.push(email);
         userEmail.textContent = summaryParts.join(' | ') || 'Logged-in user';
         roleList.textContent = roles.join(', ');
+        sessionTokenState.textContent = 'Ready';
+        sessionRoleCount.textContent = String(roles.length);
 
         const preferredRole = ['Admin', 'ITWorker', 'Doctor', 'Nurse', 'Donor', 'Applicant', 'Patient']
             .find(role => roles.includes(role));
@@ -470,7 +477,7 @@
         const bloodBankItAccess = await hasBloodBankItAccess();
 
         welcomeLine.textContent = `Welcome back, ${config.label}.`;
-        welcomeCopy.textContent = `This dashboard organizes your next steps around the ${config.label.toLowerCase()} workflow and related tools already built in the system.`;
+        welcomeCopy.textContent = `This hub keeps your role workflow clear and routes you to operational pages quickly.`;
         primaryTitle.textContent = config.primaryLabel;
         primaryCopy.textContent = config.primaryCopy;
         primaryLink.href = config.primaryHref;
@@ -499,11 +506,11 @@
         });
 
         actionGrid.innerHTML = visibleCards.map(card => `
-            <article class="action-card">
+            <article class="hub-card">
                 <h3>${card.title}</h3>
                 <p>${card.desc}</p>
-                <div class="action-links">
-                    <a class="primary" href="${card.href}">Open</a>
+                <div class="hub-actions">
+                    <a class="hub-primary" href="${card.href}">Open</a>
                 </div>
             </article>
         `).join('');

@@ -4,7 +4,7 @@
 @section('workspace_label', 'Patient self-service workspace')
 @section('hero_badge', 'Patient Mode')
 @section('hero_title', 'Patient portal for records, appointments, and blood requests.')
-@section('hero_description', 'This is the first role page moved into the shared authenticated shell. Patients can stay inside one connected workspace instead of bouncing between isolated prototype screens.')
+@section('hero_description', 'One connected patient workspace for appointments, records, and blood requests.')
 @section('meta_title', 'Patient Portal')
 @section('meta_copy', 'Appointments, records, and blood support')
 
@@ -187,9 +187,17 @@
     </div>
 @endsection
 
+@section('section_nav')
+    <a href="#portal-snapshot" class="is-active">Snapshot</a>
+    <a href="#portal-actions">Book + Request</a>
+    <a href="#portal-tables">Appointments + Blood</a>
+    <a href="#portal-records">Records</a>
+    <a href="#portal-debug">API Response</a>
+@endsection
+
 @section('content')
     <div class="portal-grid">
-        <div class="portal-card">
+        <div id="portal-snapshot" class="portal-card ll-section">
             <h3>Snapshot</h3>
             <p class="portal-hint">Live summary from <code>GET /api/patient/portal</code>.</p>
             <div class="portal-stats">
@@ -201,7 +209,7 @@
             <div class="portal-summary" id="patientSummary"></div>
         </div>
 
-        <div class="portal-split">
+        <div id="portal-actions" class="portal-split ll-section">
             <div class="portal-card">
                 <h3>Book appointment</h3>
                 <p class="portal-hint">Department and time are required. Doctor is optional.</p>
@@ -270,7 +278,7 @@
             </div>
         </div>
 
-        <div class="portal-split">
+        <div id="portal-tables" class="portal-split ll-section">
             <div class="portal-card">
                 <h3>Appointments</h3>
                 <div class="portal-table-wrap">
@@ -295,7 +303,7 @@
             </div>
         </div>
 
-        <div class="portal-card">
+        <div id="portal-records" class="portal-card ll-section">
             <div class="portal-row">
                 <div>
                     <h3>Medical records</h3>
@@ -316,9 +324,11 @@
             </div>
         </div>
 
-        <div class="portal-card">
-            <h3>API response</h3>
-            <pre id="out" class="portal-pre"></pre>
+        <div id="portal-debug" class="portal-card ll-section">
+            <details class="ll-debug" open>
+                <summary>API response</summary>
+                <pre id="out" class="portal-pre"></pre>
+            </details>
         </div>
     </div>
 

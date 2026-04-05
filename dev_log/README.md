@@ -2986,3 +2986,107 @@ What changed:
 - Blood Matching Center now explains the staff workflow more clearly and shows explicit auth-state messaging when the stored token is missing or rejected
 - Blood Bank Schema page now more clearly reads as a setup/debug page instead of the main Blood Bank daily workflow page
 
+
+## UI Cleanup + Systemization Pass (2026-04-03)
+
+Scope completed:
+- Landing / welcome page
+- Workspace hub (`/ui/dashboard`)
+- Prototype directory (`/ui`)
+- Shared authenticated shell
+- Admin control center
+- Application reviews
+- Doctor dashboard
+- Donor dashboard
+- Patient portal
+- IT dashboard
+- Nurse dashboard
+
+### Goals implemented
+- Reduced visual noise and helper-text verbosity
+- Added section-level navigation for dense authenticated pages
+- Added reusable debug/output containment (`details` + shared debug styles)
+- Kept all existing routes, API calls, IDs, form controls, and JS workflow hooks intact
+- Preserved LifeLink brand identity (teal/blue/orange family)
+
+### New shared UI primitive
+- Added: `lifelink-app/public/css/ui-system.css`
+- Includes:
+  - sticky per-page section nav pattern (`.ll-section-nav`)
+  - section anchor rhythm (`.ll-section`)
+  - reusable debug panel wrapper (`.ll-debug`)
+  - content spacing helper for authenticated shell
+
+### Shared shell updates
+- Updated: `lifelink-app/resources/views/ui/layouts/app.blade.php`
+- Added external shared stylesheet include
+- Added optional `@section('section_nav')` slot before page content
+- Added shared content-body wrapper for spacing consistency
+
+### Page structure updates
+- Updated: `welcome.blade.php`
+  - Rebuilt into calmer, lower-density public landing with clearer entry logic
+  - Kept session-aware login/register vs dashboard/logout switch behavior
+- Updated: `ui/dashboard.blade.php`
+  - Rebuilt as cleaner workspace hub with navigation rail + role shortcuts
+  - Preserved role detection, Blood Bank IT visibility check, and redirect flow
+- Updated: `ui/index.blade.php`
+  - Reorganized into role/workflow grouped prototype directory sections
+  - Preserved Blood Bank link gating logic
+
+### Role page cleanup updates
+- Updated: `ui/admin-users.blade.php`
+  - Added section nav (overview/queue/setup/debug)
+  - Shortened long helper paragraphs
+  - Moved context/API output into contained debug details blocks
+- Updated: `ui/application-reviews.blade.php`
+  - Added section nav (queue/cards/action/debug)
+  - Reduced helper verbosity
+  - Wrapped context/API output in debug details blocks
+- Updated: `ui/doctor-dashboard.blade.php`
+  - Added section nav and clearer grouping
+  - Contained API response in debug details block
+- Updated: `ui/donor-dashboard.blade.php`
+  - Added section nav (access/availability/requests/history/debug)
+  - Contained API response in debug details block
+- Updated: `ui/patient-portal.blade.php`
+  - Added section nav (snapshot/actions/tables/records/debug)
+  - Contained API response in debug details block
+- Updated: `ui/it-bed-allocation.blade.php`
+  - Added section nav for dense operational flow sections
+  - Shortened instructional copy in key control areas
+  - Contained API response in debug details block
+- Updated: `ui/nurse-dashboard.blade.php`
+  - Added section nav (overview/monitoring/blood-bank/debug)
+  - Shortened explanatory copy in high-frequency areas
+  - Contained API response in debug details block
+
+### Notes on behavior safety
+- No route changes
+- No API endpoint changes
+- No form ID / input ID / JS function name changes for operational flows
+- No role workflow logic changes beyond presentation and containment
+
+### Donor dashboard follow-up fixes (2026-04-05)
+
+Additional updates requested and applied:
+
+1. Restored `Refresh Donations` action in donor history panel.
+- File: `lifelink-app/resources/views/ui/donor-dashboard.blade.php`
+- Note: button id `btnDonations` and existing `loadDonations()` hook were preserved.
+
+2. Made authenticated shell brand (logo + `LifeLink Workspace`) clickable to public landing.
+- File: `lifelink-app/resources/views/ui/layouts/app.blade.php`
+- Behavior: clicking top-left brand now routes to `/` (same destination as `Public Home`) without clearing session.
+
+3. Dashboard UI view locations (role pages)
+- Admin: `lifelink-app/resources/views/ui/admin-users.blade.php`
+- Application Reviews: `lifelink-app/resources/views/ui/application-reviews.blade.php`
+- Applicant: `lifelink-app/resources/views/ui/applications.blade.php`
+- Doctor: `lifelink-app/resources/views/ui/doctor-dashboard.blade.php`
+- Nurse: `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+- Patient: `lifelink-app/resources/views/ui/patient-portal.blade.php`
+- Donor: `lifelink-app/resources/views/ui/donor-dashboard.blade.php`
+- IT Operations: `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+- Workspace Hub: `lifelink-app/resources/views/ui/dashboard.blade.php`
+- Shared shell: `lifelink-app/resources/views/ui/layouts/app.blade.php`

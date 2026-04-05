@@ -4,7 +4,8 @@
 @section('workspace_label', 'Admin operations workspace')
 @section('hero_badge', 'Admin Mode')
 @section('hero_title', 'Approve staff applications and finish staff setup from one place.')
-@section('hero_description', 'This page now handles the real admin flow: review pending applicants, leave review notes, approve or reject, and then finish doctor, nurse, or IT worker setup with the correct approved user id.')
+@section('hero_description', 'Review applicants, decide status, and complete staff setup with the approved user ID.')
+@section('show_prototype_directory', '1')
 @section('meta_title', 'Admin Control Center')
 @section('meta_copy', 'Account state, staff approval, and role setup')
 
@@ -212,9 +213,16 @@
     </div>
 @endsection
 
+@section('section_nav')
+    <a href="#admin-overview" class="is-active">Overview</a>
+    <a href="#admin-queue">Pending Queue</a>
+    <a href="#admin-setup">Staff Setup</a>
+    <a href="#admin-debug">Context + API</a>
+@endsection
+
 @section('content')
     <div class="admin-grid">
-        <div class="admin-summary">
+        <div id="admin-overview" class="admin-summary ll-section">
             <div class="admin-stat"><small>Pending applicants</small><strong id="pendingCount">0</strong></div>
             <div class="admin-stat"><small>Departments loaded</small><strong id="departmentCount">0</strong></div>
             <div class="admin-stat"><small>Admin token</small><strong id="tokenState">Missing</strong></div>
@@ -243,16 +251,16 @@
             </div>
         </div>
 
-        <div class="admin-card">
+        <div id="admin-queue" class="admin-card ll-section">
             <h3>Pending applicant cards</h3>
-            <p class="admin-hint">Each pending card includes a notes area so admin can leave a review note before approving or rejecting. Cards show both the application id and the linked user id so setup uses the right identifier.</p>
+            <p class="admin-hint">Review from cards first, then push approved users into setup.</p>
             <div id="pendingCards" class="admin-card-grid" style="margin-top: 12px;"></div>
         </div>
 
-        <div class="admin-row">
+        <div id="admin-setup" class="admin-row ll-section">
             <div class="admin-card">
                 <h3>Doctor department setup</h3>
-                <p class="admin-hint">Doctor ids are not new ids. The doctor profile uses the same user id as the approved account. Approving a doctor now auto-fills this form with the correct user id and selected department.</p>
+                <p class="admin-hint">Doctor profile uses the same user ID as the approved account.</p>
                 <div class="admin-controls">
                     <div>
                         <label class="admin-label" for="doctorUserId">Doctor user ID</label>
@@ -272,7 +280,7 @@
 
             <div class="admin-card">
                 <h3>Nurse department setup</h3>
-                <p class="admin-hint">Use this after approving a nurse application. This creates or updates the nurse profile and binds the nurse to a department.</p>
+                <p class="admin-hint">Create or update nurse profile and bind department scope.</p>
                 <div class="admin-controls">
                     <div>
                         <label class="admin-label" for="nurseUserId">Nurse user ID</label>
@@ -294,7 +302,7 @@
 
             <div class="admin-card">
                 <h3>IT worker department setup</h3>
-                <p class="admin-hint">Use this after approving an IT worker application. This gives the IT worker department scope for ward and bed operations.</p>
+                <p class="admin-hint">Assign department scope for IT ward and bed operations.</p>
                 <div class="admin-controls">
                     <div>
                         <label class="admin-label" for="itUserId">IT worker user ID</label>
@@ -313,14 +321,15 @@
             </div>
         </div>
 
-        <div class="admin-card">
-            <h3>Stored session context</h3>
-            <pre id="ctx" class="admin-context"></pre>
-        </div>
-
-        <div class="admin-card">
-            <h3>API response</h3>
-            <pre id="out" class="admin-context"></pre>
+        <div id="admin-debug" class="admin-card ll-section">
+            <details class="ll-debug">
+                <summary>Stored session context</summary>
+                <pre id="ctx" class="admin-context"></pre>
+            </details>
+            <details class="ll-debug" style="margin-top: 10px;" open>
+                <summary>API response</summary>
+                <pre id="out" class="admin-context"></pre>
+            </details>
         </div>
     </div>
 @endsection
