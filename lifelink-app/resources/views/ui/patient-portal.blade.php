@@ -1,3 +1,6 @@
+/*
+ This is done to ensure the last commit went through
+*/
 @extends('ui.layouts.app')
 
 @section('title', 'Patient Portal')
@@ -626,3 +629,4 @@ function boot() {
 boot();
 </script>
 @endpush
+
