@@ -1,6 +1,3 @@
-/*
- This is done to ensure the last commit went through
-*/
 @extends('ui.layouts.app')
 
 @section('title', 'IT Worker Dashboard')
@@ -244,19 +241,22 @@
 @endpush
 
 @section('sidebar_nav')
-    <a class="is-active" href="#it-overview">
+    <a class="is-active" href="#it-overview" data-panel="it-overview" data-mode="all">
         <strong>Overview</strong>
     </a>
-    <a href="#it-directory">
+    <a href="#it-directory" data-panel="it-directory" data-mode="regular">
         <strong>Doctor + Patient Lookup</strong>
     </a>
-    <a href="#it-admission">
+    <a href="#it-admission" data-panel="it-admission" data-mode="regular">
         <strong>Admission + Bed Flow</strong>
     </a>
-    <a href="#it-reference">
+    <a href="#it-reference" data-panel="it-reference" data-mode="regular">
         <strong>Reference Tables</strong>
     </a>
-    <a href="#it-debug">
+    <a href="#it-blood-bank" data-panel="it-blood-bank" data-mode="blood">
+        <strong>Blood Bank Operations</strong>
+    </a>
+    <a href="#it-debug" data-panel="it-debug" data-mode="all">
         <strong>API Response</strong>
     </a>
 @endsection
@@ -294,7 +294,7 @@
             </div>
         </div>
 
-        <div id="bloodBankItSection" class="it-panel it-panel-switch" data-display="block" style="display:none;">
+        <div id="it-blood-bank" class="it-panel it-panel-switch ll-section" data-display="block" style="display:none;">
             <h3>Blood Bank operations</h3>
             <p class="it-note">This account has Blood Bank department scope. Use the Blood Matching Center for donor matching, donor notifications, donation logging, and request-linked blood workflow actions.</p>
             <div class="it-summary">
@@ -579,10 +579,12 @@
 const API = '/api';
 const out = document.getElementById('out');
 const ctx = document.getElementById('ctx');
-const itPanelIds = ['it-overview', 'it-directory', 'it-admission', 'it-reference', 'it-debug'];
-const itNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[href^="#it-"]'));
+const itPanelIds = ['it-overview', 'it-directory', 'it-admission', 'it-reference', 'it-blood-bank', 'it-debug'];
+const itNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[data-panel]'));
 
 const state = {
+    activePanel: 'it-overview',
+    scopeLoaded: false,
     departments: [],
     scopeDepartments: [],
     doctors: [],
@@ -594,38 +596,74 @@ const state = {
 
 const BLOOD_BANK_DEPARTMENT = 'Blood Bank';
 
+function allowedPanels() {
+    if (!state.scopeLoaded) {
+        return ['it-overview', 'it-directory', 'it-admission', 'it-reference', 'it-debug'];
+    }
+
+    const blood = hasBloodBankScope();
+    const regular = hasNonBloodBankScope();
+
+    if (blood && !regular) {
+        return ['it-overview', 'it-blood-bank', 'it-debug'];
+    }
+
+    if (blood && regular) {
+        return ['it-overview', 'it-directory', 'it-admission', 'it-reference', 'it-blood-bank', 'it-debug'];
+    }
+
+    return ['it-overview', 'it-directory', 'it-admission', 'it-reference', 'it-debug'];
+}
+
+function updateSidebarByScope() {
+    const allowed = allowedPanels();
+
+    itNavLinks.forEach((link) => {
+        const mode = link.dataset.mode || 'all';
+        const panel = link.dataset.panel || '';
+        const visible = mode === 'all'
+            || (mode === 'regular' && allowed.includes(panel))
+            || (mode === 'blood' && allowed.includes(panel));
+        link.style.display = visible ? '' : 'none';
+    });
+}
+
 function setActivePanel(panelId) {
+    const allowed = allowedPanels();
+    if (!allowed.includes(panelId)) {
+        panelId = allowed[0];
+    }
+
+    state.activePanel = panelId;
+
     itPanelIds.forEach((id) => {
         const panel = document.getElementById(id);
         if (!panel) return;
         panel.style.display = id === panelId ? (panel.dataset.display || 'block') : 'none';
     });
 
-    if (panelId !== 'it-overview') {
-        document.getElementById('bloodBankItSection').style.display = 'none';
-    } else {
-        renderDepartmentMode();
-    }
-
     itNavLinks.forEach((link) => {
-        const targetId = (link.getAttribute('href') || '').replace('#', '');
+        const targetId = link.dataset.panel || '';
         link.classList.toggle('is-active', targetId === panelId);
     });
+
+    renderDepartmentMode();
 }
 
 function setupSidebarPanelNav() {
     itNavLinks.forEach((link) => {
         link.addEventListener('click', (event) => {
             event.preventDefault();
-            const panelId = (link.getAttribute('href') || '').replace('#', '');
+            const panelId = link.dataset.panel || '';
             if (!itPanelIds.includes(panelId)) return;
             setActivePanel(panelId);
             history.replaceState(null, '', `#${panelId}`);
         });
     });
 
+    updateSidebarByScope();
     const initialHash = (window.location.hash || '').replace('#', '');
-    const initialPanel = itPanelIds.includes(initialHash) ? initialHash : itPanelIds[0];
+    const initialPanel = itPanelIds.includes(initialHash) ? initialHash : allowedPanels()[0];
     setActivePanel(initialPanel);
 }
 
@@ -720,11 +758,19 @@ function hasNonBloodBankScope() {
 
 function renderDepartmentMode() {
     const bloodBankAccess = hasBloodBankScope();
-    const selectedPanel = (window.location.hash || '').replace('#', '') || 'it-overview';
-    document.getElementById('bloodBankItSection').style.display = bloodBankAccess && selectedPanel === 'it-overview' ? '' : 'none';
+    const selectedPanel = state.activePanel || 'it-overview';
+    const allowed = allowedPanels();
+
+    if (!allowed.includes(selectedPanel)) {
+        setActivePanel(allowed[0]);
+        return;
+    }
+
+    document.getElementById('it-blood-bank').style.display = bloodBankAccess && selectedPanel === 'it-blood-bank' ? '' : 'none';
     document.getElementById('standardItWorkArea').style.display = bloodBankAccess && !hasNonBloodBankScope() ? 'none' : '';
     document.getElementById('bloodBankScopeStatus').textContent = bloodBankAccess ? 'Enabled' : 'Locked';
     document.getElementById('bloodBankScopeCount').textContent = String(state.scopeDepartments.filter((department) => String(department.dept_name || '').trim() === BLOOD_BANK_DEPARTMENT).length);
+    updateSidebarByScope();
 }
 
 function renderDoctors() {
@@ -907,6 +953,7 @@ async function listDepartments() {
 async function loadDepartmentsScope() {
     const result = await call('/ward/it/departments');
     write(result);
+    state.scopeLoaded = true;
     if (result.status < 300) {
         state.scopeDepartments = Array.isArray(result.data?.departments) ? result.data.departments : [];
         syncCounters();

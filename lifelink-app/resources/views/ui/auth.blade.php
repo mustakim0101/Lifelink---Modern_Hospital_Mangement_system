@@ -499,7 +499,7 @@
                 rememberLastEmail(payload.email);
                 refreshSessionCard();
                 showMessage('success', 'Admin account created. Redirecting to the admin workspace.');
-                setTimeout(() => window.location.href = getPrimaryDestination(result.data.user?.roles || []), 700);
+                window.location.href = getPrimaryDestination(result.data.user?.roles || []);
                 return;
             }
             showMessage('error', extractMessage(result, 'Unable to create admin account.'));
@@ -517,7 +517,7 @@
                 rememberLastEmail(payload.email);
                 refreshSessionCard();
                 showMessage('success', 'Login successful. Redirecting to your workspace.');
-                setTimeout(() => window.location.href = getPrimaryDestination(result.data.user?.roles || []), 700);
+                window.location.href = getPrimaryDestination(result.data.user?.roles || []);
                 return;
             }
             showMessage('error', extractMessage(result, 'Login failed.'));
@@ -536,7 +536,7 @@
         registerBase(payload).then(() => {
             clearTransientSession();
             showMessage('success', 'Patient account created. Redirecting to login.');
-            setTimeout(() => goToLogin(payload.email, 'patient'), 700);
+            goToLogin(payload.email, 'patient');
         }).catch(error => showMessage('error', error.message));
     }
 
@@ -557,7 +557,7 @@
                 }
                 clearTransientSession();
                 showMessage('success', 'Donor account created. Redirecting to login.');
-                setTimeout(() => goToLogin(payload.email, 'donor'), 700);
+                goToLogin(payload.email, 'donor');
             });
         }).catch(error => showMessage('error', error.message));
     }
@@ -578,7 +578,7 @@
                 }
                 clearTransientSession();
                 showMessage('success', 'Applicant account created. Redirecting to login.');
-                setTimeout(() => goToLogin(payload.email, 'applicant'), 700);
+                goToLogin(payload.email, 'applicant');
             });
         }).catch(error => showMessage('error', error.message));
     }
