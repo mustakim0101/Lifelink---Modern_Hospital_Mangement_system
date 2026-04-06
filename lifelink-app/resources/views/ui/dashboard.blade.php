@@ -1,540 +1,258 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LifeLink | Workspace Hub</title>
-    <style>
-        :root {
-            --hub-bg: #edf4f7;
-            --hub-surface: rgba(255, 255, 255, 0.9);
-            --hub-line: rgba(20, 45, 63, 0.12);
-            --hub-text: #143145;
-            --hub-muted: #607686;
-            --hub-primary: #0f766e;
-            --hub-secondary: #1d4ed8;
-            --hub-danger: #b91c1c;
-            --hub-shadow: 0 18px 42px rgba(16, 42, 60, 0.12);
-        }
+@extends('ui.layouts.app')
 
-        * { box-sizing: border-box; }
+@section('title', 'Workspace Hub')
+@section('workspace_label', 'Role-aware routing workspace')
+@section('hero_badge', 'Workspace Hub')
+@section('hero_title', 'Return every signed-in user to the right place with a cleaner role-aware hub.')
+@section('hero_description', 'This hub keeps identity, primary destination, and module shortcuts visible before routing the current browser session into the correct workspace.')
+@section('meta_title', 'Workspace Hub')
+@section('meta_copy', 'Role routing, session summary, and operational shortcuts')
 
-        body {
-            margin: 0;
-            color: var(--hub-text);
-            font-family: "Segoe UI", "Trebuchet MS", sans-serif;
-            background:
-                radial-gradient(circle at top left, rgba(29, 78, 216, 0.14), transparent 24rem),
-                radial-gradient(circle at right, rgba(15, 118, 110, 0.14), transparent 24rem),
-                linear-gradient(180deg, #f8fbfd 0%, var(--hub-bg) 100%);
-        }
-
-        a { color: inherit; text-decoration: none; }
-
-        .hub-shell {
-            width: min(1280px, calc(100% - 24px));
-            margin: 0 auto;
-            padding: 16px 0 30px;
-        }
-
-        .hub-topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 14px;
-        }
-
-        .hub-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .hub-mark {
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            display: grid;
-            place-items: center;
-            color: #fff;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--hub-secondary), var(--hub-primary));
-            box-shadow: 0 12px 22px rgba(29, 78, 216, 0.24);
-        }
-
-        .hub-brand strong {
-            display: block;
-            font-size: 1.04rem;
-        }
-
-        .hub-brand span {
-            color: var(--hub-muted);
-            font-size: 0.9rem;
-        }
-
-        .hub-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .hub-chip {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 38px;
-            padding: 8px 14px;
-            border: 1px solid var(--hub-line);
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.78);
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .hub-layout {
-            display: grid;
-            grid-template-columns: 290px minmax(0, 1fr);
-            gap: 14px;
-        }
-
-        .hub-rail,
-        .hub-main {
-            border: 1px solid var(--hub-line);
-            border-radius: 20px;
-            background: var(--hub-surface);
-            box-shadow: var(--hub-shadow);
-        }
-
-        .hub-rail {
-            padding: 14px;
-            align-self: start;
-            position: sticky;
-            top: 12px;
-            display: grid;
-            gap: 12px;
-        }
-
-        .hub-main {
-            padding: 14px;
-            display: grid;
-            gap: 12px;
-        }
-
-        .hub-block {
-            border: 1px solid var(--hub-line);
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.86);
-            padding: 14px;
-        }
-
-        .hub-label {
-            display: block;
-            margin-bottom: 6px;
-            color: var(--hub-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.07em;
-            font-size: 0.72rem;
-            font-weight: 800;
-        }
-
-        .hub-title {
-            margin: 0;
-            font-size: 1.24rem;
-        }
-
-        .hub-copy {
-            margin: 6px 0 0;
-            color: var(--hub-muted);
-            line-height: 1.6;
-            font-size: 0.93rem;
-        }
-
-        .hub-primary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 38px;
-            padding: 8px 14px;
-            border: 0;
-            border-radius: 999px;
-            color: #fff;
-            background: linear-gradient(135deg, var(--hub-secondary), var(--hub-primary));
-            font-weight: 700;
-        }
-
-        .hub-stats {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
-        }
-
-        .hub-stat {
-            border: 1px solid var(--hub-line);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-        }
-
-        .hub-stat strong {
-            display: block;
-            font-size: 0.95rem;
-        }
-
-        .hub-stat span {
-            color: var(--hub-muted);
-            font-size: 0.82rem;
-        }
-
-        .hub-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px;
-        }
-
-        .hub-card {
-            border: 1px solid var(--hub-line);
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 14px;
-        }
-
-        .hub-card h3 {
-            margin: 0 0 8px;
-            font-size: 1rem;
-        }
-
-        .hub-card p {
-            margin: 0;
-            color: var(--hub-muted);
-            font-size: 0.9rem;
-            line-height: 1.55;
-        }
-
-        .hub-card .hub-actions {
-            margin-top: 10px;
-        }
-
-        .hub-notice {
-            padding: 12px;
-            border-radius: 14px;
-            border: 1px solid rgba(185, 28, 28, 0.2);
-            color: var(--hub-danger);
-            background: rgba(185, 28, 28, 0.08);
-        }
-
-        .hidden { display: none; }
-
-        @media (max-width: 980px) {
-            .hub-layout,
-            .hub-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .hub-rail {
-                position: static;
-            }
-        }
-
-        @media (max-width: 720px) {
-            .hub-shell { width: min(100% - 16px, 1280px); }
-            .hub-topbar { flex-direction: column; align-items: flex-start; }
-            .hub-stats { grid-template-columns: 1fr; }
-        }
-    </style>
-</head>
-<body>
-    <div class="hub-shell">
-        <header class="hub-topbar">
-            <div class="hub-brand">
-                <div class="hub-mark">LL</div>
-                <div>
-                    <strong>LifeLink Workspace Hub</strong>
-                    <span>Role-aware routing and operational shortcuts.</span>
-                </div>
-            </div>
-            <div class="hub-actions">
-                <a class="hub-chip" href="/">Public Home</a>
-                <button class="hub-chip" type="button" onclick="logoutSession()">Logout</button>
-            </div>
-        </header>
-
-        <div class="hub-layout">
-            <aside class="hub-rail">
-                <article class="hub-block">
-                    <span class="hub-label">Signed In</span>
-                    <strong id="user-email">No active session</strong>
-                    <p class="hub-copy">Identity and session summary.</p>
-                </article>
-                <article class="hub-block">
-                    <span class="hub-label">Detected Roles</span>
-                    <strong id="role-list">None</strong>
-                    <p class="hub-copy">Primary route and tools adjust to your active roles.</p>
-                </article>
-                <article id="admin-tools-card" class="hub-block hidden">
-                    <span class="hub-label">Admin / IT</span>
-                    <strong>Advanced tools</strong>
-                    <p class="hub-copy">Open diagnostics only when normal workflow pages are not enough.</p>
-                    <div class="hub-actions">
-                        <a class="hub-primary" href="/ui/dev-tools">Open advanced tools</a>
-                    </div>
-                </article>
-            </aside>
-
-            <main class="hub-main">
-                <section class="hub-block">
-                    <span class="hub-label">Workspace Hub</span>
-                    <h1 id="welcome-line" class="hub-title">Organized access for your role.</h1>
-                    <p id="welcome-copy" class="hub-copy">This hub highlights your next operational page and related tools.</p>
-                </section>
-
-                <section class="hub-block">
-                    <span class="hub-label">Primary Destination</span>
-                    <h2 id="primary-title" class="hub-title">Sign in required</h2>
-                    <p id="primary-copy" class="hub-copy">Log in first to unlock role-aware routing.</p>
-                    <div class="hub-actions" style="margin-top: 10px;">
-                        <a id="primary-link" class="hub-primary" href="/ui/login">Open login page</a>
-                    </div>
-                </section>
-
-                <section class="hub-block">
-                    <span class="hub-label">Session Snapshot</span>
-                    <div class="hub-stats">
-                        <div class="hub-stat">
-                            <strong id="session-token-state">No token</strong>
-                            <span>Token state</span>
-                        </div>
-                        <div class="hub-stat">
-                            <strong id="session-role-count">0</strong>
-                            <span>Role count</span>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="hub-block">
-                    <span class="hub-label">Role Shortcuts</span>
-                    <div id="action-grid" class="hub-grid"></div>
-                </section>
-
-                <div id="session-warning" class="hub-notice hidden">
-                    No valid local session found. Log in again to restore role-aware routing.
-                </div>
-            </main>
-        </div>
+@section('hero_extra')
+    <div class="ll-inline-actions">
+        <a id="heroPrimaryLink" class="ll-button" href="/ui/login">Open main area</a>
+        <button class="ll-button-ghost" type="button" onclick="logoutSession()">Logout</button>
     </div>
+@endsection
 
-    <script>
-    const BLOOD_BANK_DEPARTMENT = 'Blood Bank';
+@push('styles')
+<style>
+    .hub-grid,.hub-card-grid,.hub-chip-row{display:grid;gap:18px}
+    .hub-card-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .hub-chip-row{grid-template-columns:repeat(auto-fit,minmax(160px,max-content));gap:10px;justify-content:start}
+    .hub-chip{display:inline-flex;align-items:center;min-height:34px;padding:0 12px;border-radius:999px;background:var(--ll-surface-muted);border:1px solid var(--ll-border);color:var(--ll-text-muted);font-size:.82rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+    .hub-route-card,.hub-session-card,.hub-role-card{height:100%}
+    .hub-role-card p,.hub-route-card p,.hub-session-card p{margin:8px 0 0;color:var(--ll-text-muted);line-height:1.65}
+    .hub-route-grid{display:grid;gap:14px}
+    .hub-value-list{display:grid;gap:12px;margin-top:14px}
+    .hub-value-item{padding:14px 16px;border-radius:18px;border:1px solid rgba(27,117,208,.1);background:rgba(248,252,255,.88)}
+    .hub-value-item small{display:block;margin-bottom:6px;color:var(--ll-text-muted);font-size:.74rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+    .hub-value-item strong{font-size:1rem}
+    .hub-shortcut{display:grid;gap:12px;padding:18px;border-radius:22px;border:1px solid rgba(140,170,201,.18);background:rgba(255,255,255,.9);box-shadow:var(--ll-shadow-sm)}
+    .hub-shortcut strong{font-size:1.04rem}
+    .hub-shortcut p{margin:0;color:var(--ll-text-muted);line-height:1.6}
+    .hub-alert-title{display:block;margin-bottom:6px}
+    @media (max-width:1080px){.hub-card-grid{grid-template-columns:1fr}}
+</style>
+@endpush
 
-    const roleConfig = {
-        Admin: {
-            label: 'Administrator',
-            primaryLabel: 'Admin control center',
-            primaryHref: '/ui/admin-users',
-            primaryCopy: 'Manage account state, application decisions, and staff setup from one page.',
-            cards: [
-                { title: 'Admin control', href: '/ui/admin-users', desc: 'Account control and profile provisioning.' },
-                { title: 'Application reviews', href: '/ui/application-reviews', desc: 'Approve or reject role applications.' },
-                { title: 'Advanced tools', href: '/ui/dev-tools', desc: 'Controlled diagnostics and raw endpoint checks.' }
-            ]
-        },
-        ITWorker: {
-            label: 'IT Worker',
-            primaryLabel: 'IT operations dashboard',
-            primaryHref: '/ui/it-bed-allocation',
-            primaryCopy: 'Manage department-scoped admissions, beds, and operational allocation flows.',
-            cards: [
-                { title: 'IT bed allocation', href: '/ui/it-bed-allocation', desc: 'Admission and bed assignment workflow.' },
-                { title: 'Ward setup', href: '/ui/ward-setup', desc: 'Care unit and bed structure setup.' },
-                { title: 'Advanced tools', href: '/ui/dev-tools', desc: 'Technical diagnostics for operations support.' }
-            ],
-            bloodBankCards: [
-                { title: 'Blood matching center', href: '/ui/blood-matching', desc: 'Request matching and donor-response operations.' }
-            ]
-        },
-        Doctor: {
-            label: 'Doctor',
-            primaryLabel: 'Doctor dashboard',
-            primaryHref: '/ui/doctor-dashboard',
-            primaryCopy: 'Open clinical doctor actions for patients, appointments, and bed requests.',
-            cards: [
-                { title: 'Doctor dashboard', href: '/ui/doctor-dashboard', desc: 'Doctor-facing clinical tools.' }
-            ]
-        },
-        Nurse: {
-            label: 'Nurse',
-            primaryLabel: 'Nurse dashboard',
-            primaryHref: '/ui/nurse-dashboard',
-            primaryCopy: 'Open nurse monitoring workflow for department patients and vitals.',
-            cards: [
-                { title: 'Nurse dashboard', href: '/ui/nurse-dashboard', desc: 'Department patient monitoring and vital logs.' }
-            ]
-        },
-        Patient: {
-            label: 'Patient',
-            primaryLabel: 'Patient portal',
-            primaryHref: '/ui/patient-portal',
-            primaryCopy: 'Use one patient workspace for appointments, records, and blood requests.',
-            cards: [
-                { title: 'Patient portal', href: '/ui/patient-portal', desc: 'Patient appointments, records, and blood requests.' }
-            ]
-        },
-        Donor: {
-            label: 'Donor',
-            primaryLabel: 'Donor dashboard',
-            primaryHref: '/ui/donor-dashboard',
-            primaryCopy: 'Manage donor availability, request response, and donation history.',
-            cards: [
-                { title: 'Donor dashboard', href: '/ui/donor-dashboard', desc: 'Donor profile, availability, notifications, and history.' }
-            ]
-        },
-        Applicant: {
-            label: 'Applicant',
-            primaryLabel: 'Application workspace',
-            primaryHref: '/ui/applications',
-            primaryCopy: 'Track application state and next steps until role approval.',
-            cards: [
-                { title: 'Applications', href: '/ui/applications', desc: 'Submit and track staff-role applications.' }
-            ]
-        }
-    };
+@section('sidebar_nav')
+    <a class="is-active" href="#hub-overview"><strong>Overview</strong><span>Today</span></a>
+    <a href="#hub-next"><strong>Primary Route</strong><span>Next</span></a>
+    <a href="#hub-shortcuts"><strong>Shortcuts</strong><span>Modules</span></a>
+    <a href="#hub-directory"><strong>Role Guide</strong><span>Reference</span></a>
+@endsection
 
-    const fullName = localStorage.getItem('CURRENT_USER_FULL_NAME') || '';
-    const userId = localStorage.getItem('CURRENT_USER_ID') || '';
-    const email = localStorage.getItem('CURRENT_USER_EMAIL') || '';
-    const roles = JSON.parse(localStorage.getItem('CURRENT_USER_ROLES') || '[]');
-    const token = localStorage.getItem('USER_TOKEN') || '';
+@section('sidebar')
+    <div class="app-shell__sidebar-card">
+        <strong>Hub behavior</strong>
+        <p>The page still reads the current browser session and routes to the correct role workspace. This refactor only improves presentation and hierarchy.</p>
+    </div>
+    <div class="app-shell__sidebar-card">
+        <strong>Recommended flow</strong>
+        <p>Confirm identity, review your primary destination, then continue into the matching operational module.</p>
+    </div>
+@endsection
 
-    const userEmail = document.getElementById('user-email');
-    const roleList = document.getElementById('role-list');
-    const welcomeLine = document.getElementById('welcome-line');
-    const welcomeCopy = document.getElementById('welcome-copy');
-    const primaryTitle = document.getElementById('primary-title');
-    const primaryCopy = document.getElementById('primary-copy');
-    const primaryLink = document.getElementById('primary-link');
-    const actionGrid = document.getElementById('action-grid');
-    const warning = document.getElementById('session-warning');
-    const adminToolsCard = document.getElementById('admin-tools-card');
-    const sessionTokenState = document.getElementById('session-token-state');
-    const sessionRoleCount = document.getElementById('session-role-count');
+@section('section_nav')
+    <a href="#hub-overview" class="is-active">Overview</a>
+    <a href="#hub-next">Primary Route</a>
+    <a href="#hub-shortcuts">Shortcuts</a>
+    <a href="#hub-directory">Role Guide</a>
+@endsection
 
-    async function api(path) {
-        const response = await fetch(`/api${path}`, {
-            headers: {
-                Accept: 'application/json',
-                Authorization: `Bearer ${token}`
-            }
-        });
+@section('content')
+    <div class="hub-grid">
+        <div id="hubSessionAlert" class="ll-inline-alert is-warning ll-hidden-debug">
+            <strong class="hub-alert-title">No active workspace session</strong>
+            <p>Sign in first to unlock role-aware routing, shortcuts, and identity-aware navigation.</p>
+        </div>
 
-        const text = await response.text();
-        let data = {};
-        try { data = JSON.parse(text); } catch {}
-        return { status: response.status, data };
-    }
+        <div id="hubRedirectAlert" class="ll-inline-alert is-success ll-hidden-debug">
+            <strong class="hub-alert-title">Auto-routing is ready</strong>
+            <p id="redirectCopy">The hub will continue into the primary workspace shortly.</p>
+        </div>
 
-    async function hasBloodBankItAccess() {
-        if (roles.includes('Admin')) {
-            return true;
-        }
+        <section id="hub-overview" class="ll-section">
+            <div class="ll-kpi-grid">
+                <article class="ll-stat-card is-primary"><small>Detected roles</small><strong id="roleCount">0</strong><span id="roleSummary">Sign in to unlock role-aware routing.</span></article>
+                <article class="ll-stat-card is-success"><small>Primary destination</small><strong id="primaryAcronym">--</strong><span id="primarySummary">No route selected yet.</span></article>
+                <article class="ll-stat-card is-warning"><small>Session token</small><strong id="tokenState">Missing</strong><span id="tokenSummary">Shared login still controls all active sessions.</span></article>
+                <article class="ll-stat-card is-neutral"><small>Advanced tools</small><strong id="advancedState">Locked</strong><span id="advancedSummary">Admin and IT users unlock operational tooling.</span></article>
+            </div>
+        </section>
 
-        if (!roles.includes('ITWorker') || !token) {
-            return false;
-        }
+        <div class="hub-card-grid">
+            <article id="hub-next" class="ll-panel hub-route-card ll-section">
+                <div class="ll-panel-heading">
+                    <div>
+                        <h2 id="primaryTitle">Sign in required</h2>
+                        <p id="primaryCopy">Log in first to unlock role-aware routing and the correct operational dashboard.</p>
+                    </div>
+                    <span class="ll-status-chip is-soft">Primary route</span>
+                </div>
 
-        const result = await api('/ward/it/departments');
-        if (result.status >= 300) {
-            return false;
-        }
+                <div class="hub-chip-row" id="roleChips" style="margin-top: 16px;"></div>
 
-        const departments = Array.isArray(result.data?.departments) ? result.data.departments : [];
-        return departments.some(department => department?.dept_name === BLOOD_BANK_DEPARTMENT);
-    }
+                <div class="hub-value-list">
+                    <div class="hub-value-item">
+                        <small>Continue to</small>
+                        <strong id="primaryLinkLabel">Login page</strong>
+                    </div>
+                    <div class="hub-value-item">
+                        <small>Auto-redirect</small>
+                        <strong id="redirectCountdown">Waiting for session</strong>
+                    </div>
+                </div>
 
-    if (!token || !roles.length) {
-        warning.classList.remove('hidden');
-        userEmail.textContent = 'No active session';
-        roleList.textContent = 'None';
-        sessionTokenState.textContent = 'No token';
-        sessionRoleCount.textContent = '0';
-    } else {
-        initializeDashboard();
-    }
-
-    async function initializeDashboard() {
-        const summaryParts = [];
-        if (fullName) summaryParts.push(fullName);
-        if (userId) summaryParts.push(`#${userId}`);
-        if (email) summaryParts.push(email);
-        userEmail.textContent = summaryParts.join(' | ') || 'Logged-in user';
-        roleList.textContent = roles.join(', ');
-        sessionTokenState.textContent = 'Ready';
-        sessionRoleCount.textContent = String(roles.length);
-
-        const preferredRole = ['Admin', 'ITWorker', 'Doctor', 'Nurse', 'Donor', 'Applicant', 'Patient']
-            .find(role => roles.includes(role));
-        const config = roleConfig[preferredRole] || roleConfig.Patient;
-        const currentPath = window.location.pathname;
-        const bloodBankItAccess = await hasBloodBankItAccess();
-
-        welcomeLine.textContent = `Welcome back, ${config.label}.`;
-        welcomeCopy.textContent = `This hub keeps your role workflow clear and routes you to operational pages quickly.`;
-        primaryTitle.textContent = config.primaryLabel;
-        primaryCopy.textContent = config.primaryCopy;
-        primaryLink.href = config.primaryHref;
-        primaryLink.textContent = 'Open main area';
-
-        const visibleCards = [];
-        roles.forEach(role => {
-            const roleEntry = roleConfig[role];
-            if (!roleEntry) {
-                return;
-            }
-
-            roleEntry.cards.forEach(card => {
-                if (!visibleCards.some(existing => existing.href === card.href)) {
-                    visibleCards.push(card);
-                }
-            });
-
-            if (role === 'ITWorker' && bloodBankItAccess) {
-                (roleEntry.bloodBankCards || []).forEach(card => {
-                    if (!visibleCards.some(existing => existing.href === card.href)) {
-                        visibleCards.push(card);
-                    }
-                });
-            }
-        });
-
-        actionGrid.innerHTML = visibleCards.map(card => `
-            <article class="hub-card">
-                <h3>${card.title}</h3>
-                <p>${card.desc}</p>
-                <div class="hub-actions">
-                    <a class="hub-primary" href="${card.href}">Open</a>
+                <div class="ll-inline-actions" style="margin-top: 18px;">
+                    <a id="primaryLink" class="ll-button" href="/ui/login">Open login page</a>
                 </div>
             </article>
-        `).join('');
 
-        if (roles.includes('Admin') || roles.includes('ITWorker')) {
-            adminToolsCard.classList.remove('hidden');
-        }
+            <article class="ll-panel hub-session-card">
+                <div class="ll-panel-heading">
+                    <div>
+                        <h2>Session summary</h2>
+                        <p>Identity details remain readable here without exposing raw token values or technical storage state.</p>
+                    </div>
+                    <span class="ll-status-chip is-soft">Identity</span>
+                </div>
 
-        if (currentPath === '/ui/dashboard') {
-            setTimeout(() => {
-                window.location.href = config.primaryHref;
-            }, 1200);
-        }
-    }
+                <div class="hub-value-list">
+                    <div class="hub-value-item">
+                        <small>User</small>
+                        <strong id="identityName">No active session</strong>
+                    </div>
+                    <div class="hub-value-item">
+                        <small>Email</small>
+                        <strong id="identityEmail">No email stored</strong>
+                    </div>
+                    <div class="hub-value-item">
+                        <small>User ID</small>
+                        <strong id="identityId">Not available</strong>
+                    </div>
+                </div>
+            </article>
 
-    function logoutSession() {
-        [
-            'ADMIN_TOKEN', 'ADMIN_USER_ID', 'ADMIN_EMAIL',
-            'USER_TOKEN', 'PATIENT_ID', 'PATIENT_EMAIL',
-            'CURRENT_USER_ID', 'CURRENT_USER_FULL_NAME', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES'
-        ].forEach(key => localStorage.removeItem(key));
+            <article class="ll-panel hub-role-card">
+                <div class="ll-panel-heading">
+                    <div>
+                        <h2>Role guide</h2>
+                        <p>Each workspace keeps a shared shell while adapting cards, filters, and actions to a specific hospital responsibility.</p>
+                    </div>
+                    <span class="ll-status-chip is-soft">Modules</span>
+                </div>
 
-        window.location.href = '/ui/login';
-    }
-    </script>
-</body>
-</html>
+                <div class="hub-value-list">
+                    <div class="hub-value-item"><small>Admin</small><strong>Review applicants, protect access, provision staff</strong></div>
+                    <div class="hub-value-item"><small>Clinical</small><strong>Appointments, monitoring, records, and care actions</strong></div>
+                    <div class="hub-value-item"><small>Patient and donor</small><strong>Guided self-service, requests, availability, and history</strong></div>
+                </div>
+            </article>
+        </div>
+
+        <section id="hub-shortcuts" class="ll-panel ll-section">
+            <div class="ll-panel-heading">
+                <div>
+                    <h2>Role shortcuts</h2>
+                    <p>These cards mirror the current role configuration and stay aligned to the same routes and features already present in the app.</p>
+                </div>
+                <span class="ll-status-chip is-soft">Shortcut grid</span>
+            </div>
+
+            <div id="actionGrid" class="ll-collection-grid" style="margin-top: 18px;"></div>
+        </section>
+
+        <section id="hub-directory" class="ll-panel ll-section">
+            <div class="ll-panel-heading">
+                <div>
+                    <h2>Browse workspace modules</h2>
+                    <p>Use the hub as a visual directory when testing flows across the Laravel Blade prototypes.</p>
+                </div>
+            </div>
+
+            <div class="ll-collection-grid" style="margin-top: 18px;">
+                <article class="hub-shortcut"><strong>Admin control</strong><p>Account state, application reviews, and staff setup.</p><a class="ll-button-ghost" href="/ui/admin-users">Open admin</a></article>
+                <article class="hub-shortcut"><strong>IT operations</strong><p>Admissions, care units, beds, and department scope.</p><a class="ll-button-ghost" href="/ui/it-bed-allocation">Open IT</a></article>
+                <article class="hub-shortcut"><strong>Clinical dashboards</strong><p>Doctor and nurse workspaces for appointments, monitoring, and bedside support.</p><a class="ll-button-ghost" href="/ui/doctor-dashboard">Doctor view</a></article>
+                <article class="hub-shortcut"><strong>Patient portal</strong><p>Appointments, records, and blood requests in one patient-friendly flow.</p><a class="ll-button-ghost" href="/ui/patient-portal">Open patient</a></article>
+                <article class="hub-shortcut"><strong>Donor and blood response</strong><p>Donor availability, matching, screening, and fulfillment flows.</p><a class="ll-button-ghost" href="/ui/donor-dashboard">Open donor</a></article>
+                <article class="hub-shortcut"><strong>Applicant tracking</strong><p>Registration, review notes, and approval status visibility.</p><a class="ll-button-ghost" href="/ui/applications">Open applicant</a></article>
+            </div>
+        </section>
+    </div>
+@endsection
+
+@push('scripts')
+<script>
+const BLOOD_BANK_DEPARTMENT='Blood Bank';
+const roleConfig={
+    Admin:{label:'Administrator',primaryLabel:'Admin control center',primaryHref:'/ui/admin-users',primaryCopy:'Review applicants, control account access, and finish staff provisioning.',cards:[{title:'Admin control',href:'/ui/admin-users',desc:'Account control and profile provisioning.'},{title:'Application reviews',href:'/ui/application-reviews',desc:'Approve or reject staff-role applications.'},{title:'Advanced tools',href:'/ui/dev-tools',desc:'Controlled diagnostics and verification tooling.'}]},
+    ITWorker:{label:'IT worker',primaryLabel:'IT operations workspace',primaryHref:'/ui/it-bed-allocation',primaryCopy:'Coordinate department scope, admissions, and bed allocation flows.',cards:[{title:'IT bed allocation',href:'/ui/it-bed-allocation',desc:'Admission and bed assignment workflow.'},{title:'Ward setup',href:'/ui/ward-setup',desc:'Care unit and bed structure setup.'}],bloodBankCards:[{title:'Blood matching center',href:'/ui/blood-matching',desc:'Request matching and donor-response operations.'}]},
+    Doctor:{label:'Doctor',primaryLabel:'Doctor dashboard',primaryHref:'/ui/doctor-dashboard',primaryCopy:'Open doctor-facing clinical actions, appointments, and patient workflows.',cards:[{title:'Doctor dashboard',href:'/ui/doctor-dashboard',desc:'Clinical tasks, appointments, and bed requests.'}]},
+    Nurse:{label:'Nurse',primaryLabel:'Nurse dashboard',primaryHref:'/ui/nurse-dashboard',primaryCopy:'Open monitoring, vitals, and bedside care actions.',cards:[{title:'Nurse dashboard',href:'/ui/nurse-dashboard',desc:'Monitoring, vitals, and Blood Bank screening tools.'}]},
+    Patient:{label:'Patient',primaryLabel:'Patient portal',primaryHref:'/ui/patient-portal',primaryCopy:'Manage appointments, records, and blood requests from one portal.',cards:[{title:'Patient portal',href:'/ui/patient-portal',desc:'Appointments, records, and blood support requests.'}]},
+    Donor:{label:'Donor',primaryLabel:'Donor dashboard',primaryHref:'/ui/donor-dashboard',primaryCopy:'Manage donor availability, notifications, and donation history.',cards:[{title:'Donor dashboard',href:'/ui/donor-dashboard',desc:'Availability, request response, and donation history.'}]},
+    Applicant:{label:'Applicant',primaryLabel:'Applicant workspace',primaryHref:'/ui/applications',primaryCopy:'Track application status and next steps until review completes.',cards:[{title:'Applicant workspace',href:'/ui/applications',desc:'Submission history, review notes, and status tracking.'}]}
+};
+const rolePriority=['Admin','ITWorker','Doctor','Nurse','Donor','Applicant','Patient'];
+const fullName=localStorage.getItem('CURRENT_USER_FULL_NAME')||'';
+const userId=localStorage.getItem('CURRENT_USER_ID')||'';
+const email=localStorage.getItem('CURRENT_USER_EMAIL')||'';
+const roles=JSON.parse(localStorage.getItem('CURRENT_USER_ROLES')||'[]');
+const token=localStorage.getItem('USER_TOKEN')||'';
+
+function setText(id,value){const node=document.getElementById(id);if(node)node.textContent=value;}
+function escapeHtml(value){return String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');}
+function preferredRole(){return rolePriority.find((role)=>roles.includes(role))||null;}
+function logoutSession(){['ADMIN_TOKEN','ADMIN_USER_ID','ADMIN_EMAIL','USER_TOKEN','PATIENT_ID','PATIENT_EMAIL','CURRENT_USER_ID','CURRENT_USER_FULL_NAME','CURRENT_USER_EMAIL','CURRENT_USER_ROLES'].forEach((key)=>localStorage.removeItem(key));window.location.href='/ui/login';}
+async function api(path){const response=await fetch(`/api${path}`,{headers:{Accept:'application/json',Authorization:`Bearer ${token}`}});const text=await response.text();let data={};try{data=JSON.parse(text)}catch{}return{status:response.status,data};}
+async function hasBloodBankItAccess(){if(roles.includes('Admin'))return true;if(!roles.includes('ITWorker')||!token)return false;const result=await api('/ward/it/departments');if(result.status>=300)return false;const departments=Array.isArray(result.data?.departments)?result.data.departments:[];return departments.some((department)=>department?.dept_name===BLOOD_BANK_DEPARTMENT);}
+
+function renderRoleChips(){const root=document.getElementById('roleChips');root.innerHTML=roles.length?roles.map((role)=>`<span class="hub-chip">${escapeHtml(role==='ITWorker'?'IT Worker':role)}</span>`).join(''):'<span class="hub-chip">No active roles</span>';}
+
+function renderShortcuts(visibleCards){const root=document.getElementById('actionGrid');root.innerHTML=visibleCards.length?visibleCards.map((card)=>`<article class="hub-shortcut"><strong>${escapeHtml(card.title)}</strong><p>${escapeHtml(card.desc)}</p><a class="ll-button-ghost" href="${card.href}">Open</a></article>`).join(''):'<div class="ll-empty"><strong>No shortcuts available</strong><p>Sign in to reveal the correct modules for this session.</p></div>';}
+
+async function bootHub(){
+    const hasSession=Boolean(token&&roles.length);
+    document.getElementById('hubSessionAlert').classList.toggle('ll-hidden-debug',hasSession);
+    setText('identityName',fullName||email||'No active session');
+    setText('identityEmail',email||'No email stored');
+    setText('identityId',userId?`#${userId}`:'Not available');
+    setText('roleCount',String(roles.length));
+    setText('roleSummary',roles.length?roles.join(', '):'Sign in to unlock role-aware routing.');
+    setText('tokenState',hasSession?'Ready':'Missing');
+    setText('tokenSummary',hasSession?'A valid shared session is available for workspace routing.':'Shared login still controls all active sessions.');
+    renderRoleChips();
+    if(!hasSession){renderShortcuts([]);return;}
+
+    const preferred=preferredRole();
+    const config=roleConfig[preferred]||roleConfig.Patient;
+    const bloodAccess=await hasBloodBankItAccess();
+    const cards=[];
+    roles.forEach((role)=>{const entry=roleConfig[role];if(!entry)return;entry.cards.forEach((card)=>{if(!cards.some((existing)=>existing.href===card.href))cards.push(card);});if(role==='ITWorker'&&bloodAccess){(entry.bloodBankCards||[]).forEach((card)=>{if(!cards.some((existing)=>existing.href===card.href))cards.push(card);});}});
+
+    setText('primaryTitle',config.primaryLabel);
+    setText('primaryCopy',config.primaryCopy);
+    setText('primaryAcronym',config.label.slice(0,2).toUpperCase());
+    setText('primarySummary',config.primaryCopy);
+    setText('primaryLinkLabel',config.label);
+    setText('advancedState',(roles.includes('Admin')||roles.includes('ITWorker'))?'Enabled':'Focused');
+    setText('advancedSummary',(roles.includes('Admin')||roles.includes('ITWorker'))?'Operational support and verification tools are available.':'Advanced tooling stays hidden for non-admin workflows.');
+    document.getElementById('primaryLink').href=config.primaryHref;
+    document.getElementById('primaryLink').textContent='Continue to workspace';
+    document.getElementById('heroPrimaryLink').href=config.primaryHref;
+    document.getElementById('heroPrimaryLink').textContent='Continue to workspace';
+    renderShortcuts(cards);
+
+    let remaining=3;
+    document.getElementById('hubRedirectAlert').classList.remove('ll-hidden-debug');
+    setText('redirectCountdown',`${remaining}s until automatic routing`);
+    setText('redirectCopy',`The hub will continue into ${config.label.toLowerCase()} workspace automatically unless you choose another module first.`);
+    const interval=setInterval(()=>{remaining-=1;setText('redirectCountdown',remaining>0?`${remaining}s until automatic routing`:'Routing now');if(remaining<=0){clearInterval(interval);window.location.href=config.primaryHref;}},1000);
+}
+
+bootHub();
+</script>
+@endpush

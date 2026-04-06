@@ -583,6 +583,3 @@ refreshContext();
 loadPendingApplications();
 </script>
 @endpush
- /*
- This is done to ensure the last commit went through
-*/

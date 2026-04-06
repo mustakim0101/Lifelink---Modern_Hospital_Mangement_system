@@ -1,0 +1,201 @@
+import React from 'react';
+import { Link } from 'react-router';
+import { User, Calendar, FileText, Droplet, Heart, Phone, Mail, MapPin } from 'lucide-react';
+import { AppShell } from '../../components/layout/AppShell';
+import { PageHeader } from '../../components/shared/PageHeader';
+import { KPICard } from '../../components/shared/KPICard';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { StatusBadge } from '../../components/shared/StatusBadge';
+import { patients, appointments, medicalRecords, bloodRequests } from '../../data/mockData';
+import { format } from 'date-fns';
+
+export default function PatientPortal() {
+  // Mock: using first patient as current user
+  const patient = patients[2]; // David Kumar
+  const myAppointments = appointments.filter(a => a.patientId === patient.id && a.status === 'Booked');
+  const myRecords = medicalRecords.filter(r => r.patientId === patient.id);
+  const myBloodRequests = bloodRequests.filter(r => r.patientId === patient.id);
+
+  return (
+    <AppShell>
+      <PageHeader
+        title="Patient Portal"
+        subtitle="Welcome back, manage your health journey"
+      />
+
+      {/* Profile Summary */}
+      <Card className="mb-6 border-2 border-[#0369A1]">
+        <CardHeader>
+          <CardTitle>Your Profile</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
+              <div className="text-sm text-muted-foreground mb-1">Full Name</div>
+              <div className="font-medium">{patient.name}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground mb-1">Medical Record Number</div>
+              <div className="font-medium">{patient.mrn}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground mb-1">Blood Group</div>
+              <div className="font-medium text-[#DC2626]">{patient.bloodGroup}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground mb-1">Age</div>
+              <div className="font-medium">{patient.age} years</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground mb-1">Gender</div>
+              <div className="font-medium">{patient.gender}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground mb-1">Phone</div>
+              <div className="font-medium">{patient.phone}</div>
+            </div>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-border">
+            <div className="text-sm font-medium mb-3">Emergency Contact</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">Name</div>
+                <div className="font-medium">{patient.emergencyContact.name}</div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">Relation</div>
+                <div className="font-medium">{patient.emergencyContact.relation}</div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">Phone</div>
+                <div className="font-medium">{patient.emergencyContact.phone}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <Link to="/patient/profile">
+              <Button variant="outline" size="sm">
+                <User className="w-4 h-4 mr-2" />
+                Edit Profile
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <KPICard
+          title="Upcoming Appointments"
+          value={myAppointments.length}
+          subtitle="Scheduled"
+          icon={Calendar}
+          variant="primary"
+        />
+        <KPICard
+          title="Medical Records"
+          value={myRecords.length}
+          subtitle="Total records"
+          icon={FileText}
+          variant="success"
+        />
+        <KPICard
+          title="Blood Requests"
+          value={myBloodRequests.length}
+          subtitle="Active requests"
+          icon={Droplet}
+          variant="warning"
+        />
+        <KPICard
+          title="Health Score"
+          value="Good"
+          subtitle="Overall status"
+          icon={Heart}
+          variant="success"
+        />
+      </div>
+
+      {/* Upcoming Appointments */}
+      <Card className="mb-6">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Upcoming Appointments</CardTitle>
+          <div className="flex gap-2">
+            <Link to="/patient/appointments/book">
+              <Button size="sm" className="bg-[#0369A1] hover:bg-[#075985]">
+                Book Appointment
+              </Button>
+            </Link>
+            <Link to="/patient/appointments">
+              <Button variant="outline" size="sm">View All</Button>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {myAppointments.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Calendar className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+              <p>No upcoming appointments</p>
+              <Link to="/patient/appointments/book">
+                <Button className="mt-4 bg-[#0369A1] hover:bg-[#075985]">
+                  Book Your First Appointment
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {myAppointments.map((appointment) => (
+                <div key={appointment.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:border-[#0369A1] transition-colors">
+                  <div>
+                    <div className="font-medium">{appointment.doctor}</div>
+                    <div className="text-sm text-muted-foreground">{appointment.department}</div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      {format(new Date(appointment.dateTime), 'MMMM dd, yyyy • h:mm a')}
+                    </div>
+                    <div className="text-sm text-muted-foreground">{appointment.reason}</div>
+                  </div>
+                  <StatusBadge status={appointment.status} />
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Link to="/patient/appointments/book">
+          <Card className="hover:border-[#0369A1] transition-colors cursor-pointer">
+            <CardContent className="pt-6">
+              <Calendar className="w-10 h-10 text-[#0369A1] mb-3" />
+              <h3 className="font-medium mb-1">Book Appointment</h3>
+              <p className="text-sm text-muted-foreground">Schedule a visit with your doctor</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link to="/patient/records">
+          <Card className="hover:border-[#0369A1] transition-colors cursor-pointer">
+            <CardContent className="pt-6">
+              <FileText className="w-10 h-10 text-[#0D9488] mb-3" />
+              <h3 className="font-medium mb-1">Medical Records</h3>
+              <p className="text-sm text-muted-foreground">View your health history</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link to="/patient/blood-requests">
+          <Card className="hover:border-[#0369A1] transition-colors cursor-pointer">
+            <CardContent className="pt-6">
+              <Droplet className="w-10 h-10 text-[#DC2626] mb-3" />
+              <h3 className="font-medium mb-1">Blood Requests</h3>
+              <p className="text-sm text-muted-foreground">Request or track blood</p>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+    </AppShell>
+  );
+}

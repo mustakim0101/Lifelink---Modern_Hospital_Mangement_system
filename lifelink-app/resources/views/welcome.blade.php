@@ -1,412 +1,210 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LifeLink | Modern Hospital Management</title>
-    <style>
-        :root {
-            --bg: #eef3f7;
-            --surface: rgba(255, 255, 255, 0.9);
-            --text: #183244;
-            --muted: #5d7280;
-            --line: rgba(24, 50, 68, 0.12);
-            --primary: #0f766e;
-            --primary-strong: #0a4d56;
-            --secondary: #1d4ed8;
-            --accent: #f97316;
-            --shadow: 0 18px 44px rgba(16, 40, 60, 0.12);
-        }
+@extends('ui.layouts.public')
 
-        * { box-sizing: border-box; }
+@section('title', 'Modern Hospital Management')
+@section('public_tagline', 'Hospital coordination for admissions, care delivery, patient access, and blood response')
 
-        body {
-            margin: 0;
-            font-family: "Segoe UI", "Trebuchet MS", sans-serif;
-            color: var(--text);
-            background:
-                radial-gradient(circle at top left, rgba(29, 78, 216, 0.14), transparent 24rem),
-                radial-gradient(circle at top right, rgba(15, 118, 110, 0.12), transparent 24rem),
-                linear-gradient(180deg, #f7fbfd 0%, var(--bg) 100%);
-        }
+@section('public_nav')
+    <a href="#overview">Overview</a>
+    <a href="#services">Services</a>
+    <a href="#roles">Workspaces</a>
+    <a href="#entry">Get Started</a>
+@endsection
 
-        a { color: inherit; text-decoration: none; }
+@section('content')
+    <div class="ll-public-stack">
+        <section id="overview" class="ll-public-hero">
+            <article class="ll-public-hero-card ll-public-card">
+                <span class="ll-public-kicker">Healthcare SaaS</span>
+                <h1>One connected hospital workspace for care teams, patients, operations, and blood response.</h1>
+                <p class="ll-public-lead">LifeLink turns scattered dashboards into one premium, role-aware experience for admissions, appointments, nursing, patient access, donor coordination, and staffing review.</p>
 
-        .shell {
-            width: min(1160px, calc(100% - 24px));
-            margin: 0 auto;
-        }
-
-        .topbar {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            backdrop-filter: blur(12px);
-            background: rgba(247, 251, 253, 0.9);
-            border-bottom: 1px solid rgba(24, 50, 68, 0.08);
-        }
-
-        .topbar-inner {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 0;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .brand-mark {
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            display: grid;
-            place-items: center;
-            color: #fff;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-        }
-
-        .brand-copy strong {
-            display: block;
-            font-size: 1.08rem;
-        }
-
-        .brand-copy span {
-            color: var(--muted);
-            font-size: 0.9rem;
-        }
-
-        .topnav {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .topnav a {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 36px;
-            padding: 8px 13px;
-            border-radius: 999px;
-            font-size: 0.9rem;
-            color: var(--muted);
-        }
-
-        .topnav a:hover {
-            background: rgba(15, 118, 110, 0.09);
-            color: var(--text);
-        }
-
-        .topnav .cta {
-            color: #fff;
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-        }
-
-        main {
-            padding: 28px 0 40px;
-            display: grid;
-            gap: 18px;
-        }
-
-        .hero {
-            border: 1px solid var(--line);
-            border-radius: 24px;
-            background: var(--surface);
-            box-shadow: var(--shadow);
-            padding: 22px;
-            display: grid;
-            grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-            gap: 14px;
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            border-radius: 999px;
-            padding: 6px 12px;
-            background: rgba(15, 118, 110, 0.1);
-            color: var(--primary-strong);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            font-size: 0.72rem;
-            font-weight: 800;
-        }
-
-        h1 {
-            margin: 12px 0 10px;
-            font-size: clamp(1.9rem, 3vw, 3.2rem);
-            line-height: 1.06;
-        }
-
-        .hero p,
-        .card p,
-        .list li,
-        .meta p {
-            margin: 0;
-            color: var(--muted);
-            line-height: 1.6;
-        }
-
-        .hero-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 14px;
-        }
-
-        .button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 38px;
-            padding: 8px 14px;
-            border-radius: 999px;
-            font-weight: 700;
-            border: 1px solid var(--line);
-            background: rgba(255, 255, 255, 0.88);
-        }
-
-        .button.primary {
-            color: #fff;
-            border: 0;
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-        }
-
-        .meta {
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.92);
-            padding: 14px;
-            display: grid;
-            gap: 8px;
-        }
-
-        .meta strong {
-            display: block;
-            font-size: 1.06rem;
-        }
-
-        .grid {
-            display: grid;
-            gap: 12px;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-
-        .card {
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            background: var(--surface);
-            box-shadow: var(--shadow);
-            padding: 14px;
-        }
-
-        .card h2 {
-            margin: 0 0 8px;
-            font-size: 1.06rem;
-        }
-
-        .list {
-            margin: 10px 0 0;
-            padding-left: 18px;
-            display: grid;
-            gap: 6px;
-        }
-
-        .auth-grid {
-            display: grid;
-            gap: 12px;
-            grid-template-columns: 1.2fr 0.8fr;
-        }
-
-        .stack {
-            display: grid;
-            gap: 10px;
-        }
-
-        .page-hidden { display: none !important; }
-
-        @media (max-width: 980px) {
-            .hero,
-            .grid,
-            .auth-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 720px) {
-            .shell { width: min(100% - 16px, 1160px); }
-            .topbar-inner { flex-direction: column; align-items: flex-start; }
-        }
-    </style>
-</head>
-<body>
-    <header class="topbar">
-        <div class="shell topbar-inner">
-            <div class="brand">
-                <div class="brand-mark">LL</div>
-                <div class="brand-copy">
-                    <strong>LifeLink</strong>
-                    <span>Hospital coordination for care, beds, and blood response.</span>
+                <div class="ll-public-actions">
+                    <a class="ll-public-chip is-primary" href="/ui/login" data-hide-when-session>Open Shared Login</a>
+                    <a class="ll-public-chip" href="/ui/register/patient" data-hide-when-session>Register as Patient</a>
+                    <a class="ll-public-chip" href="/ui/register/donor" data-hide-when-session>Register as Donor</a>
+                    <a class="ll-public-chip is-soft" href="/ui/dashboard" data-session-destination data-show-when-session>Continue to Workspace</a>
                 </div>
+
+                <div class="ll-metric-strip">
+                    <div class="ll-metric-card">
+                        <small>Core Workspaces</small>
+                        <strong>7</strong>
+                        <span>Admin, IT, doctor, nurse, patient, donor, and applicant flows now sit inside one visual system.</span>
+                    </div>
+                    <div class="ll-metric-card">
+                        <small>Operational Zones</small>
+                        <strong>5</strong>
+                        <span>Admissions, care delivery, self-service, staffing review, and Blood Bank response stay connected.</span>
+                    </div>
+                    <div class="ll-metric-card">
+                        <small>Primary Goal</small>
+                        <strong>1</strong>
+                        <span>Keep urgent hospital work calm, readable, and action-focused without losing role safety.</span>
+                    </div>
+                </div>
+            </article>
+
+            <aside class="ll-public-panel">
+                <span class="ll-public-kicker">Design Direction</span>
+                <h2>Built to feel calm in urgent moments.</h2>
+                <p class="ll-public-copy">The target product language is a modern hospital SaaS shell: soft blue-gray background, white surfaces, rounded cards, large page titles, clear status chips, and guided actions instead of raw technical output.</p>
+
+                <div class="ll-collection-grid" style="margin-top: 20px;">
+                    <article class="ll-action-card">
+                        <strong>Unified app shell</strong>
+                        <p>Stable left navigation, role identity, notifications, and consistent page rhythm across every module.</p>
+                    </article>
+                    <article class="ll-action-card">
+                        <strong>Readable hierarchy</strong>
+                        <p>KPI cards, page headers, alert banners, and structured panels surface what matters first.</p>
+                    </article>
+                    <article class="ll-action-card">
+                        <strong>Human-facing workflows</strong>
+                        <p>Patient, donor, and applicant experiences use guided forms, progress steps, and clearer next actions.</p>
+                    </article>
+                    <article class="ll-action-card">
+                        <strong>Operational confidence</strong>
+                        <p>Admins, doctors, nurses, IT, and Blood Bank users get faster status visibility without backend clutter.</p>
+                    </article>
+                </div>
+            </aside>
+        </section>
+
+        <section id="services" class="ll-public-stack">
+            <div class="ll-public-panel">
+                <span class="ll-public-kicker">Platform Modules</span>
+                <h2>Modules organized around real hospital workflows instead of raw system views.</h2>
+                <p class="ll-public-copy">Each surface is being translated into cards, filters, timelines, queues, and action panels while keeping the same underlying routes, endpoints, and role boundaries intact.</p>
             </div>
 
-            <nav class="topnav">
-                <a href="#overview">Overview</a>
-                <a href="#modules">Services</a>
-                <a href="#entry">Entry</a>
-                <a id="auth-nav-link" href="/ui/login">Login / Register</a>
-                <a id="session-nav-link" class="cta" href="/ui">Explore UI</a>
-            </nav>
-        </div>
-    </header>
+            <div class="ll-collection-grid">
+                <article class="ll-action-card">
+                    <strong>Admissions and bed operations</strong>
+                    <p>IT users can coordinate departments, available beds, admissions, transfers, and discharge from one control surface.</p>
+                </article>
+                <article class="ll-action-card">
+                    <strong>Clinical dashboards</strong>
+                    <p>Doctors and nurses see patient context, appointments, vitals, and care actions inside a calmer dashboard shell.</p>
+                </article>
+                <article class="ll-action-card">
+                    <strong>Patient self-service portal</strong>
+                    <p>Appointments, records, and blood requests stay grouped into a cleaner patient journey with fewer technical distractions.</p>
+                </article>
+                <article class="ll-action-card">
+                    <strong>Blood response workflows</strong>
+                    <p>Donor matching, screening, notifications, and fulfillment stay visible across donor, nurse, and Blood Bank operations.</p>
+                </article>
+            </div>
+        </section>
 
-    <div class="shell">
-        <main>
-            <section class="hero" id="overview">
-                <article>
-                    <span class="badge">Public Mode</span>
-                    <h1>One platform for hospital operations and donor response.</h1>
-                    <p>LifeLink connects admissions, bed allocation, patient access, and blood-request workflows in one role-aware system.</p>
-                    <div class="hero-actions">
-                        <a class="button primary" href="/ui/login">Open Login</a>
-                        <a class="button" href="#modules">See Modules</a>
-                        <a class="button" href="/ui/dashboard">Workspace Hub</a>
-                    </div>
-                </article>
-                <aside class="meta">
-                    <strong>What this page does</strong>
-                    <p>Explains the product before login and routes signed-in users back to authenticated workflow pages.</p>
-                    <strong>Who it serves</strong>
-                    <p>Admin, IT, doctor, nurse, patient, donor, and applicant roles.</p>
-                </aside>
-            </section>
+        <section class="ll-public-grid">
+            <article class="ll-public-col-8 ll-public-panel">
+                <span class="ll-public-kicker">Product Journey</span>
+                <h2>One product, multiple guided journeys.</h2>
+                <p class="ll-public-copy">The visual direction stays cohesive while each route adapts to a specific hospital responsibility.</p>
 
-            <section id="modules" class="grid">
-                <article class="card">
-                    <h2>Role-aware authentication</h2>
-                    <p>Single login entry with route decisions based on active role.</p>
-                </article>
-                <article class="card">
-                    <h2>Admissions and beds</h2>
-                    <p>Department scope, care units, admissions, and bed assignment.</p>
-                </article>
-                <article class="card">
-                    <h2>Blood operations</h2>
-                    <p>Donor readiness, matching, notifications, and fulfillment flow.</p>
-                </article>
-            </section>
-
-            <section id="entry" class="auth-grid">
-                <div id="logged-out-entry" class="card stack">
-                    <h2>Start here</h2>
-                    <p>Use login for existing users. Use registration only for new patient, donor, or applicant accounts.</p>
-                    <ul class="list">
-                        <li>Login routes users to role-specific workflow pages.</li>
-                        <li>Applicants stay in application workspace until approval.</li>
-                        <li>Donor and patient registration open role onboarding paths.</li>
-                    </ul>
-                    <div class="hero-actions">
-                        <a class="button primary" href="/ui/login">Login</a>
-                        <a class="button" href="/ui/register/patient">Patient Register</a>
-                        <a class="button" href="/ui/register/donor">Donor Register</a>
-                        <a class="button" href="/ui/register/applicant">Applicant Register</a>
-                    </div>
+                <div class="ll-step-grid" style="margin-top: 22px;">
+                    <article class="ll-step-card">
+                        <div class="ll-step-card__number">1</div>
+                        <h3>Enter cleanly</h3>
+                        <p class="ll-public-copy">Users enter through a shared login or one of the dedicated onboarding paths.</p>
+                    </article>
+                    <article class="ll-step-card">
+                        <div class="ll-step-card__number">2</div>
+                        <h3>Land in role context</h3>
+                        <p class="ll-public-copy">The workspace hub routes the active session to the correct dashboard and navigation.</p>
+                    </article>
+                    <article class="ll-step-card">
+                        <div class="ll-step-card__number">3</div>
+                        <h3>Work from cards</h3>
+                        <p class="ll-public-copy">Queues, tables, KPIs, alerts, and action cards replace developer-looking panels.</p>
+                    </article>
                 </div>
+            </article>
 
-                <div id="logged-in-entry" class="card stack page-hidden">
-                    <h2>Session detected</h2>
-                    <p>You are already signed in. Continue to your workspace or log out before switching account.</p>
-                    <div class="hero-actions">
-                        <a id="logged-dashboard-link" class="button primary" href="/ui/dashboard">Go to dashboard</a>
-                        <button id="logout-button" class="button" type="button">Logout</button>
-                    </div>
+            <aside class="ll-public-col-4 ll-public-panel">
+                <span class="ll-public-kicker">Signals</span>
+                <h2>Visual patterns shared everywhere</h2>
+                <div class="ll-chip-row" style="margin-top: 16px;">
+                    <span class="ll-chip">KPI cards</span>
+                    <span class="ll-chip">Status badges</span>
+                    <span class="ll-chip">Filter bars</span>
+                    <span class="ll-chip">Alert banners</span>
+                    <span class="ll-chip">Steppers</span>
+                    <span class="ll-chip">Timelines</span>
+                    <span class="ll-chip">Action cards</span>
+                    <span class="ll-chip">Cleaner tables</span>
                 </div>
+            </aside>
+        </section>
 
-                <article class="card">
-                    <h2>Quick links</h2>
-                    <ul class="list">
-                        <li><a href="/ui/applications">Application flow prototype</a></li>
-                        <li><a href="/ui/it-bed-allocation">IT operations prototype</a></li>
-                        <li><a href="/ui/blood-matching">Blood matching prototype</a></li>
-                        <li><a href="/ui/patient-portal">Patient portal prototype</a></li>
-                    </ul>
+        <section id="roles" class="ll-public-stack">
+            <div class="ll-public-panel">
+                <span class="ll-public-kicker">Role Workspaces</span>
+                <h2>Each role lands in the tools they actually need.</h2>
+            </div>
+
+            <div class="ll-role-grid">
+                <article class="ll-role-card">
+                    <span class="ll-role-card__meta">Admin</span>
+                    <h3>Applicant review and account safety</h3>
+                    <p class="ll-public-copy">Review staff applicants, protect access, and provision doctor, nurse, or IT roles without technical clutter.</p>
                 </article>
-            </section>
-        </main>
+                <article class="ll-role-card">
+                    <span class="ll-role-card__meta">Doctor + Nurse</span>
+                    <h3>Clinical dashboards</h3>
+                    <p class="ll-public-copy">Appointments, patient monitoring, vitals, and care actions stay visible inside a consistent shell.</p>
+                </article>
+                <article class="ll-role-card">
+                    <span class="ll-role-card__meta">Patient</span>
+                    <h3>Portal for appointments and records</h3>
+                    <p class="ll-public-copy">Patients get a cleaner experience for booking, record review, and blood support requests.</p>
+                </article>
+                <article class="ll-role-card">
+                    <span class="ll-role-card__meta">Donor + Blood Bank</span>
+                    <h3>Donation and fulfillment flow</h3>
+                    <p class="ll-public-copy">Eligibility, notifications, donor screening, and blood fulfillment align across matching workflows.</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="entry" class="ll-public-grid">
+            <article class="ll-public-col-8 ll-public-panel" data-hide-when-session>
+                <span class="ll-public-kicker">Start Here</span>
+                <h2>Choose the right entry path for the person behind the screen.</h2>
+                <p class="ll-public-copy">Existing users use a shared sign-in route. New patient, donor, and applicant users get tailored onboarding so the forms stay focused and supportive instead of overloaded.</p>
+
+                <div class="ll-public-actions">
+                    <a class="ll-public-chip is-primary" href="/ui/login">Login</a>
+                    <a class="ll-public-chip" href="/ui/register/patient">Patient Registration</a>
+                    <a class="ll-public-chip" href="/ui/register/donor">Donor Registration</a>
+                    <a class="ll-public-chip" href="/ui/register/applicant">Staff Application</a>
+                </div>
+            </article>
+
+            <article class="ll-public-col-8 ll-public-panel ll-hidden" data-show-when-session>
+                <span class="ll-public-kicker">Session Detected</span>
+                <h2>Your workspace is ready.</h2>
+                <p class="ll-public-copy">LifeLink found an active session in this browser. Continue to the correct dashboard for your role, or sign out before switching accounts.</p>
+
+                <div class="ll-public-actions">
+                    <a class="ll-public-chip is-primary" href="/ui/dashboard" data-session-destination>Continue to Workspace</a>
+                    <button class="ll-public-chip" type="button" onclick="window.lifeLinkUi.clearSession(); window.location.reload();">Logout</button>
+                </div>
+            </article>
+
+            <aside class="ll-public-col-4 ll-public-panel">
+                <span class="ll-public-kicker">Quick Access</span>
+                <h2>Browse sample modules</h2>
+                <p class="ll-public-copy">Open the current role workspaces and operational modules from one lightweight entry card.</p>
+                <ul class="ll-public-list">
+                    <li><a href="/ui/patient-portal">Patient portal</a></li>
+                    <li><a href="/ui/doctor-dashboard">Doctor dashboard</a></li>
+                    <li><a href="/ui/nurse-dashboard">Nurse workspace</a></li>
+                    <li><a href="/ui/it-bed-allocation">IT operations</a></li>
+                    <li><a href="/ui/blood-matching">Blood matching center</a></li>
+                </ul>
+            </aside>
+        </section>
     </div>
-
-    <script>
-    const token = localStorage.getItem('USER_TOKEN') || '';
-    const roles = JSON.parse(localStorage.getItem('CURRENT_USER_ROLES') || '[]');
-
-    const authNavLink = document.getElementById('auth-nav-link');
-    const sessionNavLink = document.getElementById('session-nav-link');
-    const loggedDashboardLink = document.getElementById('logged-dashboard-link');
-    const loggedOutEntry = document.getElementById('logged-out-entry');
-    const loggedInEntry = document.getElementById('logged-in-entry');
-    const logoutButton = document.getElementById('logout-button');
-    const rolePriority = ['Admin', 'ITWorker', 'Doctor', 'Nurse', 'Donor', 'Applicant', 'Patient'];
-    const roleDestinations = {
-        Admin: '/ui/admin-users',
-        ITWorker: '/ui/it-bed-allocation',
-        Doctor: '/ui/doctor-dashboard',
-        Nurse: '/ui/nurse-dashboard',
-        Donor: '/ui/donor-dashboard',
-        Applicant: '/ui/applications',
-        Patient: '/ui/patient-portal'
-    };
-
-    function preferredRolePath() {
-        const preferredRole = rolePriority.find(role => roles.includes(role));
-        return preferredRole ? roleDestinations[preferredRole] : '/ui/dashboard';
-    }
-
-    if (token && roles.length) {
-        const dashboardPath = preferredRolePath();
-        if (authNavLink) {
-            authNavLink.textContent = 'Go to Dashboard';
-            authNavLink.href = dashboardPath;
-        }
-        if (loggedDashboardLink) loggedDashboardLink.href = dashboardPath;
-
-        if (sessionNavLink) {
-            sessionNavLink.textContent = 'Logout';
-            sessionNavLink.href = '#';
-        }
-
-        if (loggedOutEntry) loggedOutEntry.classList.add('page-hidden');
-        if (loggedInEntry) loggedInEntry.classList.remove('page-hidden');
-    }
-
-    function clearSession() {
-        [
-            'ADMIN_TOKEN', 'ADMIN_USER_ID', 'ADMIN_EMAIL',
-            'USER_TOKEN', 'PATIENT_ID', 'PATIENT_EMAIL',
-            'CURRENT_USER_ID', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES'
-        ].forEach(key => localStorage.removeItem(key));
-    }
-
-    if (logoutButton) {
-        logoutButton.addEventListener('click', () => {
-            clearSession();
-            window.location.reload();
-        });
-    }
-
-    if (sessionNavLink) {
-        sessionNavLink.addEventListener('click', event => {
-            if (!(token && roles.length)) return;
-            event.preventDefault();
-            clearSession();
-            window.location.reload();
-        });
-    }
-    </script>
-</body>
-</html>
+@endsection

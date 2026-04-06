@@ -1,320 +1,163 @@
 @extends('ui.layouts.app')
 
-@section('title', 'Applicant Workspace')
-@section('workspace_label', '')
-@section('hero_badge', '')
-@section('hero_title', 'Applicant Dashboard')
-@section('hero_description', '')
-@section('hide_meta_card', '1')
-@section('meta_title', 'Applicant Workspace')
-@section('meta_copy', 'Status tracking, review notes, and next steps')
+@section('title', 'Applicant Status')
+@section('workspace_label', 'Applicant progress workspace')
+@section('hero_badge', 'Applicant')
+@section('hero_title', 'Track staffing review progress, latest notes, and next steps from one calmer status page.')
+@section('hero_description', 'The applicant workspace keeps status, role details, department context, and review history visible without forcing applicants through raw API output.')
+@section('meta_title', 'Applicant Status')
+@section('meta_copy', 'Application state, review notes, and next actions')
 
 @push('styles')
 <style>
-    :root {
-        --app-ink: #172436;
-        --app-muted: #5a6d7b;
-        --app-line: rgba(23, 36, 54, 0.12);
-        --app-card: rgba(255, 255, 255, 0.92);
-        --app-primary: #1d4ed8;
-        --app-primary-strong: #1e40af;
-        --app-accent: #0f766e;
-        --app-ok: #166534;
-        --app-warn: #a16207;
-        --app-danger: #b91c1c;
-        --app-shadow: 0 16px 36px rgba(18, 34, 50, 0.14);
-    }
-
-    .applicant-grid { display: grid; gap: 10px; }
-    .applicant-panel { display: none; }
-    .applicant-card {
-        border: 1px solid var(--app-line);
-        border-radius: 16px;
-        background: var(--app-card);
-        box-shadow: var(--app-shadow);
-        padding: 14px;
-    }
-
-    .applicant-card h3 { margin: 0; }
-    .applicant-hint { margin: 5px 0 0; color: var(--app-muted); font-size: 12px; line-height: 1.7; }
-    .applicant-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .applicant-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
-    .applicant-stat {
-        border: 1px solid var(--app-line);
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.94);
-        text-align: center;
-        padding: 12px;
-    }
-    .applicant-stat strong { display: block; font-size: 1.35rem; font-family: "Sora", "Trebuchet MS", sans-serif; }
-    .applicant-stat span { color: var(--app-muted); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.06em; }
-
-    .applicant-status {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 999px;
-        padding: 6px 10px;
-        font-size: 12px;
-        font-weight: 700;
-    }
-    .applicant-status.pending { color: var(--app-warn); background: rgba(161, 98, 7, 0.14); }
-    .applicant-status.approved { color: var(--app-ok); background: rgba(22, 101, 52, 0.14); }
-    .applicant-status.rejected { color: var(--app-danger); background: rgba(185, 28, 28, 0.14); }
-
-    .applicant-table-wrap {
-        margin-top: 10px;
-        border: 1px solid var(--app-line);
-        border-radius: 12px;
-        overflow: auto;
-        background: rgba(255, 255, 255, 0.95);
-    }
-    .applicant-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 12px;
-    }
-    .applicant-table th,
-    .applicant-table td {
-        text-align: left;
-        white-space: nowrap;
-        padding: 10px;
-        border-bottom: 1px solid rgba(23, 36, 54, 0.08);
-    }
-    .applicant-table th {
-        position: sticky;
-        top: 0;
-        background: rgba(247, 250, 255, 0.98);
-        color: var(--app-muted);
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .applicant-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-    .applicant-btn {
-        border: 0;
-        border-radius: 10px;
-        padding: 10px 12px;
-        font: inherit;
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-    }
-    .applicant-btn-main { background: var(--app-primary); color: #fff; }
-    .applicant-btn-main:hover { background: var(--app-primary-strong); }
-    .applicant-btn-soft { background: rgba(23, 36, 54, 0.08); color: var(--app-ink); }
-
-    .applicant-pre {
-        margin: 0;
-        min-height: 110px;
-        max-height: 280px;
-        overflow: auto;
-        border-radius: 11px;
-        border: 1px solid var(--app-line);
-        background: #101c33;
-        color: #d7e3ff;
-        padding: 11px;
-        font-size: 12px;
-    }
-
-    @media (max-width: 860px) {
-        .applicant-row, .applicant-stats { grid-template-columns: 1fr; }
-    }
+    .applicant-grid,.applicant-summary-grid,.applicant-info-grid{display:grid;gap:18px}
+    .applicant-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .applicant-info-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .applicant-status-pill{display:inline-flex;align-items:center;min-height:34px;padding:0 14px;border-radius:999px;font-size:.82rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+    .applicant-status-pill.pending{background:rgba(212,140,32,.14);color:#a66a11}
+    .applicant-status-pill.approved{background:rgba(16,152,107,.14);color:#0d7b57}
+    .applicant-status-pill.rejected{background:rgba(217,72,90,.14);color:#b53b4a}
+    .applicant-note-card{padding:18px;border-radius:20px;border:1px solid rgba(140,170,201,.18);background:rgba(248,252,255,.88)}
+    .applicant-note-card strong{display:block;font-size:1.02rem}
+    .applicant-note-card p{margin:8px 0 0;color:var(--ll-text-muted);line-height:1.65}
+    .applicant-console{margin-top:16px;min-height:140px;max-height:320px;overflow:auto;border-radius:18px;border:1px solid rgba(140,170,201,.18);background:#0f1c33;color:#d7e3ff;padding:16px;font-size:12px}
+    @media (max-width:980px){.applicant-summary-grid,.applicant-info-grid{grid-template-columns:1fr}}
 </style>
 @endpush
 
 @section('sidebar_nav')
-    <a class="is-active" href="#app-status">
-        <strong>Status</strong>
-    </a>
-    <a href="#app-waiting">
-        <strong>Waiting State</strong>
-    </a>
-    <a href="#app-history">
-        <strong>History</strong>
-    </a>
-    <a href="#app-debug">
-        <strong>API Response</strong>
-    </a>
+    <a class="is-active" href="#applicant-overview"><strong>Overview</strong><span>Status</span></a>
+    <a href="#applicant-timeline"><strong>Timeline</strong><span>Steps</span></a>
+    <a href="#applicant-history"><strong>History</strong><span>Records</span></a>
+    <a href="#applicant-debug"><strong>Debug</strong><span>Hidden</span></a>
 @endsection
 
 @section('sidebar')
+    <div class="app-shell__sidebar-card">
+        <strong>How this page works</strong>
+        <p>The page still loads the same applicant endpoints. It now presents results as status cards, notes, and history instead of a prototype console.</p>
+    </div>
+@endsection
+
+@section('section_nav')
+    <a href="#applicant-overview" class="is-active">Overview</a>
+    <a href="#applicant-timeline">Timeline</a>
+    <a href="#applicant-history">History</a>
+    <a href="#applicant-debug">Debug</a>
 @endsection
 
 @section('content')
     <div class="applicant-grid">
-        <div id="app-status" class="applicant-card ll-section applicant-panel" data-display="block">
-            <h3>Latest application status</h3>
-            <p id="statusMessage" class="applicant-hint">Your application has been submitted. Please wait for admin review.</p>
-            <p id="applicantEmail" class="applicant-hint">No applicant session found.</p>
-            <div class="applicant-btns">
-                <button class="applicant-btn applicant-btn-soft" type="button" onclick="loadLatest()">Refresh latest status</button>
-                <button class="applicant-btn applicant-btn-soft" type="button" onclick="loadAll()">Load application history</button>
-            </div>
-            <div class="applicant-stats">
-                <div class="applicant-stat">
-                    <strong id="latestStatus">-</strong>
-                    <span>Status</span>
-                </div>
-                <div class="applicant-stat">
-                    <strong id="latestRole">-</strong>
-                    <span>Applied Role</span>
-                </div>
-                <div class="applicant-stat">
-                    <strong id="latestDepartment">-</strong>
-                    <span>Department</span>
-                </div>
-            </div>
+        <div id="applicantSessionAlert" class="ll-inline-alert is-warning ll-hidden-debug">
+            <strong>Applicant session required</strong>
+            <p>Sign in first so LifeLink can load the latest application status and review history for this account.</p>
         </div>
 
-        <div id="app-waiting" class="applicant-row ll-section applicant-panel" data-display="grid">
-            <div class="applicant-card">
-                <h3>Waiting state</h3>
-                <div id="waitingBadge" class="applicant-status pending">Pending review</div>
+        <section id="applicant-overview" class="ll-section">
+            <div class="applicant-summary-grid">
+                <article class="ll-stat-card is-primary"><small>Latest status</small><strong id="latestStatus">-</strong><span id="statusMessage">Your application status will appear here after loading.</span></article>
+                <article class="ll-stat-card is-success"><small>Applied role</small><strong id="latestRole">-</strong><span id="roleSummary">Role context updates from the latest application.</span></article>
+                <article class="ll-stat-card is-warning"><small>Preferred department</small><strong id="latestDepartment">-</strong><span id="departmentSummary">Department context stays visible when it was part of the application.</span></article>
+            </div>
+        </section>
+
+        <section class="applicant-info-grid">
+            <article class="ll-panel">
+                <div class="ll-panel-heading">
+                    <div>
+                        <h2>Current application</h2>
+                        <p>Use refresh actions to pull the newest decision and review note without leaving the applicant workspace.</p>
+                    </div>
+                    <span id="waitingBadge" class="applicant-status-pill pending">Pending review</span>
+                </div>
+
+                <div class="hub-value-list" style="margin-top: 16px;">
+                    <div class="hub-value-item"><small>Applicant email</small><strong id="applicantEmail">No applicant session found.</strong></div>
+                    <div class="hub-value-item"><small>Latest review note</small><strong id="latestReviewNote">No review note available yet.</strong></div>
+                </div>
+
+                <div class="ll-inline-actions" style="margin-top: 18px;">
+                    <button class="ll-button" type="button" onclick="loadLatest()">Refresh latest status</button>
+                    <button class="ll-button-ghost" type="button" onclick="loadAll()">Load full history</button>
+                </div>
+            </article>
+
+            <article id="applicant-timeline" class="ll-panel ll-section">
+                <div class="ll-panel-heading">
+                    <div>
+                        <h2>Review journey</h2>
+                        <p>This timeline translates the staffing workflow into a user-facing explanation.</p>
+                    </div>
+                </div>
+
+                <div class="ll-timeline" style="margin-top: 16px;">
+                    <div class="ll-timeline__item">
+                        <div class="ll-timeline__dot">1</div>
+                        <strong>Account created</strong>
+                        <div class="ll-timeline__meta">You registered through the applicant onboarding flow and submitted an initial role request.</div>
+                    </div>
+                    <div class="ll-timeline__item">
+                        <div class="ll-timeline__dot">2</div>
+                        <strong>Admin review</strong>
+                        <div class="ll-timeline__meta">Admins review role, department context, and notes before approving or rejecting the request.</div>
+                    </div>
+                    <div class="ll-timeline__item">
+                        <div class="ll-timeline__dot">3</div>
+                        <strong>Next action</strong>
+                        <div id="nextStepCopy" class="ll-timeline__meta">Load your latest status to see whether you should wait, log in again, or prepare for another application.</div>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section id="applicant-history" class="ll-panel ll-section">
+            <div class="ll-panel-heading">
+                <div>
+                    <h2>Application history</h2>
+                    <p>Every submission stays visible here with status, role, department, and review note context.</p>
+                </div>
             </div>
 
-            <div class="applicant-card">
-                <h3>Latest review note</h3>
-                <p class="applicant-hint" id="latestReviewNote">No review note available yet.</p>
-            </div>
-        </div>
-
-        <div id="app-history" class="applicant-card ll-section applicant-panel" data-display="block">
-            <h3>Application history</h3>
-            <div class="applicant-table-wrap">
-                <table class="applicant-table">
+            <div class="ll-table-wrap" style="margin-top: 18px;">
+                <table class="ll-table">
                     <thead>
                         <tr><th>ID</th><th>Status</th><th>Applied Role</th><th>Department</th><th>Applied At</th><th>Review Note</th></tr>
                     </thead>
-                    <tbody id="applicationsBody"></tbody>
+                    <tbody id="applicationsBody">
+                        <tr><td colspan="6">No applications loaded yet.</td></tr>
+                    </tbody>
                 </table>
             </div>
-        </div>
+        </section>
 
-        <div id="app-debug" class="applicant-card ll-section applicant-panel" data-display="block">
-            <h3>API response</h3>
-            <pre id="out" class="applicant-pre"></pre>
-        </div>
+        <section id="applicant-debug" class="ll-panel ll-section">
+            <div class="ll-panel-heading">
+                <div>
+                    <h2>Debug response</h2>
+                    <p>The raw response is still preserved for troubleshooting, but it stays contained below the main user-facing interface.</p>
+                </div>
+                <span class="ll-status-chip is-soft">Contained</span>
+            </div>
+            <pre id="out" class="applicant-console"></pre>
+        </section>
     </div>
 @endsection
 
 @push('scripts')
 <script>
-const out = document.getElementById('out');
-const API = '/api';
-const applicantPanelIds = ['app-status', 'app-waiting', 'app-history', 'app-debug'];
-const applicantNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[href^="#app-"]'));
-
-function write(data) {
-    out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-}
-
-function setActivePanel(panelId) {
-    applicantPanelIds.forEach((id) => {
-        const panel = document.getElementById(id);
-        if (!panel) return;
-        panel.style.display = id === panelId ? (panel.dataset.display || 'block') : 'none';
-    });
-
-    applicantNavLinks.forEach((link) => {
-        const targetId = (link.getAttribute('href') || '').replace('#', '');
-        link.classList.toggle('is-active', targetId === panelId);
-    });
-}
-
-function setupSidebarPanelNav() {
-    applicantNavLinks.forEach((link) => {
-        link.addEventListener('click', (event) => {
-            event.preventDefault();
-            const panelId = (link.getAttribute('href') || '').replace('#', '');
-            if (!applicantPanelIds.includes(panelId)) return;
-            setActivePanel(panelId);
-            history.replaceState(null, '', `#${panelId}`);
-        });
-    });
-
-    const initialHash = (window.location.hash || '').replace('#', '');
-    const initialPanel = applicantPanelIds.includes(initialHash) ? initialHash : applicantPanelIds[0];
-    setActivePanel(initialPanel);
-}
-
-function userToken() {
-    return localStorage.getItem('USER_TOKEN');
-}
-
-function applicantStatusClass(status) {
-    if (status === 'Approved') return 'approved';
-    if (status === 'Rejected') return 'rejected';
-    return 'pending';
-}
-
-function renderWaitingState(application) {
-    const status = application?.status || 'No application';
-    const role = application?.applied_role || '-';
-    const department = application?.applied_department || 'General';
-    const reviewNote = application?.review_notes || 'No review note available yet.';
-
-    document.getElementById('latestStatus').textContent = status;
-    document.getElementById('latestRole').textContent = role;
-    document.getElementById('latestDepartment').textContent = department;
-    document.getElementById('latestReviewNote').textContent = reviewNote;
-
-    const badge = document.getElementById('waitingBadge');
-    badge.className = `applicant-status ${applicantStatusClass(status)}`;
-    badge.textContent = status;
-
-    const message = document.getElementById('statusMessage');
-    if (status === 'Approved') {
-        message.textContent = 'Your application was approved. Your staff role should now be active, and future logins will take you into the assigned role dashboard.';
-    } else if (status === 'Rejected') {
-        message.textContent = 'Your application was reviewed and rejected. Please wait for further instruction or apply again when appropriate.';
-    } else {
-        message.textContent = 'Your application is pending. Please wait for admin review. You will be contacted soon or your status will update here.';
-    }
-}
-
-async function call(path, method, body = null) {
-    const token = userToken();
-    if (!token) return { status: 401, data: { message: 'USER_TOKEN missing. Login first from /ui/login.' } };
-
-    const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
-    const res = await fetch(API + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
-    const text = await res.text();
-    try { return { status: res.status, data: JSON.parse(text) }; } catch { return { status: res.status, data: text }; }
-}
-
-async function loadLatest() {
-    const r = await call('/applications/my/latest', 'GET');
-    write(r);
-    const application = r.data?.latestApplication || null;
-    renderWaitingState(application);
-}
-
-async function loadAll() {
-    const r = await call('/applications/my', 'GET');
-    write(r);
-    const rows = r.data?.applications || [];
-    document.getElementById('applicationsBody').innerHTML = rows.length
-        ? rows.map((row) => `
-            <tr>
-                <td>${row.id}</td>
-                <td><span class="applicant-status ${applicantStatusClass(row.status)}">${row.status || '-'}</span></td>
-                <td>${row.applied_role || '-'}</td>
-                <td>${row.applied_department || '-'}</td>
-                <td>${row.applied_at ? new Date(row.applied_at).toLocaleString() : '-'}</td>
-                <td>${row.review_notes || '-'}</td>
-            </tr>
-        `).join('')
-        : '<tr><td colspan="6">No applications found.</td></tr>';
-}
-
-function hydrateApplicantIdentity() {
-    document.getElementById('applicantEmail').textContent = localStorage.getItem('CURRENT_USER_EMAIL') || 'No applicant session found.';
-}
-
-hydrateApplicantIdentity();
-setupSidebarPanelNav();
-loadLatest();
-loadAll();
+const out=document.getElementById('out');
+const API='/api';
+function write(data){out.textContent=typeof data==='string'?data:JSON.stringify(data,null,2);}
+function userToken(){return localStorage.getItem('USER_TOKEN');}
+function applicantStatusClass(status){if(status==='Approved')return'approved';if(status==='Rejected')return'rejected';return'pending';}
+function setText(id,value){const node=document.getElementById(id);if(node)node.textContent=value;}
+function updateStatus(status){const badge=document.getElementById('waitingBadge');badge.className=`applicant-status-pill ${applicantStatusClass(status)}`;badge.textContent=status||'Pending review';}
+function setMessageCopy(status){if(status==='Approved'){setText('statusMessage','Your application was approved. Future logins should route you into the assigned staff workspace.');setText('nextStepCopy','Approval is complete. Use the shared login page again to continue into your newly assigned role workspace.');return;}if(status==='Rejected'){setText('statusMessage','Your application was reviewed and rejected. Wait for further instruction or submit another request when appropriate.');setText('nextStepCopy','The current request was rejected. Review the latest note, then wait for guidance before submitting again.');return;}setText('statusMessage','Your application is pending. Keep checking this page for review notes and final status changes.');setText('nextStepCopy','The request is still pending. No action is required yet other than checking back for an update.');}
+async function call(path,method,body=null){const token=userToken();if(!token)return{status:401,data:{message:'USER_TOKEN missing. Login first from /ui/login.'}};const headers={'Accept':'application/json','Content-Type':'application/json','Authorization':`Bearer ${token}`};const res=await fetch(API+path,{method,headers,body:body?JSON.stringify(body):undefined});const text=await res.text();try{return{status:res.status,data:JSON.parse(text)}}catch{return{status:res.status,data:text}}}
+function renderLatest(application){const status=application?.status||'Pending';setText('latestStatus',status);setText('latestRole',application?.applied_role||'-');setText('latestDepartment',application?.applied_department||'General');setText('latestReviewNote',application?.review_notes||'No review note available yet.');updateStatus(status);setMessageCopy(status);}
+async function loadLatest(){const result=await call('/applications/my/latest','GET');write(result);document.getElementById('applicantSessionAlert').classList.toggle('ll-hidden-debug',result.status!==401);renderLatest(result.data?.latestApplication||null);}
+async function loadAll(){const result=await call('/applications/my','GET');write(result);document.getElementById('applicantSessionAlert').classList.toggle('ll-hidden-debug',result.status!==401);const rows=Array.isArray(result.data?.applications)?result.data.applications:[];document.getElementById('applicationsBody').innerHTML=rows.length?rows.map((row)=>`<tr><td>${row.id}</td><td><span class="applicant-status-pill ${applicantStatusClass(row.status)}">${row.status||'-'}</span></td><td>${row.applied_role||'-'}</td><td>${row.applied_department||'-'}</td><td>${row.applied_at?new Date(row.applied_at).toLocaleString():'-'}</td><td>${row.review_notes||'-'}</td></tr>`).join(''):'<tr><td colspan="6">No applications found.</td></tr>';}
+function hydrateApplicantIdentity(){setText('applicantEmail',localStorage.getItem('CURRENT_USER_EMAIL')||'No applicant session found.');}
+hydrateApplicantIdentity();loadLatest();loadAll();
 </script>
 @endpush

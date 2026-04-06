@@ -1,13 +1,11 @@
 @extends('ui.layouts.app')
 
-@section('title', 'IT Worker Dashboard')
-@section('workspace_label', '')
-@section('hero_badge', '')
-@section('hero_title', 'IT Dashboard')
-@section('hero_description', '')
-@section('hide_meta_card', '1')
-@section('meta_title', 'IT Workflow')
-@section('meta_copy', 'Department assignment, ward setup, admissions, and beds')
+@section('title', 'IT Operations Workspace')
+@section('workspace_label', 'IT operations workspace')
+@section('hero_badge', 'IT')
+@section('hero_title', 'Coordinate admissions, beds, and department operations from one control surface.')
+@section('hero_description', 'This workspace keeps doctor lookup, patient intake, ward setup, and bed allocation together while hiding technical response logs from daily operations.')
+@section('meta_title', 'IT Operations Workspace')
 
 @push('styles')
 <style>
@@ -256,24 +254,42 @@
     <a href="#it-blood-bank" data-panel="it-blood-bank" data-mode="blood">
         <strong>Blood Bank Operations</strong>
     </a>
-    <a href="#it-debug" data-panel="it-debug" data-mode="all">
-        <strong>API Response</strong>
-    </a>
 @endsection
 
 @section('sidebar')
+    <div class="app-shell__sidebar-card">
+        <strong>Operational flow</strong>
+        <p>Refresh department scope first, use doctor and patient lookup cards to prefill admissions, then assign a bed or discharge directly from the same workspace.</p>
+    </div>
+
+    <div class="app-shell__sidebar-card">
+        <strong>Scope reminder</strong>
+        <p>Blood Bank access is still preserved, but standard IT pages stay focused on admissions, ward setup, and bed movement rather than developer diagnostics.</p>
+    </div>
 @endsection
 
 @section('content')
     <div class="it-grid">
+        <div id="itSessionAlert" class="ll-inline-alert is-warning ll-hidden-debug">
+            <strong>IT session required</strong>
+            <p>Sign in first so department scope, admissions, and bed operations can load with the correct permissions.</p>
+        </div>
+
+        <div id="itActionAlert" class="ll-inline-alert is-success ll-hidden-debug">
+            <strong id="itActionTitle">Workspace ready</strong>
+            <p id="itActionBody">Recent IT actions and status updates will appear here.</p>
+        </div>
+
         <div id="it-overview" class="it-split ll-section it-panel-switch" data-display="grid">
             <div class="it-panel it-col-4">
-                <h3>IT worker session</h3>
-                <p class="it-note">Use the logged-in IT worker token here. If "load my departments" returns nothing, admin has not finished your department assignment yet.</p>
-                <label class="it-label" for="tokenInput">IT worker token</label>
-                <input id="tokenInput" class="it-input" placeholder="IT worker token">
+                <h3>Operations readiness</h3>
+                <p id="itSessionCopy" class="it-note">This workspace uses your active sign-in session. If department scope does not load, admin likely still needs to finish your assignment.</p>
+                <div class="it-summary">
+                    <div class="it-stat"><small>Session</small><strong id="itSessionState">Checking</strong></div>
+                    <div class="it-stat"><small>Mode</small><strong id="itModeState">Waiting</strong></div>
+                </div>
                 <div class="it-actions">
-                    <button class="it-button soft" type="button" onclick="useUserToken()">Use USER_TOKEN</button>
+                    <button class="it-button soft" type="button" onclick="useUserToken()">Refresh session</button>
                     <button class="it-button primary" type="button" onclick="loadDepartmentsScope()">Reload my departments</button>
                 </div>
             </div>
@@ -517,8 +533,14 @@
             </div>
 
             <div class="it-panel it-col-7">
-                <h3>Latest IDs and stored context</h3>
-                <pre id="ctx" class="it-console"></pre>
+                <h3>Operational clipboard</h3>
+                <p class="it-note">Recent selections stay visible here so admissions, beds, and department scope remain easy to follow without a raw JSON console.</p>
+                <div class="it-summary">
+                    <div class="it-stat"><small>Last admission</small><strong id="ctxAdmission">Not selected</strong></div>
+                    <div class="it-stat"><small>Last bed</small><strong id="ctxBed">Not selected</strong></div>
+                    <div class="it-stat"><small>Last care unit</small><strong id="ctxCareUnit">Not selected</strong></div>
+                    <div class="it-stat"><small>Scope summary</small><strong id="ctxScope">Waiting</strong></div>
+                </div>
             </div>
         </div>
 
@@ -565,11 +587,10 @@
         </div>
         </div>
 
-        <div id="it-debug" class="it-panel ll-section it-panel-switch" data-display="block">
-            <details class="ll-debug" open>
-                <summary>API response</summary>
-                <pre id="out" class="it-console"></pre>
-            </details>
+        <div class="ll-hidden-debug" aria-hidden="true">
+            <input id="tokenInput" class="it-input" placeholder="Hidden IT session input">
+            <pre id="ctx" class="it-console"></pre>
+            <pre id="out" class="it-console"></pre>
         </div>
     </div>
 @endsection
@@ -579,7 +600,7 @@
 const API = '/api';
 const out = document.getElementById('out');
 const ctx = document.getElementById('ctx');
-const itPanelIds = ['it-overview', 'it-directory', 'it-admission', 'it-reference', 'it-blood-bank', 'it-debug'];
+const itPanelIds = ['it-overview', 'it-directory', 'it-admission', 'it-reference', 'it-blood-bank'];
 const itNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[data-panel]'));
 
 const state = {
@@ -598,21 +619,21 @@ const BLOOD_BANK_DEPARTMENT = 'Blood Bank';
 
 function allowedPanels() {
     if (!state.scopeLoaded) {
-        return ['it-overview', 'it-directory', 'it-admission', 'it-reference', 'it-debug'];
+        return ['it-overview', 'it-directory', 'it-admission', 'it-reference'];
     }
 
     const blood = hasBloodBankScope();
     const regular = hasNonBloodBankScope();
 
     if (blood && !regular) {
-        return ['it-overview', 'it-blood-bank', 'it-debug'];
+        return ['it-overview', 'it-blood-bank'];
     }
 
     if (blood && regular) {
-        return ['it-overview', 'it-directory', 'it-admission', 'it-reference', 'it-blood-bank', 'it-debug'];
+        return ['it-overview', 'it-directory', 'it-admission', 'it-reference', 'it-blood-bank'];
     }
 
-    return ['it-overview', 'it-directory', 'it-admission', 'it-reference', 'it-debug'];
+    return ['it-overview', 'it-directory', 'it-admission', 'it-reference'];
 }
 
 function updateSidebarByScope() {
@@ -667,12 +688,52 @@ function setupSidebarPanelNav() {
     setActivePanel(initialPanel);
 }
 
-function write(data) {
+function itMessage(data) {
+    if (!data) return '';
+    if (typeof data === 'string') return data;
+    if (typeof data?.message === 'string') return data.message;
+    if (typeof data?.error === 'string') return data.error;
+    if (typeof data?.status === 'string') return data.status;
+    return '';
+}
+
+function setItAlert(tone, title, body) {
+    const root = document.getElementById('itActionAlert');
+    root.classList.remove('ll-hidden-debug', 'is-success', 'is-warning', 'is-danger');
+    root.classList.add(tone === 'danger' ? 'is-danger' : tone === 'warning' ? 'is-warning' : 'is-success');
+    document.getElementById('itActionTitle').textContent = title;
+    document.getElementById('itActionBody').textContent = body;
+}
+
+function refreshItSessionState() {
+    const hasSession = !!selectedToken();
+    document.getElementById('itSessionAlert').classList.toggle('ll-hidden-debug', hasSession);
+    document.getElementById('itSessionState').textContent = hasSession ? 'Ready' : 'Sign in needed';
+    document.getElementById('itModeState').textContent = !state.scopeLoaded
+        ? 'Scope pending'
+        : hasBloodBankScope() && hasNonBloodBankScope()
+            ? 'Hybrid access'
+            : hasBloodBankScope()
+                ? 'Blood Bank'
+                : 'Admissions';
+    document.getElementById('itSessionCopy').textContent = hasSession
+        ? 'Your IT workspace is using the active sign-in session. Reload department scope whenever assignments change.'
+        : 'Sign in first so this workspace can load department scope and protected bed operations safely.';
+}
+
+function write(data, config = {}) {
     out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+    if (config.skipAlert) return;
+    const status = Number(data?.status || 0);
+    const tone = config.tone || (!status || status < 300 ? 'success' : status === 401 || status === 403 ? 'warning' : 'danger');
+    const title = config.title || (tone === 'danger' ? 'IT action needs attention' : tone === 'warning' ? 'IT session check' : 'IT workspace updated');
+    const body = config.body || itMessage(data?.data || data) || 'The IT workspace completed the latest action.';
+    setItAlert(tone, title, body);
 }
 
 function useUserToken() {
     document.getElementById('tokenInput').value = localStorage.getItem('USER_TOKEN') || '';
+    refreshItSessionState();
 }
 
 function selectedToken() {
@@ -680,7 +741,7 @@ function selectedToken() {
 }
 
 function refreshCtx() {
-    ctx.textContent = JSON.stringify({
+    const snapshot = {
         ADMIN_TOKEN_PRESENT: !!localStorage.getItem('ADMIN_TOKEN'),
         USER_TOKEN_PRESENT: !!localStorage.getItem('USER_TOKEN'),
         LAST_ADMISSION_ID: localStorage.getItem('LAST_ADMISSION_ID'),
@@ -688,12 +749,20 @@ function refreshCtx() {
         LAST_CARE_UNIT_ID: localStorage.getItem('LAST_CARE_UNIT_ID'),
         LAST_BED_ID: localStorage.getItem('LAST_BED_ID'),
         SCOPE_DEPARTMENTS: state.scopeDepartments.map((department) => ({ id: department.id, dept_name: department.dept_name })),
-    }, null, 2);
+    };
+    ctx.textContent = JSON.stringify(snapshot, null, 2);
+    document.getElementById('ctxAdmission').textContent = snapshot.LAST_ADMISSION_ID || 'Not selected';
+    document.getElementById('ctxBed').textContent = snapshot.LAST_ASSIGNED_BED_ID || snapshot.LAST_BED_ID || 'Not selected';
+    document.getElementById('ctxCareUnit').textContent = snapshot.LAST_CARE_UNIT_ID || 'Not selected';
+    document.getElementById('ctxScope').textContent = state.scopeDepartments.length
+        ? `${state.scopeDepartments.length} department${state.scopeDepartments.length === 1 ? '' : 's'}`
+        : 'Waiting';
+    refreshItSessionState();
 }
 
 async function call(path, method = 'GET', body = null) {
     const token = selectedToken();
-    if (!token) return { status: 401, data: { message: 'Token missing in Auth Context.' } };
+    if (!token) return { status: 401, data: { message: 'IT session missing. Sign in again before continuing.' } };
 
     const headers = {
         Accept: 'application/json',
@@ -1150,12 +1219,16 @@ async function bootItDashboard() {
     setupSidebarPanelNav();
     useUserToken();
     initializeEmptyTables();
+    refreshItSessionState();
     await loadDepartmentSelectors();
 
     if (selectedToken()) {
         await loadDepartmentsScope();
     } else {
-        write('Login first or use USER_TOKEN so the IT dashboard can auto-load your department scope.');
+        write('Sign in to load department scope and begin admissions or bed operations.', {
+            tone: 'warning',
+            title: 'IT session required'
+        });
     }
 }
 

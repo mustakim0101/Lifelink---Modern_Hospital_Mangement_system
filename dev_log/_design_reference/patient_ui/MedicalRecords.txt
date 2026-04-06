@@ -1,0 +1,256 @@
+import React, { useState } from 'react';
+import { FileText, Download, Eye, Search } from 'lucide-react';
+import { AppShell } from '../../components/layout/AppShell';
+import { PageHeader } from '../../components/shared/PageHeader';
+import { FilterBar } from '../../components/shared/FilterBar';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import { Badge } from '../../components/ui/badge';
+import { medicalRecords, patients } from '../../data/mockData';
+import { format } from 'date-fns';
+
+export default function MedicalRecords() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [selectedRecord, setSelectedRecord] = useState<any>(null);
+
+  // Mock: using patient David Kumar
+  const patient = patients[2];
+  const myRecords = medicalRecords.filter(r => r.patientId === patient.id);
+
+  const filteredRecords = myRecords.filter(record => {
+    const matchesSearch = record.diagnosis.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         record.clinician.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = typeFilter === 'all' || record.type === typeFilter;
+    return matchesSearch && matchesType;
+  });
+
+  const recordTypes = Array.from(new Set(myRecords.map(r => r.type)));
+
+  return (
+    <AppShell>
+      <PageHeader
+        title="Medical Records"
+        subtitle="View your complete medical history"
+        breadcrumb={[
+          { label: 'Patient Portal', path: '/patient/portal' },
+          { label: 'Medical Records' },
+        ]}
+      />
+
+      {/* Patient Info Summary */}
+      <Card className="mb-6 border-2 border-[#0369A1]">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <div className="text-sm text-muted-foreground">Patient Name</div>
+              <div className="font-medium">{patient.name}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">MRN</div>
+              <div className="font-medium">{patient.mrn}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Blood Group</div>
+              <div className="font-medium text-[#DC2626]">{patient.bloodGroup}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Total Records</div>
+              <div className="font-medium">{myRecords.length}</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Filters */}
+      <FilterBar
+        filters={{
+          search: {
+            type: 'search',
+            placeholder: 'Search by diagnosis or clinician...',
+            value: searchTerm,
+            onChange: setSearchTerm,
+          },
+          type: {
+            type: 'select',
+            placeholder: 'Filter by type',
+            value: typeFilter,
+            onChange: setTypeFilter,
+            options: [
+              { label: 'All Types', value: 'all' },
+              ...recordTypes.map(t => ({ label: t, value: t })),
+            ],
+          },
+        }}
+        onReset={() => {
+          setSearchTerm('');
+          setTypeFilter('all');
+        }}
+      />
+
+      {/* Records List */}
+      {filteredRecords.length === 0 ? (
+        <Card>
+          <CardContent className="pt-12 pb-12 text-center">
+            <FileText className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">No Medical Records Found</h3>
+            <p className="text-muted-foreground">
+              {searchTerm || typeFilter !== 'all'
+                ? 'Try adjusting your filters'
+                : 'Your medical records will appear here'}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {filteredRecords.map((record) => (
+            <Card key={record.id} className="hover:border-[#0369A1] transition-colors">
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <FileText className="w-5 h-5 text-[#0369A1]" />
+                      <h3 className="font-semibold text-lg">{record.diagnosis}</h3>
+                      <Badge variant="outline">{record.type}</Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground mb-3">
+                      {format(new Date(record.date), 'MMMM dd, yyyy')} • {record.clinician} • {record.department}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedRecord(record)}
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      View
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Download className="w-4 h-4 mr-1" />
+                      Download
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-accent rounded-lg">
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Treatment</div>
+                    <div className="text-sm">{record.treatment}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Clinical Notes</div>
+                    <div className="text-sm">{record.notes}</div>
+                  </div>
+                </div>
+
+                {record.admissionId && (
+                  <div className="mt-3 text-sm text-muted-foreground">
+                    Linked to admission: <span className="text-[#0369A1] font-medium">{record.admissionId}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Record Detail Dialog */}
+      {selectedRecord && (
+        <Dialog open={!!selectedRecord} onOpenChange={() => setSelectedRecord(null)}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl flex items-center gap-2">
+                <FileText className="w-6 h-6 text-[#0369A1]" />
+                Medical Record Details
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-6">
+              {/* Header Info */}
+              <div className="p-4 bg-[#E0F2FE] rounded-lg">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-muted-foreground">Record Date</div>
+                    <div className="font-medium">
+                      {format(new Date(selectedRecord.date), 'MMMM dd, yyyy • h:mm a')}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Record Type</div>
+                    <Badge>{selectedRecord.type}</Badge>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Clinician</div>
+                    <div className="font-medium">{selectedRecord.clinician}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Department</div>
+                    <div className="font-medium">{selectedRecord.department}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Diagnosis */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Diagnosis</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>{selectedRecord.diagnosis}</p>
+                </CardContent>
+              </Card>
+
+              {/* Treatment Plan */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Treatment Plan</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>{selectedRecord.treatment}</p>
+                </CardContent>
+              </Card>
+
+              {/* Clinical Notes */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Clinical Notes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>{selectedRecord.notes}</p>
+                </CardContent>
+              </Card>
+
+              {/* Admission Reference */}
+              {selectedRecord.admissionId && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Admission Reference</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <span>Admission ID: <strong>{selectedRecord.admissionId}</strong></span>
+                      <Button variant="outline" size="sm">View Admission Details</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <Button className="flex-1 bg-[#0369A1] hover:bg-[#075985]">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Record
+                </Button>
+                <Button variant="outline" className="flex-1">
+                  Request Copy
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </AppShell>
+  );
+}

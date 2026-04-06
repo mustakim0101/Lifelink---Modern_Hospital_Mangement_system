@@ -1,13 +1,11 @@
 @extends('ui.layouts.app')
 
-@section('title', 'Nurse Dashboard')
-@section('workspace_label', '')
-@section('hero_badge', '')
-@section('hero_title', 'Nurse Dashboard')
-@section('hero_description', '')
-@section('hide_meta_card', '1')
-@section('meta_title', 'Nurse Workflow')
-@section('meta_copy', 'Department monitoring and bedside updates')
+@section('title', 'Nurse Workspace')
+@section('workspace_label', 'Nursing operations workspace')
+@section('hero_badge', 'Nurse')
+@section('hero_title', 'Monitor admissions, chart vitals, and support safe bedside care.')
+@section('hero_description', 'Keep patient monitoring, recent records, and blood bank screening in one consistent workflow without exposing technical response logs to nursing staff.')
+@section('meta_title', 'Nurse Workspace')
 
 @push('styles')
 <style>
@@ -320,30 +318,48 @@
     <a href="#nurse-blood-bank">
         <strong>Blood Bank Screening</strong>
     </a>
-    <a href="#nurse-debug">
-        <strong>API Response</strong>
-    </a>
 @endsection
 
 @section('sidebar')
+    <div class="app-shell__sidebar-card">
+        <strong>Shift flow</strong>
+        <p>Refresh your profile, review active admissions, select a patient, then chart vitals or donor screening updates from the same workspace.</p>
+    </div>
+
+    <div class="app-shell__sidebar-card">
+        <strong>Care safety</strong>
+        <p>Use patient cards and admission detail first. The interface now keeps technical session handling in the background so bedside tasks stay readable.</p>
+    </div>
 @endsection
 
 @section('content')
     <div class="nurse-grid">
+        <div id="nurseSessionAlert" class="ll-inline-alert is-warning ll-hidden-debug">
+            <strong>Nurse session required</strong>
+            <p>Sign in first so profile loading, monitoring, and Blood Bank actions can use your active workspace session.</p>
+        </div>
+
+        <div id="nurseActionAlert" class="ll-inline-alert is-success ll-hidden-debug">
+            <strong id="nurseActionTitle">Workspace ready</strong>
+            <p id="nurseActionBody">Recent nurse actions and status updates will appear here.</p>
+        </div>
+
         <div id="nurse-overview" class="nurse-split ll-section nurse-panel-switch" data-display="grid">
             <div class="nurse-panel nurse-col-4">
-                <h3>Nurse session</h3>
-                <p class="nurse-note">Use the logged-in nurse token here. If profile loading fails, it usually means admin has not finished nurse setup yet.</p>
-                <label class="nurse-label" for="nurseTokenInput">Nurse token</label>
-                <input id="nurseTokenInput" class="nurse-input" placeholder="Bearer token for nurse">
+                <h3>Shift readiness</h3>
+                <p id="nurseSessionCopy" class="nurse-note">This workspace uses your signed-in session. If profile loading fails, admin likely still needs to finish nurse setup.</p>
+                <div class="nurse-summary-grid" style="margin-top: 12px;">
+                    <div class="nurse-summary"><small>Session</small><strong id="nurseSessionState">Checking</strong></div>
+                    <div class="nurse-summary"><small>Department</small><strong id="nurseDepartmentState">Waiting for profile</strong></div>
+                </div>
                 <div class="nurse-actions">
-                    <button class="nurse-button soft" type="button" onclick="useStoredUserToken()">Use USER_TOKEN</button>
+                    <button class="nurse-button primary" type="button" onclick="useStoredUserToken(); loadNurseProfile()">Refresh session</button>
                 </div>
             </div>
 
             <div class="nurse-panel nurse-col-4">
-                <h3>What "load profile" means</h3>
-                <p class="nurse-note">Loads your admin-provisioned nurse profile and department scope.</p>
+                <h3>Profile and scope</h3>
+                <p class="nurse-note">Loads the nurse profile that admin provisioned for this account, including department scope and Blood Bank access.</p>
                 <div class="nurse-actions">
                     <button class="nurse-button soft" type="button" onclick="loadNurseProfile()">Reload profile</button>
                 </div>
@@ -573,11 +589,9 @@
             </div>
         </div>
 
-        <div id="nurse-debug" class="nurse-panel ll-section nurse-panel-switch" data-display="block">
-            <details class="ll-debug" open>
-                <summary>API response log</summary>
-                <pre id="out" class="nurse-console"></pre>
-            </details>
+        <div class="ll-hidden-debug" aria-hidden="true">
+            <input id="nurseTokenInput" class="nurse-input" placeholder="Hidden nurse session input">
+            <pre id="out" class="nurse-console"></pre>
         </div>
     </div>
 @endsection
@@ -586,7 +600,7 @@
 <script>
 const API = '/api';
 const out = document.getElementById('out');
-const nursePanelIds = ['nurse-overview', 'nurse-monitoring', 'nurse-blood-bank', 'nurse-debug'];
+const nursePanelIds = ['nurse-overview', 'nurse-monitoring', 'nurse-blood-bank'];
 const nurseNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[href^="#nurse-"]'));
 
 const state = {
@@ -615,8 +629,42 @@ const state = {
     },
 };
 
-function write(data) {
+function nurseMessage(data) {
+    if (!data) return '';
+    if (typeof data === 'string') return data;
+    if (typeof data?.message === 'string') return data.message;
+    if (typeof data?.error === 'string') return data.error;
+    if (typeof data?.status === 'string') return data.status;
+    return '';
+}
+
+function setNurseAlert(tone, title, body) {
+    const root = document.getElementById('nurseActionAlert');
+    root.classList.remove('ll-hidden-debug', 'is-success', 'is-warning', 'is-danger');
+    root.classList.add(tone === 'danger' ? 'is-danger' : tone === 'warning' ? 'is-warning' : 'is-success');
+    document.getElementById('nurseActionTitle').textContent = title;
+    document.getElementById('nurseActionBody').textContent = body;
+}
+
+function refreshSessionState() {
+    const hasSession = !!document.getElementById('nurseTokenInput').value.trim();
+    const sessionAlert = document.getElementById('nurseSessionAlert');
+    sessionAlert.classList.toggle('ll-hidden-debug', hasSession);
+    document.getElementById('nurseSessionState').textContent = hasSession ? 'Ready' : 'Sign in needed';
+    document.getElementById('nurseSessionCopy').textContent = hasSession
+        ? 'Your nurse workspace is using the active session from sign-in. Refresh the profile any time you need the latest department context.'
+        : 'Sign in first so the nurse workspace can load your profile, department scope, and bedside actions safely.';
+    document.getElementById('nurseDepartmentState').textContent = state.nurse?.department || 'Waiting for profile';
+}
+
+function write(data, config = {}) {
     out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+    if (config.skipAlert) return;
+    const status = Number(data?.status || 0);
+    const tone = config.tone || (!status || status < 300 ? 'success' : status === 401 || status === 403 ? 'warning' : 'danger');
+    const title = config.title || (tone === 'danger' ? 'Nurse action needs attention' : tone === 'warning' ? 'Nurse session check' : 'Nurse workspace updated');
+    const body = config.body || nurseMessage(data?.data || data) || 'The nurse workspace completed the latest action.';
+    setNurseAlert(tone, title, body);
 }
 
 function setActivePanel(panelId) {
@@ -671,6 +719,7 @@ async function maybeLoadPanelData(panelId) {
 
 function useStoredUserToken() {
     document.getElementById('nurseTokenInput').value = localStorage.getItem('USER_TOKEN') || '';
+    refreshSessionState();
 }
 
 function buildUrl(path, query = null) {
@@ -684,7 +733,7 @@ async function call(path, method = 'GET', body = null, tokenType = 'nurse', quer
     const token = document.getElementById('nurseTokenInput').value.trim();
 
     if (!token) {
-        return { status: 401, data: { message: `${tokenType} token missing` } };
+        return { status: 401, data: { message: `${tokenType} session missing. Sign in again before continuing.` } };
     }
 
     const headers = {
@@ -914,6 +963,7 @@ async function loadNurseProfile(options = {}) {
             state.patientsLoaded = false;
             state.bloodBankDonorsLoaded = false;
         }
+        refreshSessionState();
         renderBloodBankAccess();
         write(result);
         return state.nurse;
@@ -1191,11 +1241,15 @@ async function bootNurseDashboard() {
     renderSelectedBloodBankDonor(null);
     renderBloodBankHealthChecks([]);
     useStoredUserToken();
+    refreshSessionState();
 
     if (document.getElementById('nurseTokenInput').value.trim()) {
         await loadNurseProfile({ force: false });
     } else {
-        write('Login first or use USER_TOKEN so the nurse dashboard can auto-load your profile.');
+        write('Sign in to load your nurse profile and start the monitoring workspace.', {
+            tone: 'warning',
+            title: 'Nurse session required'
+        });
     }
 }
 

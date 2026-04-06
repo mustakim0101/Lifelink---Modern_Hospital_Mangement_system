@@ -1,0 +1,100 @@
+Blood Module Verification Instructions
+Purpose: reusable clean-state blood workflow setup and live verification notes captured from this execution.
+
+Baseline verification after clean reset
+1. GET / -> 200
+2. GET /ui/login -> 200
+3. Verified earlier after rebuild: php artisan route:list --path=api/blood succeeded with 12 blood routes.
+
+Created test accounts
+Admin | Blood Test Admin | admin.bloodtest@lifelink.test | role=Admin | password=12345678 | user_id=1
+IT Worker | Blood Test IT Worker | itworker.bloodtest@lifelink.test | role=ITWorker | password=12345678 | user_id=2 | application_id=1 | department_id=1 (Cardiology)
+Patient | Blood Test Patient | patient.bloodtest@lifelink.test | role=Patient | password=12345678 | user_id=3 | patient_id=3 | blood_group=A+
+Donor A | Exact Match Donor | donor.exact.aplus@lifelink.test | role=Donor | password=12345678 | user_id=4 | donor_id=4 | blood_group=A+ | category=exact-match donor
+Donor B | Compatible Donor | donor.compatible.oplus@lifelink.test | role=Donor | password=12345678 | user_id=5 | donor_id=5 | blood_group=O+ | category=compatible donor
+Donor C | Control Nonmatching Donor | donor.control.bplus@lifelink.test | role=Donor | password=12345678 | user_id=6 | donor_id=6 | blood_group=B+ | category=control donor (should NOT match)
+Donor D | Ineligible Donor | donor.ineligible.ominus@lifelink.test | role=Donor | password=12345678 | user_id=7 | donor_id=7 | blood_group=O- | category=bad-vitals / ineligible donor
+
+Relevant created IDs
+department_id=1 (Cardiology)
+blood_bank_id=2
+inventory_id_initial=1
+blood_request_id=1
+exact_availability_id=1
+exact_health_check_id=1
+compatible_availability_id=2
+compatible_health_check_id=2
+control_availability_id=3
+control_health_check_id=3
+ineligible_availability_id=4
+ineligible_health_check_id=4
+exact_notification_id=1
+compatible_notification_id=2
+exact_match_id=1
+compatible_match_id=2
+blood_donation_id=1
+inventory_id_after_donation=1
+
+Blood groups and donor categories used
+1. Patient request blood group: A+
+2. Exact-match donor: A+
+3. Compatible donor: O+
+4. Control donor: B+
+5. Bad-vitals / ineligible donor: O- with weight=40kg and temperature=38.5C
+
+Exact test sequence and expected outcomes
+1. Create admin via POST /api/dev/create-admin. Expected: 201 and Admin role assigned.
+2. Register IT worker, submit ITWorker application, approve it, and assign Cardiology department. Expected: ITWorker role assigned and department_admins row created.
+3. Register patient with blood group A+. Expected: Patient role assigned and patients row created.
+4. Register 4 donor accounts as base users. Expected: all users created with reusable credentials.
+5. As Admin, create LifeLink Verification Blood Bank via POST /api/blood/schema/banks. Expected: blood_banks row created.
+6. As Admin, upsert donor profiles for compatible/control/ineligible donors via POST /api/blood/schema/donor-profiles. Expected: donor_profiles rows created and Donor role attached.
+7. As Admin, upsert A+ WholeBlood inventory=5 via POST /api/blood/schema/inventory. Expected: blood_inventory row created.
+8. Confirm GET /api/blood/schema/overview, /banks, /donor-profiles, and /inventory all return 200. Expected: new bank/profile/inventory rows are visible.
+9. Verify Exact Match Donor gets 403 from GET /api/donor/dashboard before POST /api/donor/enroll. Expected: donor is not usable before donor role/profile setup.
+10. Call POST /api/donor/enroll for Exact Match Donor. Expected: Donor role/profile is created for the current user.
+11. POST /api/donor/availability with isAvailable=true and no maxBagsPossible. Expected: 422.
+12. Post valid availability for all donors. Expected: donor_availabilities rows created.
+13. Post healthy health checks for exact/compatible/control donors and bad vitals for the ineligible donor. Expected: the ineligible donor flips to donor_is_eligible=false.
+14. Attempt POST /api/donor/donations for the ineligible donor. Expected: 409, donation blocked.
+15. As Patient, create POST /api/patient/blood-requests with A+, WholeBlood, Urgent, units=2, department=Cardiology. Expected: blood_requests row created with status=Pending.
+16. As IT Worker, load GET /api/blood/matching/requests and GET /api/blood/matching/requests/{requestId}/suggestions. Expected: Exact and Compatible donors appear; Control and Ineligible donors do not.
+17. As IT Worker, notify only Exact and Compatible donors via POST /api/blood/matching/requests/{requestId}/notify. Expected: 2 donor_notifications rows created.
+18. As Exact Match Donor, read the notification and respond Accepted. Expected: match status becomes Accepted.
+19. As Compatible Donor, read the notification and respond Declined. Expected: match status becomes Declined.
+20. As Patient, reload GET /api/patient/blood-requests. Expected: accepted_donors contains only the Exact Match Donor.
+21. As Exact Match Donor, POST /api/donor/donations with linkedRequestId, bankId, and healthCheckId. Expected: blood_donations row created and A+ WholeBlood inventory increases from 5 to 6.
+22. Mark the request Fulfilled in SQL and retry POST /api/blood/matching/requests/{requestId}/notify. Expected: 409 because closed requests must not allow new notify actions.
+
+Negative tests performed
+- Exact donor dashboard access before /api/donor/enroll returned 403 as expected.
+- POST /api/donor/availability with isAvailable=true and no maxBagsPossible returned 422 as expected.
+- Bad vitals health check set donor_is_eligible=false as expected.
+- Ineligible donor donation attempt returned 409 as expected.
+- Control and ineligible donors did not appear in /api/blood/matching/requests/{id}/suggestions.
+- Responding to another donor's notification returned 404 as expected.
+- Notify on a closed request returned 409 as expected.
+- Patient GET /api/patient/blood-requests showed accepted_donors containing only the accepted exact-match donor before the final closed-request recheck.
+
+Final DB tables checked
+- blood_banks
+- donor_profiles
+- blood_inventory
+- blood_requests
+- donor_availabilities
+- donor_health_checks
+- blood_donations
+- blood_request_matches
+- donor_notifications
+
+Notes about any fixes applied during execution
+- No application-code fixes were required. Two local execution issues were handled during verification: PowerShell execution policy blocked dot-sourcing the helper file, and PowerShell intermittently dropped the socket on the final 409 response even though the app completed the request.
+
+Quick-run role guide
+Admin -> log in with admin.bloodtest@lifelink.test / 12345678 -> re-check /api/blood/schema/* or create new blood-bank setup rows.
+IT Worker -> log in with itworker.bloodtest@lifelink.test / 12345678 -> open /api/blood/matching/requests and review request_id=1.
+Patient -> log in with patient.bloodtest@lifelink.test / 12345678 -> load /api/patient/blood-requests and inspect request_id=1.
+Donor A -> log in with donor.exact.aplus@lifelink.test / 12345678 -> review notifications and donation history as the accepted exact-match donor.
+Donor B -> log in with donor.compatible.oplus@lifelink.test / 12345678 -> review notifications as the declined compatible donor.
+Donor C -> log in with donor.control.bplus@lifelink.test / 12345678 -> verify notifications remain empty and suggestions never include this donor.
+Donor D -> log in with donor.ineligible.ominus@lifelink.test / 12345678 -> verify bad-vitals donor remains ineligible and donation logging stays blocked.

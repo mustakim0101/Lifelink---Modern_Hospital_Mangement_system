@@ -1,0 +1,266 @@
+import React, { useState } from 'react';
+import { Calendar as CalendarIcon, Check } from 'lucide-react';
+import { AppShell } from '../../components/layout/AppShell';
+import { PageHeader } from '../../components/shared/PageHeader';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Label } from '../../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Textarea } from '../../components/ui/textarea';
+import { Calendar } from '../../components/ui/calendar';
+import { departments, doctors } from '../../data/mockData';
+import { toast } from 'sonner';
+
+export default function AppointmentBooking() {
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState({
+    department: '',
+    doctor: '',
+    date: undefined as Date | undefined,
+    time: '',
+    reason: '',
+  });
+
+  const availableDoctors = formData.department
+    ? doctors.filter(d => d.department === formData.department)
+    : [];
+
+  const timeSlots = [
+    '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
+    '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM',
+  ];
+
+  const handleSubmit = () => {
+    toast.success('Appointment booked successfully!');
+    setStep(4);
+  };
+
+  return (
+    <AppShell>
+      <PageHeader
+        title="Book Appointment"
+        subtitle="Schedule a visit with your healthcare provider"
+        breadcrumb={[
+          { label: 'Patient Portal', path: '/patient/portal' },
+          { label: 'Book Appointment' },
+        ]}
+      />
+
+      {/* Progress Steps */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between max-w-3xl mx-auto">
+          {[
+            { num: 1, label: 'Department' },
+            { num: 2, label: 'Doctor & Date' },
+            { num: 3, label: 'Confirm' },
+            { num: 4, label: 'Complete' },
+          ].map((s, idx) => (
+            <React.Fragment key={s.num}>
+              <div className="flex flex-col items-center">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                    step >= s.num
+                      ? 'bg-[#0369A1] border-[#0369A1] text-white'
+                      : 'border-border text-muted-foreground'
+                  }`}
+                >
+                  {step > s.num ? <Check className="w-5 h-5" /> : s.num}
+                </div>
+                <div className="text-xs mt-1 text-center">{s.label}</div>
+              </div>
+              {idx < 3 && (
+                <div
+                  className={`flex-1 h-0.5 mx-2 ${
+                    step > s.num ? 'bg-[#0369A1]' : 'bg-border'
+                  }`}
+                />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* Step 1: Select Department */}
+      {step === 1 && (
+        <Card className="max-w-2xl mx-auto">
+          <CardHeader>
+            <CardTitle>Select Department</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Department</Label>
+              <Select value={formData.department} onValueChange={(value) => setFormData({ ...formData, department: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a department" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept.id} value={dept.name}>
+                      {dept.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              onClick={() => setStep(2)}
+              disabled={!formData.department}
+              className="w-full bg-[#0369A1] hover:bg-[#075985]"
+            >
+              Continue
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 2: Select Doctor and Date */}
+      {step === 2 && (
+        <Card className="max-w-4xl mx-auto">
+          <CardHeader>
+            <CardTitle>Select Doctor & Date</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label>Doctor (Optional)</Label>
+              <Select value={formData.doctor} onValueChange={(value) => setFormData({ ...formData, doctor: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a doctor or leave blank for any available" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Any Available Doctor</SelectItem>
+                  {availableDoctors.map((doctor) => (
+                    <SelectItem key={doctor.id} value={doctor.name}>
+                      {doctor.name} - {doctor.specialization}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Select Date</Label>
+              <div className="border border-border rounded-lg p-4">
+                <Calendar
+                  mode="single"
+                  selected={formData.date}
+                  onSelect={(date) => setFormData({ ...formData, date })}
+                  disabled={(date) => date < new Date()}
+                  className="mx-auto"
+                />
+              </div>
+            </div>
+
+            {formData.date && (
+              <div className="space-y-2">
+                <Label>Select Time</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {timeSlots.map((time) => (
+                    <Button
+                      key={time}
+                      variant={formData.time === time ? 'default' : 'outline'}
+                      onClick={() => setFormData({ ...formData, time })}
+                      className={formData.time === time ? 'bg-[#0369A1] hover:bg-[#075985]' : ''}
+                    >
+                      {time}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
+                Back
+              </Button>
+              <Button
+                onClick={() => setStep(3)}
+                disabled={!formData.date || !formData.time}
+                className="flex-1 bg-[#0369A1] hover:bg-[#075985]"
+              >
+                Continue
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 3: Confirm Details */}
+      {step === 3 && (
+        <Card className="max-w-2xl mx-auto">
+          <CardHeader>
+            <CardTitle>Confirm Appointment</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-4 p-4 bg-accent rounded-lg">
+              <div>
+                <div className="text-sm text-muted-foreground">Department</div>
+                <div className="font-medium">{formData.department}</div>
+              </div>
+              {formData.doctor && formData.doctor !== 'any' && (
+                <div>
+                  <div className="text-sm text-muted-foreground">Doctor</div>
+                  <div className="font-medium">{formData.doctor}</div>
+                </div>
+              )}
+              <div>
+                <div className="text-sm text-muted-foreground">Date & Time</div>
+                <div className="font-medium">
+                  {formData.date?.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}{' '}
+                  at {formData.time}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Reason for Visit (Optional)</Label>
+              <Textarea
+                placeholder="Briefly describe the reason for your appointment..."
+                value={formData.reason}
+                onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                rows={4}
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setStep(2)} className="flex-1">
+                Back
+              </Button>
+              <Button onClick={handleSubmit} className="flex-1 bg-[#0369A1] hover:bg-[#075985]">
+                Book Appointment
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 4: Success */}
+      {step === 4 && (
+        <Card className="max-w-2xl mx-auto border-2 border-[#059669]">
+          <CardContent className="pt-12 pb-12 text-center">
+            <div className="w-16 h-16 bg-[#D1FAE5] rounded-full flex items-center justify-center mx-auto mb-4">
+              <Check className="w-8 h-8 text-[#059669]" />
+            </div>
+            <h2 className="text-2xl font-semibold mb-2">Appointment Booked!</h2>
+            <p className="text-muted-foreground mb-6">
+              Your appointment has been successfully scheduled. You will receive a confirmation email shortly.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <Button variant="outline" onClick={() => window.location.href = '/patient/appointments'}>
+                View My Appointments
+              </Button>
+              <Button className="bg-[#0369A1] hover:bg-[#075985]" onClick={() => window.location.href = '/patient/portal'}>
+                Return to Portal
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </AppShell>
+  );
+}
