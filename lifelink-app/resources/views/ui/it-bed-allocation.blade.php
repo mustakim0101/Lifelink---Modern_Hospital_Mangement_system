@@ -4,10 +4,11 @@
 @extends('ui.layouts.app')
 
 @section('title', 'IT Worker Dashboard')
-@section('workspace_label', 'IT worker operations workspace')
-@section('hero_badge', 'IT Operations')
-@section('hero_title', 'Manage department scope, ward setup, admissions, and bed assignment from one dashboard.')
-@section('hero_description', 'Department-scoped IT operations for wards, admissions, and bed assignment.')
+@section('workspace_label', '')
+@section('hero_badge', '')
+@section('hero_title', 'IT Dashboard')
+@section('hero_description', '')
+@section('hide_meta_card', '1')
 @section('meta_title', 'IT Workflow')
 @section('meta_copy', 'Department assignment, ward setup, admissions, and beds')
 
@@ -38,6 +39,7 @@
     }
 
     .it-grid { gap: 14px; }
+    .it-panel-switch { display: none; }
     .it-split { grid-template-columns: repeat(12, minmax(0, 1fr)); }
     .it-col-4 { grid-column: span 4; }
     .it-col-5 { grid-column: span 5; }
@@ -242,42 +244,29 @@
 @endpush
 
 @section('sidebar_nav')
-    <a class="is-active" href="/ui/it-bed-allocation">
-        <strong>IT Dashboard</strong>
-        <span>Current area</span>
+    <a class="is-active" href="#it-overview">
+        <strong>Overview</strong>
     </a>
-    <a href="/ui/application-reviews">
-        <strong>Application Reviews</strong>
-        <span>Approve IT staff applicants</span>
+    <a href="#it-directory">
+        <strong>Doctor + Patient Lookup</strong>
     </a>
-    <a href="/ui/admin-users">
-        <strong>Admin Control</strong>
-        <span>Account and role actions</span>
+    <a href="#it-admission">
+        <strong>Admission + Bed Flow</strong>
+    </a>
+    <a href="#it-reference">
+        <strong>Reference Tables</strong>
+    </a>
+    <a href="#it-debug">
+        <strong>API Response</strong>
     </a>
 @endsection
 
 @section('sidebar')
-    <div class="app-shell__sidebar-card">
-        <strong>IT scope</strong>
-        <p>Admin assigns departments first. This page handles day-to-day IT operations after that setup.</p>
-    </div>
-    <div class="app-shell__sidebar-card">
-        <strong>How to use this page</strong>
-        <p>Typical order: load scope, set up units/beds, create admission, assign bed, then discharge to release bed.</p>
-    </div>
-@endsection
-
-@section('section_nav')
-    <a href="#it-overview" class="is-active">Overview</a>
-    <a href="#it-directory">Doctor + Patient Lookup</a>
-    <a href="#it-admission">Admission + Bed Flow</a>
-    <a href="#it-reference">Reference Tables</a>
-    <a href="#it-debug">API Response</a>
 @endsection
 
 @section('content')
     <div class="it-grid">
-        <div id="it-overview" class="it-split ll-section">
+        <div id="it-overview" class="it-split ll-section it-panel-switch" data-display="grid">
             <div class="it-panel it-col-4">
                 <h3>IT worker session</h3>
                 <p class="it-note">Use the logged-in IT worker token here. If "load my departments" returns nothing, admin has not finished your department assignment yet.</p>
@@ -305,7 +294,7 @@
             </div>
         </div>
 
-        <div id="bloodBankItSection" class="it-panel" style="display:none;">
+        <div id="bloodBankItSection" class="it-panel it-panel-switch" data-display="block" style="display:none;">
             <h3>Blood Bank operations</h3>
             <p class="it-note">This account has Blood Bank department scope. Use the Blood Matching Center for donor matching, donor notifications, donation logging, and request-linked blood workflow actions.</p>
             <div class="it-summary">
@@ -319,7 +308,7 @@
         </div>
 
         <div id="standardItWorkArea">
-        <div id="it-directory" class="it-split ll-section">
+        <div id="it-directory" class="it-split ll-section it-panel-switch" data-display="grid">
             <div class="it-panel it-col-6">
                 <h3>Doctor lookup for admission context</h3>
                 <p class="it-note">If admission should be tied to a doctor, search doctors here and use one of their ids in the admission form. The doctor must belong to the same department as the admission.</p>
@@ -363,7 +352,7 @@
             </div>
         </div>
 
-        <div id="it-admission" class="it-split ll-section">
+        <div id="it-admission" class="it-split ll-section it-panel-switch" data-display="grid">
             <div class="it-panel it-col-6">
                 <h3>Ward setup</h3>
                 <p class="it-note">Create care units and beds here instead of jumping to a separate prototype page.</p>
@@ -547,7 +536,7 @@
             </div>
         </div>
 
-        <div id="it-reference" class="it-panel ll-section">
+        <div id="it-reference" class="it-panel ll-section it-panel-switch" data-display="block">
             <h3>Reference tables</h3>
             <div class="it-table-grid">
                 <div>
@@ -576,7 +565,7 @@
         </div>
         </div>
 
-        <div id="it-debug" class="it-panel ll-section">
+        <div id="it-debug" class="it-panel ll-section it-panel-switch" data-display="block">
             <details class="ll-debug" open>
                 <summary>API response</summary>
                 <pre id="out" class="it-console"></pre>
@@ -590,6 +579,8 @@
 const API = '/api';
 const out = document.getElementById('out');
 const ctx = document.getElementById('ctx');
+const itPanelIds = ['it-overview', 'it-directory', 'it-admission', 'it-reference', 'it-debug'];
+const itNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[href^="#it-"]'));
 
 const state = {
     departments: [],
@@ -602,6 +593,41 @@ const state = {
 };
 
 const BLOOD_BANK_DEPARTMENT = 'Blood Bank';
+
+function setActivePanel(panelId) {
+    itPanelIds.forEach((id) => {
+        const panel = document.getElementById(id);
+        if (!panel) return;
+        panel.style.display = id === panelId ? (panel.dataset.display || 'block') : 'none';
+    });
+
+    if (panelId !== 'it-overview') {
+        document.getElementById('bloodBankItSection').style.display = 'none';
+    } else {
+        renderDepartmentMode();
+    }
+
+    itNavLinks.forEach((link) => {
+        const targetId = (link.getAttribute('href') || '').replace('#', '');
+        link.classList.toggle('is-active', targetId === panelId);
+    });
+}
+
+function setupSidebarPanelNav() {
+    itNavLinks.forEach((link) => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            const panelId = (link.getAttribute('href') || '').replace('#', '');
+            if (!itPanelIds.includes(panelId)) return;
+            setActivePanel(panelId);
+            history.replaceState(null, '', `#${panelId}`);
+        });
+    });
+
+    const initialHash = (window.location.hash || '').replace('#', '');
+    const initialPanel = itPanelIds.includes(initialHash) ? initialHash : itPanelIds[0];
+    setActivePanel(initialPanel);
+}
 
 function write(data) {
     out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
@@ -694,7 +720,8 @@ function hasNonBloodBankScope() {
 
 function renderDepartmentMode() {
     const bloodBankAccess = hasBloodBankScope();
-    document.getElementById('bloodBankItSection').style.display = bloodBankAccess ? '' : 'none';
+    const selectedPanel = (window.location.hash || '').replace('#', '') || 'it-overview';
+    document.getElementById('bloodBankItSection').style.display = bloodBankAccess && selectedPanel === 'it-overview' ? '' : 'none';
     document.getElementById('standardItWorkArea').style.display = bloodBankAccess && !hasNonBloodBankScope() ? 'none' : '';
     document.getElementById('bloodBankScopeStatus').textContent = bloodBankAccess ? 'Enabled' : 'Locked';
     document.getElementById('bloodBankScopeCount').textContent = String(state.scopeDepartments.filter((department) => String(department.dept_name || '').trim() === BLOOD_BANK_DEPARTMENT).length);
@@ -1073,6 +1100,7 @@ function initializeEmptyTables() {
 }
 
 async function bootItDashboard() {
+    setupSidebarPanelNav();
     useUserToken();
     initializeEmptyTables();
     await loadDepartmentSelectors();
@@ -1087,4 +1115,3 @@ async function bootItDashboard() {
 bootItDashboard();
 </script>
 @endpush
-
