@@ -4,10 +4,11 @@
 @extends('ui.layouts.app')
 
 @section('title', 'Doctor Dashboard')
-@section('workspace_label', 'Clinical doctor workspace')
-@section('hero_badge', 'Doctor Mode')
-@section('hero_title', 'Doctor dashboard for patient review, appointments, and bed requests.')
-@section('hero_description', 'Clinical actions only: patient view, appointments, and bed requests after admin setup.')
+@section('workspace_label', '')
+@section('hero_badge', '')
+@section('hero_title', 'Doctor Dashboard')
+@section('hero_description', '')
+@section('hide_meta_card', '1')
 @section('meta_title', 'Doctor Dashboard')
 @section('meta_copy', 'Clinical actions, appointments, and admissions support')
 
@@ -26,6 +27,7 @@
     }
 
     .doctor-grid { display: grid; gap: 10px; }
+    .doctor-panel { display: none; }
     .doctor-card {
         border: 1px solid var(--doctor-line);
         border-radius: 16px;
@@ -115,52 +117,34 @@
 @endpush
 
 @section('sidebar_nav')
-    <a class="is-active" href="/ui/doctor-dashboard">
-        <strong>Doctor Dashboard</strong>
-        <span>Current area</span>
+    <a class="is-active" href="#doctor-request">
+        <strong>Bed Request</strong>
     </a>
-    <a href="/ui/dashboard">
-        <strong>Workspace Hub</strong>
-        <span>Role redirect center</span>
+    <a href="#doctor-actions">
+        <strong>Actions</strong>
     </a>
-    <a href="/ui/patient-portal">
-        <strong>Patient Portal</strong>
-        <span>See patient-side outcome</span>
+    <a href="#doctor-debug">
+        <strong>API Response</strong>
     </a>
 @endsection
 
 @section('sidebar')
-    <div class="app-shell__sidebar-card">
-        <strong>Doctor session</strong>
-        <p>Use the logged-in doctor token for doctor-facing dashboard actions. If profile loading fails, admin has not finished doctor setup yet.</p>
-        <label class="doctor-label" for="doctorTokenInput">Doctor token</label>
-        <input id="doctorTokenInput" class="doctor-input" placeholder="doctor token for dashboard actions">
-        <button class="doctor-btn doctor-btn-soft" type="button" onclick="useUserToken()">Use USER_TOKEN</button>
-    </div>
-
-    <div class="app-shell__sidebar-card">
-        <strong>Quick actions</strong>
-        <p>Use these doctor actions to inspect profile data, patient assignments, appointments, and requested admissions without leaving the workspace.</p>
-        <div class="doctor-btns">
-            <button class="doctor-btn doctor-btn-soft" type="button" onclick="doctorProfile()">Doctor Profile</button>
-            <button class="doctor-btn doctor-btn-soft" type="button" onclick="doctorPatients()">Doctor Patients</button>
-            <button class="doctor-btn doctor-btn-soft" type="button" onclick="doctorBedRequests()">Bed Requests</button>
-        </div>
-    </div>
-@endsection
-
-@section('section_nav')
-    <a href="#doctor-request" class="is-active">Bed Request</a>
-    <a href="#doctor-actions">Doctor Actions</a>
-    <a href="#doctor-debug">API Response</a>
 @endsection
 
 @section('content')
     <div class="doctor-grid">
-        <div id="doctor-request" class="doctor-split ll-section">
+        <div id="doctor-request" class="doctor-split ll-section doctor-panel" data-display="grid">
             <div class="doctor-card">
                 <h3>Doctor: create bed request</h3>
                 <p class="doctor-hint">Submit an admission or bed request for a patient.</p>
+                <label class="doctor-label" for="doctorTokenInput">Doctor token</label>
+                <input id="doctorTokenInput" class="doctor-input" placeholder="doctor token for dashboard actions">
+                <div class="doctor-btns">
+                    <button class="doctor-btn doctor-btn-soft" type="button" onclick="useUserToken()">Use USER_TOKEN</button>
+                    <button class="doctor-btn doctor-btn-soft" type="button" onclick="doctorProfile()">Doctor Profile</button>
+                    <button class="doctor-btn doctor-btn-soft" type="button" onclick="doctorPatients()">Doctor Patients</button>
+                    <button class="doctor-btn doctor-btn-soft" type="button" onclick="doctorBedRequests()">Bed Requests</button>
+                </div>
                 <div class="doctor-row">
                     <div>
                         <label class="doctor-label" for="patientUserId">Patient user id</label>
@@ -186,7 +170,7 @@
             </div>
         </div>
 
-        <div id="doctor-actions" class="doctor-card ll-section">
+        <div id="doctor-actions" class="doctor-card ll-section doctor-panel" data-display="block">
             <div class="doctor-section-title">
                 <div>
                     <h3>Doctor actions</h3>
@@ -231,7 +215,7 @@
             </div>
         </div>
 
-        <div id="doctor-debug" class="doctor-card ll-section">
+        <div id="doctor-debug" class="doctor-card ll-section doctor-panel" data-display="block">
             <details class="ll-debug" open>
                 <summary>API response</summary>
                 <pre id="out" class="doctor-response"></pre>
@@ -244,6 +228,37 @@
 <script>
 const API = '/api';
 const out = document.getElementById('out');
+const doctorPanelIds = ['doctor-request', 'doctor-actions', 'doctor-debug'];
+const doctorNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[href^="#doctor-"]'));
+
+function setActivePanel(panelId) {
+    doctorPanelIds.forEach((id) => {
+        const panel = document.getElementById(id);
+        if (!panel) return;
+        panel.style.display = id === panelId ? (panel.dataset.display || 'block') : 'none';
+    });
+
+    doctorNavLinks.forEach((link) => {
+        const targetId = (link.getAttribute('href') || '').replace('#', '');
+        link.classList.toggle('is-active', targetId === panelId);
+    });
+}
+
+function setupSidebarPanelNav() {
+    doctorNavLinks.forEach((link) => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            const panelId = (link.getAttribute('href') || '').replace('#', '');
+            if (!doctorPanelIds.includes(panelId)) return;
+            setActivePanel(panelId);
+            history.replaceState(null, '', `#${panelId}`);
+        });
+    });
+
+    const initialHash = (window.location.hash || '').replace('#', '');
+    const initialPanel = doctorPanelIds.includes(initialHash) ? initialHash : doctorPanelIds[0];
+    setActivePanel(initialPanel);
+}
 
 function write(data) {
     out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
@@ -305,7 +320,7 @@ async function doctorBedRequests() {
     write(await call('/doctor/bed-requests', 'GET'));
 }
 
+setupSidebarPanelNav();
 useUserToken();
 </script>
 @endpush
-

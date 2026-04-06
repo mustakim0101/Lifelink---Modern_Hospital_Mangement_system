@@ -4,10 +4,11 @@
 @extends('ui.layouts.app')
 
 @section('title', 'Patient Portal')
-@section('workspace_label', 'Patient self-service workspace')
-@section('hero_badge', 'Patient Mode')
-@section('hero_title', 'Patient portal for records, appointments, and blood requests.')
-@section('hero_description', 'One connected patient workspace for appointments, records, and blood requests.')
+@section('workspace_label', '')
+@section('hero_badge', '')
+@section('hero_title', 'Patient Dashboard')
+@section('hero_description', '')
+@section('hide_meta_card', '1')
 @section('meta_title', 'Patient Portal')
 @section('meta_copy', 'Appointments, records, and blood support')
 
@@ -28,6 +29,7 @@
     }
 
     .portal-grid { display: grid; gap: 10px; }
+    .portal-panel { display: none; }
     .portal-card {
         border: 1px solid var(--portal-line);
         border-radius: 16px;
@@ -134,17 +136,20 @@
 @endpush
 
 @section('sidebar_nav')
-    <a class="is-active" href="/ui/patient-portal">
-        <strong>Patient Portal</strong>
-        <span>Current area</span>
+    <a class="is-active" href="#portal-snapshot">
+        <strong>Snapshot</strong>
     </a>
-    <a href="/ui/dashboard">
-        <strong>Workspace Hub</strong>
-        <span>Role redirect center</span>
+    <a href="#portal-actions">
+        <strong>Book + Request</strong>
     </a>
-    <a href="/ui/applications">
-        <strong>Applications</strong>
-        <span>Track applicant-side flow</span>
+    <a href="#portal-tables">
+        <strong>Appointments + Blood</strong>
+    </a>
+    <a href="#portal-records">
+        <strong>Records</strong>
+    </a>
+    <a href="#portal-debug">
+        <strong>API Response</strong>
     </a>
 @endsection
 
@@ -190,17 +195,9 @@
     </div>
 @endsection
 
-@section('section_nav')
-    <a href="#portal-snapshot" class="is-active">Snapshot</a>
-    <a href="#portal-actions">Book + Request</a>
-    <a href="#portal-tables">Appointments + Blood</a>
-    <a href="#portal-records">Records</a>
-    <a href="#portal-debug">API Response</a>
-@endsection
-
 @section('content')
     <div class="portal-grid">
-        <div id="portal-snapshot" class="portal-card ll-section">
+        <div id="portal-snapshot" class="portal-card ll-section portal-panel" data-display="block">
             <h3>Snapshot</h3>
             <p class="portal-hint">Live summary from <code>GET /api/patient/portal</code>.</p>
             <div class="portal-stats">
@@ -212,7 +209,7 @@
             <div class="portal-summary" id="patientSummary"></div>
         </div>
 
-        <div id="portal-actions" class="portal-split ll-section">
+        <div id="portal-actions" class="portal-split ll-section portal-panel" data-display="grid">
             <div class="portal-card">
                 <h3>Book appointment</h3>
                 <p class="portal-hint">Department and time are required. Doctor is optional.</p>
@@ -281,7 +278,7 @@
             </div>
         </div>
 
-        <div id="portal-tables" class="portal-split ll-section">
+        <div id="portal-tables" class="portal-split ll-section portal-panel" data-display="grid">
             <div class="portal-card">
                 <h3>Appointments</h3>
                 <div class="portal-table-wrap">
@@ -306,7 +303,7 @@
             </div>
         </div>
 
-        <div id="portal-records" class="portal-card ll-section">
+        <div id="portal-records" class="portal-card ll-section portal-panel" data-display="block">
             <div class="portal-row">
                 <div>
                     <h3>Medical records</h3>
@@ -327,7 +324,7 @@
             </div>
         </div>
 
-        <div id="portal-debug" class="portal-card ll-section">
+        <div id="portal-debug" class="portal-card ll-section portal-panel" data-display="block">
             <details class="ll-debug" open>
                 <summary>API response</summary>
                 <pre id="out" class="portal-pre"></pre>
@@ -350,9 +347,39 @@ const state = {
     records: [],
     recordSearch: ''
 };
+const portalPanelIds = ['portal-snapshot', 'portal-actions', 'portal-tables', 'portal-records', 'portal-debug'];
+const portalNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[href^="#portal-"]'));
 
 function byId(id) { return document.getElementById(id); }
 function write(data) { out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2); }
+function setActivePanel(panelId) {
+    portalPanelIds.forEach((id) => {
+        const panel = byId(id);
+        if (!panel) return;
+        panel.style.display = id === panelId ? (panel.dataset.display || 'block') : 'none';
+    });
+
+    portalNavLinks.forEach((link) => {
+        const targetId = (link.getAttribute('href') || '').replace('#', '');
+        link.classList.toggle('is-active', targetId === panelId);
+    });
+}
+
+function setupSidebarPanelNav() {
+    portalNavLinks.forEach((link) => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            const panelId = (link.getAttribute('href') || '').replace('#', '');
+            if (!portalPanelIds.includes(panelId)) return;
+            setActivePanel(panelId);
+            history.replaceState(null, '', `#${panelId}`);
+        });
+    });
+
+    const initialHash = (window.location.hash || '').replace('#', '');
+    const initialPanel = portalPanelIds.includes(initialHash) ? initialHash : portalPanelIds[0];
+    setActivePanel(initialPanel);
+}
 function html(value) {
     if (value === null || value === undefined) return '';
     return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
@@ -617,6 +644,7 @@ async function refreshAll() {
 }
 
 function boot() {
+    setupSidebarPanelNav();
     setClock();
     setInterval(setClock, 1000);
     useStoredUserToken();
@@ -629,4 +657,3 @@ function boot() {
 boot();
 </script>
 @endpush
-

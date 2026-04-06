@@ -4,10 +4,11 @@
 @extends('ui.layouts.app')
 
 @section('title', 'Applicant Workspace')
-@section('workspace_label', 'Applicant status workspace')
-@section('hero_badge', 'Applicant Mode')
-@section('hero_title', 'Application status and next steps stay in one place.')
-@section('hero_description', 'Applicants should not land in a staff dashboard before approval. This workspace focuses on application status, review updates, and the message that the applicant should wait for admin response.')
+@section('workspace_label', '')
+@section('hero_badge', '')
+@section('hero_title', 'Applicant Dashboard')
+@section('hero_description', '')
+@section('hide_meta_card', '1')
 @section('meta_title', 'Applicant Workspace')
 @section('meta_copy', 'Status tracking, review notes, and next steps')
 
@@ -28,6 +29,7 @@
     }
 
     .applicant-grid { display: grid; gap: 10px; }
+    .applicant-panel { display: none; }
     .applicant-card {
         border: 1px solid var(--app-line);
         border-radius: 16px;
@@ -125,41 +127,33 @@
 @endpush
 
 @section('sidebar_nav')
-    <a class="is-active" href="/ui/applications">
-        <strong>Applicant Workspace</strong>
-        <span>Current area</span>
+    <a class="is-active" href="#app-status">
+        <strong>Status</strong>
     </a>
-    <a href="/ui/dashboard">
-        <strong>Workspace Hub</strong>
-        <span>Role redirect center</span>
+    <a href="#app-waiting">
+        <strong>Waiting State</strong>
     </a>
-    <a href="/ui/login">
-        <strong>Login Page</strong>
-        <span>Switch account</span>
+    <a href="#app-history">
+        <strong>History</strong>
+    </a>
+    <a href="#app-debug">
+        <strong>API Response</strong>
     </a>
 @endsection
 
 @section('sidebar')
-    <div class="app-shell__sidebar-card">
-        <strong>Applicant message</strong>
-        <p id="statusMessage">Your application has been submitted. Please wait for admin review. You will be contacted soon or your status will update here.</p>
-    </div>
-
-    <div class="app-shell__sidebar-card">
-        <strong>Current user</strong>
-        <p id="applicantEmail">No applicant session found.</p>
-        <div class="applicant-btns">
-            <button class="applicant-btn applicant-btn-soft" type="button" onclick="loadLatest()">Refresh latest status</button>
-            <button class="applicant-btn applicant-btn-soft" type="button" onclick="loadAll()">Load application history</button>
-        </div>
-    </div>
 @endsection
 
 @section('content')
     <div class="applicant-grid">
-        <div class="applicant-card">
+        <div id="app-status" class="applicant-card ll-section applicant-panel" data-display="block">
             <h3>Latest application status</h3>
-            <p class="applicant-hint">This page is the correct landing area after applicant login. Staff-role dashboards should only unlock after admin approval assigns the real role.</p>
+            <p id="statusMessage" class="applicant-hint">Your application has been submitted. Please wait for admin review.</p>
+            <p id="applicantEmail" class="applicant-hint">No applicant session found.</p>
+            <div class="applicant-btns">
+                <button class="applicant-btn applicant-btn-soft" type="button" onclick="loadLatest()">Refresh latest status</button>
+                <button class="applicant-btn applicant-btn-soft" type="button" onclick="loadAll()">Load application history</button>
+            </div>
             <div class="applicant-stats">
                 <div class="applicant-stat">
                     <strong id="latestStatus">-</strong>
@@ -176,10 +170,9 @@
             </div>
         </div>
 
-        <div class="applicant-row">
+        <div id="app-waiting" class="applicant-row ll-section applicant-panel" data-display="grid">
             <div class="applicant-card">
                 <h3>Waiting state</h3>
-                <p class="applicant-hint">Pending applicants should remain here and wait for admin review. Approved applicants will receive the actual staff role, and only then should login redirect them into the matching staff dashboard.</p>
                 <div id="waitingBadge" class="applicant-status pending">Pending review</div>
             </div>
 
@@ -189,7 +182,7 @@
             </div>
         </div>
 
-        <div class="applicant-card">
+        <div id="app-history" class="applicant-card ll-section applicant-panel" data-display="block">
             <h3>Application history</h3>
             <div class="applicant-table-wrap">
                 <table class="applicant-table">
@@ -201,7 +194,7 @@
             </div>
         </div>
 
-        <div class="applicant-card">
+        <div id="app-debug" class="applicant-card ll-section applicant-panel" data-display="block">
             <h3>API response</h3>
             <pre id="out" class="applicant-pre"></pre>
         </div>
@@ -212,9 +205,40 @@
 <script>
 const out = document.getElementById('out');
 const API = '/api';
+const applicantPanelIds = ['app-status', 'app-waiting', 'app-history', 'app-debug'];
+const applicantNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[href^="#app-"]'));
 
 function write(data) {
     out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+}
+
+function setActivePanel(panelId) {
+    applicantPanelIds.forEach((id) => {
+        const panel = document.getElementById(id);
+        if (!panel) return;
+        panel.style.display = id === panelId ? (panel.dataset.display || 'block') : 'none';
+    });
+
+    applicantNavLinks.forEach((link) => {
+        const targetId = (link.getAttribute('href') || '').replace('#', '');
+        link.classList.toggle('is-active', targetId === panelId);
+    });
+}
+
+function setupSidebarPanelNav() {
+    applicantNavLinks.forEach((link) => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            const panelId = (link.getAttribute('href') || '').replace('#', '');
+            if (!applicantPanelIds.includes(panelId)) return;
+            setActivePanel(panelId);
+            history.replaceState(null, '', `#${panelId}`);
+        });
+    });
+
+    const initialHash = (window.location.hash || '').replace('#', '');
+    const initialPanel = applicantPanelIds.includes(initialHash) ? initialHash : applicantPanelIds[0];
+    setActivePanel(initialPanel);
 }
 
 function userToken() {
@@ -292,6 +316,7 @@ function hydrateApplicantIdentity() {
 }
 
 hydrateApplicantIdentity();
+setupSidebarPanelNav();
 loadLatest();
 loadAll();
 </script>

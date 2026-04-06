@@ -4,10 +4,11 @@
 @extends('ui.layouts.app')
 
 @section('title', 'Nurse Dashboard')
-@section('workspace_label', 'Nurse monitoring workspace')
-@section('hero_badge', 'Nurse Care')
-@section('hero_title', 'Monitor department patients and log vital signs from one workspace.')
-@section('hero_description', 'Department-focused nurse workflow for monitoring and vital-sign logging.')
+@section('workspace_label', '')
+@section('hero_badge', '')
+@section('hero_title', 'Nurse Dashboard')
+@section('hero_description', '')
+@section('hide_meta_card', '1')
 @section('meta_title', 'Nurse Workflow')
 @section('meta_copy', 'Department monitoring and bedside updates')
 
@@ -39,6 +40,7 @@
     .nurse-grid {
         gap: 14px;
     }
+    .nurse-panel-switch { display: none; }
 
     .nurse-panel {
         border: 1px solid var(--nurse-line);
@@ -312,45 +314,26 @@
 @endpush
 
 @section('sidebar_nav')
-    <a class="is-active" href="/ui/nurse-dashboard">
-        <strong>Nurse Dashboard</strong>
-        <span>Current area</span>
+    <a class="is-active" href="#nurse-overview">
+        <strong>Overview</strong>
     </a>
-    <a href="/ui/patient-portal">
-        <strong>Patient Portal</strong>
-        <span>Patient-side workflow</span>
+    <a href="#nurse-monitoring">
+        <strong>Patient Monitoring</strong>
     </a>
-    <a href="/ui/doctor-dashboard">
-        <strong>Doctor Dashboard</strong>
-        <span>Clinical counterpart</span>
+    <a href="#nurse-blood-bank">
+        <strong>Blood Bank Screening</strong>
+    </a>
+    <a href="#nurse-debug">
+        <strong>API Response</strong>
     </a>
 @endsection
 
 @section('sidebar')
-    <div class="app-shell__sidebar-card">
-        <strong>Role notes</strong>
-        <p>Admin must finish nurse setup from the admin dashboard first. This page is only for the nurse's own daily work after that setup exists.</p>
-    </div>
-    <div class="app-shell__sidebar-card">
-        <strong>Expected flow</strong>
-        <p>Order: admin approves nurse application, admin assigns department, nurse logs in here, nurse loads department patients, nurse records vitals for admitted patients.</p>
-    </div>
-    <div class="app-shell__sidebar-card">
-        <strong>Blood Bank rule</strong>
-        <p>If this nurse belongs to the <code>Blood Bank</code> department, an extra donor screening section appears below for staff-entered donor health checks.</p>
-    </div>
-@endsection
-
-@section('section_nav')
-    <a href="#nurse-overview" class="is-active">Overview</a>
-    <a href="#regularNurseWorkArea">Patient Monitoring</a>
-    <a href="#nurse-blood-bank">Blood Bank Screening</a>
-    <a href="#nurse-debug">API Response</a>
 @endsection
 
 @section('content')
     <div class="nurse-grid">
-        <div id="nurse-overview" class="nurse-split ll-section">
+        <div id="nurse-overview" class="nurse-split ll-section nurse-panel-switch" data-display="grid">
             <div class="nurse-panel nurse-col-4">
                 <h3>Nurse session</h3>
                 <p class="nurse-note">Use the logged-in nurse token here. If profile loading fails, it usually means admin has not finished nurse setup yet.</p>
@@ -394,25 +377,26 @@
             </div>
         </div>
 
-        <div id="regularNurseSection" class="nurse-panel ll-section">
-            <h3>Department snapshot</h3>
-            <div class="nurse-stat-grid">
-                <div class="nurse-stat"><strong id="stTotal">0</strong><span>Total</span></div>
-                <div class="nurse-stat"><strong id="stActive">0</strong><span>Admitted</span></div>
-                <div class="nurse-stat"><strong id="stBed">0</strong><span>Has bed</span></div>
-                <div class="nurse-stat"><strong id="stNoBed">0</strong><span>No bed</span></div>
-                <div class="nurse-stat"><strong id="stMonitored">0</strong><span>Monitored 24h</span></div>
-            </div>
-        </div>
-
-        <div id="regularNurseWorkArea" class="nurse-split ll-section">
-            <div class="nurse-panel nurse-col-5">
-                <h3>Patient monitoring list</h3>
-                <p class="nurse-note">Select an admission to open monitoring detail, recent vitals, and linked records.</p>
-                <div id="patientList" class="nurse-list"></div>
+        <div id="nurse-monitoring" class="ll-section nurse-panel-switch" data-display="block">
+            <div id="regularNurseSection" class="nurse-panel">
+                <h3>Department snapshot</h3>
+                <div class="nurse-stat-grid">
+                    <div class="nurse-stat"><strong id="stTotal">0</strong><span>Total</span></div>
+                    <div class="nurse-stat"><strong id="stActive">0</strong><span>Admitted</span></div>
+                    <div class="nurse-stat"><strong id="stBed">0</strong><span>Has bed</span></div>
+                    <div class="nurse-stat"><strong id="stNoBed">0</strong><span>No bed</span></div>
+                    <div class="nurse-stat"><strong id="stMonitored">0</strong><span>Monitored 24h</span></div>
+                </div>
             </div>
 
-            <div class="nurse-panel nurse-col-7">
+            <div id="regularNurseWorkArea" class="nurse-split" style="margin-top: 12px;">
+                <div class="nurse-panel nurse-col-5">
+                    <h3>Patient monitoring list</h3>
+                    <p class="nurse-note">Select an admission to open monitoring detail, recent vitals, and linked records.</p>
+                    <div id="patientList" class="nurse-list"></div>
+                </div>
+
+                <div class="nurse-panel nurse-col-7">
                 <h3>Admission monitor</h3>
                 <p class="nurse-note">Record vitals for the selected admission and review recent entries.</p>
 
@@ -499,10 +483,11 @@
                         <tbody id="recordsBody"></tbody>
                     </table>
                 </div>
+                </div>
             </div>
         </div>
 
-        <div id="nurse-blood-bank" class="nurse-panel ll-section">
+        <div id="nurse-blood-bank" class="nurse-panel ll-section nurse-panel-switch" data-display="block">
             <h3>Blood Bank donor screening</h3>
             <p class="nurse-note">Visible only for nurses assigned to the Blood Bank department.</p>
 
@@ -591,7 +576,7 @@
             </div>
         </div>
 
-        <div id="nurse-debug" class="nurse-panel ll-section">
+        <div id="nurse-debug" class="nurse-panel ll-section nurse-panel-switch" data-display="block">
             <details class="ll-debug" open>
                 <summary>API response log</summary>
                 <pre id="out" class="nurse-console"></pre>
@@ -604,6 +589,8 @@
 <script>
 const API = '/api';
 const out = document.getElementById('out');
+const nursePanelIds = ['nurse-overview', 'nurse-monitoring', 'nurse-blood-bank', 'nurse-debug'];
+const nurseNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[href^="#nurse-"]'));
 
 const state = {
     nurse: null,
@@ -618,6 +605,35 @@ const state = {
 
 function write(data) {
     out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+}
+
+function setActivePanel(panelId) {
+    nursePanelIds.forEach((id) => {
+        const panel = document.getElementById(id);
+        if (!panel) return;
+        panel.style.display = id === panelId ? (panel.dataset.display || 'block') : 'none';
+    });
+
+    nurseNavLinks.forEach((link) => {
+        const targetId = (link.getAttribute('href') || '').replace('#', '');
+        link.classList.toggle('is-active', targetId === panelId);
+    });
+}
+
+function setupSidebarPanelNav() {
+    nurseNavLinks.forEach((link) => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            const panelId = (link.getAttribute('href') || '').replace('#', '');
+            if (!nursePanelIds.includes(panelId)) return;
+            setActivePanel(panelId);
+            history.replaceState(null, '', `#${panelId}`);
+        });
+    });
+
+    const initialHash = (window.location.hash || '').replace('#', '');
+    const initialPanel = nursePanelIds.includes(initialHash) ? initialHash : nursePanelIds[0];
+    setActivePanel(initialPanel);
 }
 
 function useStoredUserToken() {
@@ -1043,6 +1059,7 @@ async function logBloodBankHealthCheck() {
 }
 
 async function bootNurseDashboard() {
+    setupSidebarPanelNav();
     renderStats(null);
     renderPatients();
     renderAdmissionSummary(null);
@@ -1067,4 +1084,3 @@ document.getElementById('bbHemoglobin').addEventListener('input', previewEligibi
 bootNurseDashboard();
 </script>
 @endpush
-
