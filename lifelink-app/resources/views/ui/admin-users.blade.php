@@ -98,6 +98,8 @@
         font-size: 13px;
         font-weight: 700;
         cursor: pointer;
+        
+
     }
 
     .admin-btn-main { background: var(--admin-primary); color: #fff; }
@@ -547,3 +549,6 @@ loadDepartments();
 loadPendingApplications();
 </script>
 @endpush
+ /*
+ This is done to ensure the last commit went through
+*/

@@ -128,7 +128,7 @@ Expected DB result:
 - `Admin` role in `user_roles`
 
 ---
-
+------
 **Part 2: Create Two Patient Accounts**
 
 3. Register Patient A

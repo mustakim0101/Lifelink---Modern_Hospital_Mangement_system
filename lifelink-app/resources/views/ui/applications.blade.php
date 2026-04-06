@@ -1,3 +1,6 @@
+/*
+ This is done to ensure the last commit went through
+*/
 @extends('ui.layouts.app')
 
 @section('title', 'Applicant Workspace')
@@ -293,3 +296,6 @@ loadLatest();
 loadAll();
 </script>
 @endpush
+ /*
+ This is done to ensure the last commit went through
+*/

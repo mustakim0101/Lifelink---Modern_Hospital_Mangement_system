@@ -1,3 +1,6 @@
+/*
+ This is done to ensure the last commit went through
+*/
 @extends('ui.layouts.app')
 
 @section('title', 'Nurse Dashboard')
@@ -1064,3 +1067,4 @@ document.getElementById('bbHemoglobin').addEventListener('input', previewEligibi
 bootNurseDashboard();
 </script>
 @endpush
+
