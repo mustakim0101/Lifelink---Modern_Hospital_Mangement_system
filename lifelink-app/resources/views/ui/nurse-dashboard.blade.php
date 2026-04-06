@@ -1,6 +1,3 @@
-/*
- This is done to ensure the last commit went through
-*/
 @extends('ui.layouts.app')
 
 @section('title', 'Nurse Dashboard')
@@ -595,12 +592,27 @@ const nurseNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[hr
 const state = {
     nurse: null,
     nurseProfileLoaded: false,
+    profileRequested: false,
     patients: [],
+    patientsLoaded: false,
+    patientsQueryKey: null,
     selectedAdmissionId: null,
     selectedPatientUserId: null,
     selectedDetail: null,
     bloodBankDonors: [],
+    bloodBankDonorsLoaded: false,
+    bloodBankDonorsQueryKey: null,
     selectedDonorId: null,
+    donorHealthChecksByDonor: {},
+    inFlight: {
+        profile: null,
+        patients: null,
+        patientsQueryKey: null,
+        donors: null,
+        donorsQueryKey: null,
+        donorChecks: null,
+        donorChecksDonorId: null,
+    },
 };
 
 function write(data) {
@@ -618,6 +630,10 @@ function setActivePanel(panelId) {
         const targetId = (link.getAttribute('href') || '').replace('#', '');
         link.classList.toggle('is-active', targetId === panelId);
     });
+
+    maybeLoadPanelData(panelId).catch((error) => {
+        write({ message: 'Panel lazy-load failed', error: String(error) });
+    });
 }
 
 function setupSidebarPanelNav() {
@@ -634,6 +650,23 @@ function setupSidebarPanelNav() {
     const initialHash = (window.location.hash || '').replace('#', '');
     const initialPanel = nursePanelIds.includes(initialHash) ? initialHash : nursePanelIds[0];
     setActivePanel(initialPanel);
+}
+
+async function maybeLoadPanelData(panelId) {
+    if (!document.getElementById('nurseTokenInput').value.trim()) {
+        return;
+    }
+
+    await loadNurseProfile({ force: false });
+
+    if (panelId === 'nurse-monitoring' && state.nurse?.department !== 'Blood Bank') {
+        await loadPatients({ force: false });
+        return;
+    }
+
+    if (panelId === 'nurse-blood-bank' && state.nurse?.department === 'Blood Bank') {
+        await loadBloodBankDonors({ force: false });
+    }
 }
 
 function useStoredUserToken() {
@@ -861,44 +894,79 @@ function renderBloodBankHealthChecks(checks = []) {
     `).join('');
 }
 
-async function loadNurseProfile() {
-    const result = await call('/nurse/profile');
-    state.nurseProfileLoaded = true;
-    if (result.status < 300 && result.data?.nurse) {
-        state.nurse = result.data.nurse;
-    } else {
-        state.nurse = null;
+async function loadNurseProfile(options = {}) {
+    const force = options.force !== false;
+    if (!force && state.nurseProfileLoaded) {
+        return state.nurse;
     }
-    renderBloodBankAccess();
-    write(result);
-
-    if (result.status < 300 && state.nurse?.department !== 'Blood Bank') {
-        await loadPatients();
+    if (state.inFlight.profile) {
+        return state.inFlight.profile;
     }
 
-    if (result.status < 300 && state.nurse?.department === 'Blood Bank') {
-        await loadBloodBankDonors();
+    state.inFlight.profile = (async () => {
+        const result = await call('/nurse/profile');
+        state.profileRequested = true;
+        state.nurseProfileLoaded = true;
+        if (result.status < 300 && result.data?.nurse) {
+            state.nurse = result.data.nurse;
+        } else {
+            state.nurse = null;
+            state.patientsLoaded = false;
+            state.bloodBankDonorsLoaded = false;
+        }
+        renderBloodBankAccess();
+        write(result);
+        return state.nurse;
+    })();
+
+    try {
+        return await state.inFlight.profile;
+    } finally {
+        state.inFlight.profile = null;
     }
 }
 
-async function loadPatients() {
+async function loadPatients(options = {}) {
+    const force = options.force !== false;
     const status = document.getElementById('statusFilter').value.trim();
     const queryValue = document.getElementById('queryFilter').value.trim();
     const query = {};
     if (status) query.status = status;
     if (queryValue) query.q = queryValue;
+    const queryKey = JSON.stringify(query);
 
-    const result = await call('/nurse/patients', 'GET', null, 'nurse', query);
-    if (result.status < 300) {
-        state.patients = Array.isArray(result.data?.patients) ? result.data.patients : [];
-        renderStats(result.data?.stats || null);
-        renderPatients();
-    } else {
-        state.patients = [];
-        renderStats(null);
-        renderPatients();
+    if (!force && state.patientsLoaded && state.patientsQueryKey === queryKey) {
+        return;
     }
-    write(result);
+
+    if (state.inFlight.patients && state.inFlight.patientsQueryKey === queryKey) {
+        return state.inFlight.patients;
+    }
+
+    state.inFlight.patientsQueryKey = queryKey;
+    state.inFlight.patients = (async () => {
+        const result = await call('/nurse/patients', 'GET', null, 'nurse', query);
+        if (result.status < 300) {
+            state.patients = Array.isArray(result.data?.patients) ? result.data.patients : [];
+            state.patientsLoaded = true;
+            state.patientsQueryKey = queryKey;
+            renderStats(result.data?.stats || null);
+            renderPatients();
+        } else {
+            state.patients = [];
+            state.patientsLoaded = false;
+            renderStats(null);
+            renderPatients();
+        }
+        write(result);
+    })();
+
+    try {
+        await state.inFlight.patients;
+    } finally {
+        state.inFlight.patients = null;
+        state.inFlight.patientsQueryKey = null;
+    }
 }
 
 async function selectAdmission(admissionId, patientUserId) {
@@ -970,49 +1038,98 @@ async function logVitals() {
     write(result);
 
     if (result.status < 300) {
-        await loadAdmissionDetail();
-        await loadPatients();
+        state.patientsLoaded = false;
+        await Promise.all([
+            loadAdmissionDetail(),
+            loadPatients({ force: true }),
+        ]);
     }
 }
 
-async function loadBloodBankDonors() {
+async function loadBloodBankDonors(options = {}) {
+    const force = options.force !== false;
     const query = {};
     const search = document.getElementById('bbDonorQuery').value.trim();
     const requestId = document.getElementById('bbRequestId').value.trim();
     if (search) query.q = search;
     if (requestId) query.requestId = Number(requestId);
+    const queryKey = JSON.stringify(query);
 
-    const result = await call('/nurse/blood-bank/donors', 'GET', null, 'nurse', query);
-    if (result.status < 300) {
-        state.bloodBankDonors = Array.isArray(result.data?.donors) ? result.data.donors : [];
-        renderBloodBankDonors();
-        if (state.bloodBankDonors.length && !state.selectedDonorId) {
-            selectBloodBankDonor(state.bloodBankDonors[0].donor_id);
-        }
+    if (!force && state.bloodBankDonorsLoaded && state.bloodBankDonorsQueryKey === queryKey) {
+        return;
     }
-    write(result);
+
+    if (state.inFlight.donors && state.inFlight.donorsQueryKey === queryKey) {
+        return state.inFlight.donors;
+    }
+
+    state.inFlight.donorsQueryKey = queryKey;
+    state.inFlight.donors = (async () => {
+        const result = await call('/nurse/blood-bank/donors', 'GET', null, 'nurse', query);
+        if (result.status < 300) {
+            state.bloodBankDonors = Array.isArray(result.data?.donors) ? result.data.donors : [];
+            state.bloodBankDonorsLoaded = true;
+            state.bloodBankDonorsQueryKey = queryKey;
+            renderBloodBankDonors();
+            if (state.selectedDonorId && !state.bloodBankDonors.some((entry) => Number(entry.donor_id) === Number(state.selectedDonorId))) {
+                state.selectedDonorId = null;
+                renderSelectedBloodBankDonor(null);
+                renderBloodBankHealthChecks([]);
+            }
+        }
+        write(result);
+    })();
+
+    try {
+        await state.inFlight.donors;
+    } finally {
+        state.inFlight.donors = null;
+        state.inFlight.donorsQueryKey = null;
+    }
 }
 
-function selectBloodBankDonor(donorId) {
+async function selectBloodBankDonor(donorId) {
     state.selectedDonorId = Number(donorId);
     renderBloodBankDonors();
     const donor = state.bloodBankDonors.find((entry) => Number(entry.donor_id) === Number(donorId)) || null;
     renderSelectedBloodBankDonor(donor);
-    loadSelectedDonorHealthChecks();
+    await loadSelectedDonorHealthChecks({ force: false });
 }
 
-async function loadSelectedDonorHealthChecks() {
+async function loadSelectedDonorHealthChecks(options = {}) {
+    const force = options.force !== false;
     const donorId = Number(document.getElementById('bbDonorId').value || state.selectedDonorId || 0);
     if (!donorId) {
         renderBloodBankHealthChecks([]);
         return;
     }
 
-    const result = await call(`/nurse/blood-bank/donors/${donorId}/health-checks`, 'GET', null, 'nurse', { limit: 12 });
-    if (result.status < 300) {
-        renderBloodBankHealthChecks(Array.isArray(result.data?.health_checks) ? result.data.health_checks : []);
+    if (!force && state.donorHealthChecksByDonor[donorId]) {
+        renderBloodBankHealthChecks(state.donorHealthChecksByDonor[donorId]);
+        return;
     }
-    write(result);
+
+    if (state.inFlight.donorChecks && state.inFlight.donorChecksDonorId === donorId) {
+        return state.inFlight.donorChecks;
+    }
+
+    state.inFlight.donorChecksDonorId = donorId;
+    state.inFlight.donorChecks = (async () => {
+        const result = await call(`/nurse/blood-bank/donors/${donorId}/health-checks`, 'GET', null, 'nurse', { limit: 12 });
+        if (result.status < 300) {
+            const checks = Array.isArray(result.data?.health_checks) ? result.data.health_checks : [];
+            state.donorHealthChecksByDonor[donorId] = checks;
+            renderBloodBankHealthChecks(checks);
+        }
+        write(result);
+    })();
+
+    try {
+        await state.inFlight.donorChecks;
+    } finally {
+        state.inFlight.donorChecks = null;
+        state.inFlight.donorChecksDonorId = null;
+    }
 }
 
 function previewEligibility() {
@@ -1053,8 +1170,12 @@ async function logBloodBankHealthCheck() {
 
     if (result.status < 300) {
         previewEligibility();
-        await loadSelectedDonorHealthChecks();
-        await loadBloodBankDonors();
+        delete state.donorHealthChecksByDonor[donorId];
+        state.bloodBankDonorsLoaded = false;
+        await Promise.all([
+            loadSelectedDonorHealthChecks({ force: true }),
+            loadBloodBankDonors({ force: true }),
+        ]);
     }
 }
 
@@ -1072,7 +1193,7 @@ async function bootNurseDashboard() {
     useStoredUserToken();
 
     if (document.getElementById('nurseTokenInput').value.trim()) {
-        await loadNurseProfile();
+        await loadNurseProfile({ force: false });
     } else {
         write('Login first or use USER_TOKEN so the nurse dashboard can auto-load your profile.');
     }

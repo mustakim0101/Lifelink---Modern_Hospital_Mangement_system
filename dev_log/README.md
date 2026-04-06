@@ -1,7 +1,3 @@
-/*
- This is done to ensure the last commit went through
-*/
-
 # Dev Notes (Q&A)
 
 ## 🚀 Phase 1: Infrastructure (2 Issues/Commits)
@@ -3094,3 +3090,27 @@ Additional updates requested and applied:
 - Workspace Hub: `lifelink-app/resources/views/ui/dashboard.blade.php`
 - Shared shell: `lifelink-app/resources/views/ui/layouts/app.blade.php`
 
+
+### IT Blood Bank mode restore + marker cleanup (2026-04-06)
+
+What was fixed:
+1. Removed stray commit-marker comment blocks from:
+- `dev_log/README.md`
+- `lifelink-app/resources/views/ui/applications.blade.php`
+- `lifelink-app/resources/views/ui/doctor-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/patient-portal.blade.php`
+
+2. Restored/completed IT dashboard Blood Bank auto-detection behavior in:
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+
+Implementation notes:
+- IT department scope is still loaded from existing `/api/ward/it/departments` flow.
+- Sidebar now changes by detected scope mode:
+  - Regular IT scope -> regular IT nav items
+  - Blood Bank-only scope -> Blood Bank operations nav + shared items
+  - Mixed scope -> both regular + Blood Bank nav items
+- Panel switching remains donor-style and hash-aware.
+- If hash points to an unavailable panel for current scope, safe fallback opens first allowed panel.
+- Existing IDs, actions, API calls, and Blood Bank operation links were preserved.

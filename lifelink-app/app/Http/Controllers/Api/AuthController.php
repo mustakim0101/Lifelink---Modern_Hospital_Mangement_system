@@ -10,7 +10,9 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -18,68 +20,118 @@ class AuthController extends Controller
 
     public function register(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => ['nullable', 'string', 'max:255'],
-            'fullName' => ['nullable', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
-            'bloodGroup' => ['nullable', 'string', Rule::in(self::BLOOD_GROUPS)],
-            'emergencyContactName' => ['nullable', 'string', 'max:150'],
-            'emergencyContactPhone' => ['nullable', 'string', 'max:30'],
-        ]);
+        $timer = microtime(true);
+        $marks = [];
+        $result = 'success';
+        $user = null;
 
-        $name = $validated['name'] ?? $validated['fullName'] ?? null;
+        try {
+            $validated = $request->validate([
+                'name' => ['nullable', 'string', 'max:255'],
+                'fullName' => ['nullable', 'string', 'max:255'],
+                'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+                'password' => ['required', 'string', 'min:8'],
+                'bloodGroup' => ['nullable', 'string', Rule::in(self::BLOOD_GROUPS)],
+                'emergencyContactName' => ['nullable', 'string', 'max:150'],
+                'emergencyContactPhone' => ['nullable', 'string', 'max:30'],
+            ]);
+            $this->markDuration($marks, 'validated', $timer);
 
-        if (! $name) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => [
-                    'name' => ['The name or fullName field is required.'],
-                ],
-            ], 422);
+            $name = $validated['name'] ?? $validated['fullName'] ?? null;
+
+            if (! $name) {
+                $result = 'missing_name';
+
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => [
+                        'name' => ['The name or fullName field is required.'],
+                    ],
+                ], 422);
+            }
+
+            $user = User::query()->create([
+                'name' => $name,
+                'full_name' => $name,
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+            ]);
+            $this->markDuration($marks, 'created_user', $timer);
+
+            $this->assignRole($user, 'Patient');
+            $this->markDuration($marks, 'assigned_role', $timer);
+
+            $user->loadMissing('roles:id,role_name');
+            $this->ensurePatientProfile($user, $validated, true);
+            $this->markDuration($marks, 'ensured_patient_profile', $timer);
+
+            $token = auth('api')->login($user);
+            $this->markDuration($marks, 'issued_token', $timer);
+
+            return $this->tokenResponse($token, $user, 201, 'Registered');
+        } catch (Throwable $e) {
+            $result = 'error';
+            throw $e;
+        } finally {
+            $this->logTiming('auth.register', $timer, $marks, [
+                'result' => $result,
+                'user_id' => $user?->id,
+            ]);
         }
-
-        $user = User::query()->create([
-            'name' => $name,
-            'full_name' => $name,
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-        ]);
-
-        $this->assignRole($user, 'Patient');
-        $this->ensurePatientProfile($user, $validated);
-
-        $token = auth('api')->login($user);
-
-        return $this->tokenResponse($token, $user, 201, 'Registered');
     }
 
     public function login(Request $request): JsonResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
-        ]);
+        $timer = microtime(true);
+        $marks = [];
+        $result = 'success';
+        $user = null;
 
-        if (! $token = auth('api')->attempt($credentials)) {
-            return response()->json([
-                'message' => 'Invalid credentials',
-            ], 401);
+        try {
+            $credentials = $request->validate([
+                'email' => ['required', 'string', 'email'],
+                'password' => ['required', 'string'],
+            ]);
+            $this->markDuration($marks, 'validated', $timer);
+
+            if (! $token = auth('api')->attempt($credentials)) {
+                $result = 'invalid_credentials';
+
+                return response()->json([
+                    'message' => 'Invalid credentials',
+                ], 401);
+            }
+            $this->markDuration($marks, 'attempted_auth', $timer);
+
+            $user = auth('api')->user();
+            $user->loadMissing('roles:id,role_name');
+            $this->markDuration($marks, 'loaded_user_roles', $timer);
+
+            if ($user->isFrozen()) {
+                auth('api')->logout();
+                $result = 'frozen';
+
+                return response()->json([
+                    'message' => 'Account is frozen. Contact admin.',
+                ], 403);
+            }
+
+            $isPatient = in_array('Patient', $user->roleNames(), true);
+            if ($isPatient) {
+                $this->ensurePatientProfile($user, [], true);
+            }
+            $this->markDuration($marks, 'ensured_patient_profile', $timer);
+
+            return $this->tokenResponse($token, $user, 200, 'Logged in');
+        } catch (Throwable $e) {
+            $result = 'error';
+            throw $e;
+        } finally {
+            $this->logTiming('auth.login', $timer, $marks, [
+                'result' => $result,
+                'user_id' => $user?->id,
+            ]);
         }
-
-        $user = auth('api')->user();
-
-        if ($user->isFrozen()) {
-            auth('api')->logout();
-
-            return response()->json([
-                'message' => 'Account is frozen. Contact admin.',
-            ], 403);
-        }
-
-        $this->ensurePatientProfile($user, []);
-
-        return $this->tokenResponse($token, $user, 200, 'Logged in');
     }
 
     public function me(): JsonResponse
@@ -127,6 +179,7 @@ class AuthController extends Controller
         ]);
 
         $this->assignRole($user, 'Admin', $user->id);
+        $user->loadMissing('roles:id,role_name');
 
         $token = auth('api')->login($user);
 
@@ -135,6 +188,9 @@ class AuthController extends Controller
 
     private function tokenResponse(string $token, User $user, int $statusCode, string $message): JsonResponse
     {
+        $roleNames = $user->roleNames();
+        $includeLatestApplication = in_array('Applicant', $roleNames, true);
+
         return response()->json([
             'message' => $message,
             'token' => $token,
@@ -145,9 +201,9 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'fullName' => $user->full_name ?? $user->name,
                 'account_status' => $user->account_status,
-                'roles' => $user->roles()->pluck('role_name')->values(),
+                'roles' => $roleNames,
             ],
-            'latestApplication' => $this->latestApplicationPayload($user->id),
+            'latestApplication' => $includeLatestApplication ? $this->latestApplicationPayload($user->id) : null,
         ], $statusCode);
     }
 
@@ -169,9 +225,11 @@ class AuthController extends Controller
     private function latestApplicationPayload(int $userId): ?array
     {
         $latest = JobApplication::query()
-            ->with(['appliedRole', 'department'])
+            ->select(['id', 'status', 'applied_at', 'applied_role_id', 'applied_department_id'])
+            ->with(['appliedRole:id,role_name', 'department:id,dept_name'])
             ->where('user_id', $userId)
             ->orderByDesc('applied_at')
+            ->orderByDesc('id')
             ->first();
 
         if (! $latest) {
@@ -187,9 +245,10 @@ class AuthController extends Controller
         ];
     }
 
-    private function ensurePatientProfile(User $user, array $context): void
+    private function ensurePatientProfile(User $user, array $context, ?bool $isPatient = null): void
     {
-        if (! $user->hasRole('Patient')) {
+        $patientRole = $isPatient ?? $user->hasRole('Patient');
+        if (! $patientRole) {
             return;
         }
 
@@ -217,5 +276,18 @@ class AuthController extends Controller
         }
 
         $patient->fill($profileData)->save();
+    }
+
+    private function markDuration(array &$marks, string $step, float $startedAt): void
+    {
+        $marks[$step] = (int) round((microtime(true) - $startedAt) * 1000);
+    }
+
+    private function logTiming(string $label, float $startedAt, array $marks, array $context = []): void
+    {
+        Log::info('perf.'.$label, array_merge($context, [
+            'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+            'steps_ms' => $marks,
+        ]));
     }
 }
