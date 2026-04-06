@@ -13,7 +13,9 @@ use App\Models\User;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Throwable;
 
 class NurseCareController extends Controller
 {
@@ -55,77 +57,116 @@ class NurseCareController extends Controller
 
     public function profile(): JsonResponse
     {
-        $nurse = $this->resolveNurseProfile();
+        $timer = microtime(true);
+        $marks = [];
+        $result = 'success';
 
-        return response()->json([
-            'nurse' => $this->nursePayload($nurse),
-        ]);
+        try {
+            $nurse = $this->resolveNurseProfile();
+            $this->markDuration($marks, 'resolve_nurse', $timer);
+
+            $payload = $this->nursePayload($nurse);
+            $this->markDuration($marks, 'build_payload', $timer);
+
+            return response()->json([
+                'nurse' => $payload,
+            ]);
+        } catch (Throwable $e) {
+            $result = 'error';
+            throw $e;
+        } finally {
+            $this->logTiming('nurse.profile', $timer, $marks, [
+                'result' => $result,
+                'auth_user_id' => auth('api')->id(),
+            ]);
+        }
     }
 
     public function patients(Request $request): JsonResponse
     {
-        $nurse = $this->resolveNurseProfile();
+        $timer = microtime(true);
+        $marks = [];
+        $result = 'success';
 
-        $validated = $request->validate([
-            'status' => ['nullable', 'string', Rule::in(self::ADMISSION_STATUS)],
-            'q' => ['nullable', 'string', 'max:120'],
-        ]);
+        try {
+            $nurse = $this->resolveNurseProfile();
+            $this->markDuration($marks, 'resolve_nurse', $timer);
 
-        $query = Admission::query()
-            ->with([
-                'patient:id,full_name,name,email',
-                'department:id,dept_name',
-                'patient.patientProfile:patient_id,blood_group',
-                'bedAssignments' => fn ($q) => $q
-                    ->whereNull('released_at')
-                    ->with(['bed:id,care_unit_id,bed_code,status', 'bed.careUnit:id,department_id,unit_type,unit_name,floor']),
-            ])
-            ->where('department_id', $nurse->department_id)
-            ->orderByDesc('admit_date')
-            ->orderByDesc('id');
+            $validated = $request->validate([
+                'status' => ['nullable', 'string', Rule::in(self::ADMISSION_STATUS)],
+                'q' => ['nullable', 'string', 'max:120'],
+            ]);
+            $this->markDuration($marks, 'validate_filters', $timer);
 
-        if (! empty($validated['status'])) {
-            $query->where('status', $validated['status']);
-        }
+            $query = Admission::query()
+                ->with([
+                    'patient:id,full_name,name,email',
+                    'department:id,dept_name',
+                    'patient.patientProfile:patient_id,blood_group',
+                    'bedAssignments' => fn ($q) => $q
+                        ->whereNull('released_at')
+                        ->with(['bed:id,care_unit_id,bed_code,status', 'bed.careUnit:id,department_id,unit_type,unit_name,floor']),
+                ])
+                ->where('department_id', $nurse->department_id)
+                ->orderByDesc('admit_date')
+                ->orderByDesc('id');
 
-        if (! empty($validated['q'])) {
-            $term = trim($validated['q']);
+            if (! empty($validated['status'])) {
+                $query->where('status', $validated['status']);
+            }
 
-            $query->where(function ($q) use ($term) {
-                $q->where('diagnosis', 'like', '%'.$term.'%')
-                    ->orWhereHas('patient', function ($patientQ) use ($term) {
-                        $patientQ->where('full_name', 'like', '%'.$term.'%')
-                            ->orWhere('name', 'like', '%'.$term.'%')
-                            ->orWhere('email', 'like', '%'.$term.'%');
-                    })
-                    ->orWhereHas('bedAssignments.bed', function ($bedQ) use ($term) {
-                        $bedQ->where('bed_code', 'like', '%'.$term.'%');
-                    });
+            if (! empty($validated['q'])) {
+                $term = trim($validated['q']);
+
+                $query->where(function ($q) use ($term) {
+                    $q->where('diagnosis', 'like', '%'.$term.'%')
+                        ->orWhereHas('patient', function ($patientQ) use ($term) {
+                            $patientQ->where('full_name', 'like', '%'.$term.'%')
+                                ->orWhere('name', 'like', '%'.$term.'%')
+                                ->orWhere('email', 'like', '%'.$term.'%');
+                        })
+                        ->orWhereHas('bedAssignments.bed', function ($bedQ) use ($term) {
+                            $bedQ->where('bed_code', 'like', '%'.$term.'%');
+                        });
+                });
+            }
+
+            $admissions = $query->get();
+            $this->markDuration($marks, 'load_admissions', $timer);
+
+            $latestVitals = $this->latestVitalsByAdmission($admissions->pluck('id')->all());
+            $this->markDuration($marks, 'load_latest_vitals', $timer);
+
+            $patients = $admissions->map(function (Admission $admission) use ($latestVitals) {
+                return $this->admissionPayload($admission, $latestVitals[$admission->id] ?? null);
             });
+            $this->markDuration($marks, 'build_patient_payload', $timer);
+
+            $hasRecentVitals = collect($latestVitals)
+                ->filter(fn (?NurseVitalSignLog $log) => $log && $log->measured_at && $log->measured_at->gte(now()->subDay()))
+                ->count();
+            $this->markDuration($marks, 'build_stats', $timer);
+
+            return response()->json([
+                'nurse' => $this->nursePayload($nurse),
+                'stats' => [
+                    'total_admissions' => $admissions->count(),
+                    'active_admissions' => $admissions->where('status', 'Admitted')->count(),
+                    'with_bed_assignment' => $admissions->filter(fn (Admission $a) => $a->bedAssignments->isNotEmpty())->count(),
+                    'without_bed_assignment' => $admissions->filter(fn (Admission $a) => $a->bedAssignments->isEmpty())->count(),
+                    'monitored_last_24h' => $hasRecentVitals,
+                ],
+                'patients' => $patients,
+            ]);
+        } catch (Throwable $e) {
+            $result = 'error';
+            throw $e;
+        } finally {
+            $this->logTiming('nurse.patients', $timer, $marks, [
+                'result' => $result,
+                'auth_user_id' => auth('api')->id(),
+            ]);
         }
-
-        $admissions = $query->get();
-        $latestVitals = $this->latestVitalsByAdmission($admissions->pluck('id')->all());
-
-        $patients = $admissions->map(function (Admission $admission) use ($latestVitals) {
-            return $this->admissionPayload($admission, $latestVitals[$admission->id] ?? null);
-        });
-
-        $hasRecentVitals = collect($latestVitals)
-            ->filter(fn (?NurseVitalSignLog $log) => $log && $log->measured_at && $log->measured_at->gte(now()->subDay()))
-            ->count();
-
-        return response()->json([
-            'nurse' => $this->nursePayload($nurse),
-            'stats' => [
-                'total_admissions' => $admissions->count(),
-                'active_admissions' => $admissions->where('status', 'Admitted')->count(),
-                'with_bed_assignment' => $admissions->filter(fn (Admission $a) => $a->bedAssignments->isNotEmpty())->count(),
-                'without_bed_assignment' => $admissions->filter(fn (Admission $a) => $a->bedAssignments->isEmpty())->count(),
-                'monitored_last_24h' => $hasRecentVitals,
-            ],
-            'patients' => $patients,
-        ]);
     }
 
     public function admissionDetail(Request $request, Admission $admission): JsonResponse
@@ -286,82 +327,124 @@ class NurseCareController extends Controller
 
     public function bloodBankDonors(Request $request): JsonResponse
     {
-        $nurse = $this->resolveBloodBankNurse();
+        $timer = microtime(true);
+        $marks = [];
+        $result = 'success';
 
-        $validated = $request->validate([
-            'q' => ['nullable', 'string', 'max:120'],
-            'requestId' => ['nullable', 'integer', 'exists:blood_requests,id'],
-            'bloodGroup' => ['nullable', 'string', Rule::in(self::BLOOD_GROUPS)],
-            'eligible' => ['nullable', 'boolean'],
-            'limit' => ['nullable', 'integer', 'min:1', 'max:80'],
-        ]);
+        try {
+            $nurse = $this->resolveBloodBankNurse();
+            $this->markDuration($marks, 'resolve_blood_bank_nurse', $timer);
 
-        $query = DonorProfile::query()
-            ->with(['donor:id,full_name,name,email', 'healthChecks' => fn ($q) => $q->latest('check_datetime')->latest('id')->limit(1)])
-            ->orderBy('donor_id');
+            $validated = $request->validate([
+                'q' => ['nullable', 'string', 'max:120'],
+                'requestId' => ['nullable', 'integer', 'exists:blood_requests,id'],
+                'bloodGroup' => ['nullable', 'string', Rule::in(self::BLOOD_GROUPS)],
+                'eligible' => ['nullable', 'boolean'],
+                'limit' => ['nullable', 'integer', 'min:1', 'max:80'],
+            ]);
+            $this->markDuration($marks, 'validate_filters', $timer);
 
-        if (array_key_exists('eligible', $validated)) {
-            $query->where('is_eligible', (bool) $validated['eligible']);
+            $query = DonorProfile::query()
+                ->with(['donor:id,full_name,name,email', 'healthChecks' => fn ($q) => $q->latest('check_datetime')->latest('id')->limit(1)])
+                ->orderBy('donor_id');
+
+            if (array_key_exists('eligible', $validated)) {
+                $query->where('is_eligible', (bool) $validated['eligible']);
+            }
+
+            if (! empty($validated['bloodGroup'])) {
+                $query->where('blood_group', $validated['bloodGroup']);
+            }
+
+            if (! empty($validated['requestId'])) {
+                $query->whereIn('donor_id', function ($q) use ($validated) {
+                    $q->select('donor_id')
+                        ->from('blood_request_matches')
+                        ->where('request_id', $validated['requestId'])
+                        ->whereIn('status', ['Accepted', 'Completed']);
+                });
+            }
+
+            if (! empty($validated['q'])) {
+                $term = trim($validated['q']);
+                $query->where(function ($q) use ($term) {
+                    $q->where('donor_id', 'like', '%'.$term.'%')
+                        ->orWhere('blood_group', 'like', '%'.$term.'%')
+                        ->orWhereHas('donor', function ($userQuery) use ($term) {
+                            $userQuery->where('full_name', 'like', '%'.$term.'%')
+                                ->orWhere('name', 'like', '%'.$term.'%')
+                                ->orWhere('email', 'like', '%'.$term.'%');
+                        });
+                });
+            }
+
+            $donors = $query->limit($validated['limit'] ?? 30)->get();
+            $this->markDuration($marks, 'load_donors', $timer);
+
+            $payload = $donors->map(fn (DonorProfile $profile) => $this->donorPayload($profile));
+            $this->markDuration($marks, 'build_donor_payload', $timer);
+
+            return response()->json([
+                'nurse' => $this->nursePayload($nurse),
+                'donors' => $payload,
+            ]);
+        } catch (Throwable $e) {
+            $result = 'error';
+            throw $e;
+        } finally {
+            $this->logTiming('nurse.blood_bank_donors', $timer, $marks, [
+                'result' => $result,
+                'auth_user_id' => auth('api')->id(),
+            ]);
         }
-
-        if (! empty($validated['bloodGroup'])) {
-            $query->where('blood_group', $validated['bloodGroup']);
-        }
-
-        if (! empty($validated['requestId'])) {
-            $query->whereIn('donor_id', function ($q) use ($validated) {
-                $q->select('donor_id')
-                    ->from('blood_request_matches')
-                    ->where('request_id', $validated['requestId'])
-                    ->whereIn('status', ['Accepted', 'Completed']);
-            });
-        }
-
-        if (! empty($validated['q'])) {
-            $term = trim($validated['q']);
-            $query->where(function ($q) use ($term) {
-                $q->where('donor_id', 'like', '%'.$term.'%')
-                    ->orWhere('blood_group', 'like', '%'.$term.'%')
-                    ->orWhereHas('donor', function ($userQuery) use ($term) {
-                        $userQuery->where('full_name', 'like', '%'.$term.'%')
-                            ->orWhere('name', 'like', '%'.$term.'%')
-                            ->orWhere('email', 'like', '%'.$term.'%');
-                    });
-            });
-        }
-
-        $donors = $query->limit($validated['limit'] ?? 30)->get();
-
-        return response()->json([
-            'nurse' => $this->nursePayload($nurse),
-            'donors' => $donors->map(fn (DonorProfile $profile) => $this->donorPayload($profile)),
-        ]);
     }
 
     public function donorHealthChecks(Request $request, int $donor): JsonResponse
     {
-        $this->resolveBloodBankNurse();
+        $timer = microtime(true);
+        $marks = [];
+        $result = 'success';
 
-        $validated = $request->validate([
-            'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
-        ]);
+        try {
+            $this->resolveBloodBankNurse();
+            $this->markDuration($marks, 'resolve_blood_bank_nurse', $timer);
 
-        $profile = DonorProfile::query()
-            ->with('donor:id,full_name,name,email')
-            ->findOrFail($donor);
+            $validated = $request->validate([
+                'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
+            ]);
+            $this->markDuration($marks, 'validate_filters', $timer);
 
-        $checks = DonorHealthCheck::query()
-            ->where('donor_id', $profile->donor_id)
-            ->with('checkedBy:id,full_name,name,email')
-            ->orderByDesc('check_datetime')
-            ->orderByDesc('id')
-            ->limit($validated['limit'] ?? 20)
-            ->get();
+            $profile = DonorProfile::query()
+                ->with('donor:id,full_name,name,email')
+                ->findOrFail($donor);
+            $this->markDuration($marks, 'load_donor_profile', $timer);
 
-        return response()->json([
-            'donor' => $this->donorPayload($profile),
-            'health_checks' => $checks->map(fn (DonorHealthCheck $check) => $this->donorHealthPayload($check)),
-        ]);
+            $checks = DonorHealthCheck::query()
+                ->where('donor_id', $profile->donor_id)
+                ->with('checkedBy:id,full_name,name,email')
+                ->orderByDesc('check_datetime')
+                ->orderByDesc('id')
+                ->limit($validated['limit'] ?? 20)
+                ->get();
+            $this->markDuration($marks, 'load_health_checks', $timer);
+
+            $payload = $checks->map(fn (DonorHealthCheck $check) => $this->donorHealthPayload($check));
+            $this->markDuration($marks, 'build_health_payload', $timer);
+
+            return response()->json([
+                'donor' => $this->donorPayload($profile),
+                'health_checks' => $payload,
+            ]);
+        } catch (Throwable $e) {
+            $result = 'error';
+            throw $e;
+        } finally {
+            $this->logTiming('nurse.donor_health_checks', $timer, $marks, [
+                'result' => $result,
+                'auth_user_id' => auth('api')->id(),
+                'donor_id' => $donor,
+            ]);
+        }
     }
 
     public function logDonorHealthCheck(Request $request, int $donor): JsonResponse
@@ -572,5 +655,18 @@ class NurseCareController extends Controller
         }
 
         return ['is_eligible' => true, 'reason' => 'Eligible based on latest Blood Bank nurse screening.'];
+    }
+
+    private function markDuration(array &$marks, string $step, float $startedAt): void
+    {
+        $marks[$step] = (int) round((microtime(true) - $startedAt) * 1000);
+    }
+
+    private function logTiming(string $label, float $startedAt, array $marks, array $context = []): void
+    {
+        Log::info('perf.'.$label, array_merge($context, [
+            'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+            'steps_ms' => $marks,
+        ]));
     }
 }

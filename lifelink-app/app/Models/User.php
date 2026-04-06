@@ -54,6 +54,8 @@ class User extends Authenticatable implements JWTSubject
         'password' => 'hashed',
     ];
 
+    protected ?array $resolvedRoleNames = null;
+
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'user_roles')
@@ -141,7 +143,40 @@ class User extends Authenticatable implements JWTSubject
             return false;
         }
 
-        return $this->roles()->whereIn('role_name', $roles)->exists();
+        $targetRoles = array_values(array_unique($roles));
+
+        if ($this->relationLoaded('roles')) {
+            return $this->roles->pluck('role_name')
+                ->intersect($targetRoles)
+                ->isNotEmpty();
+        }
+
+        return ! empty(array_intersect($this->roleNames(), $targetRoles));
+    }
+
+    public function roleNames(): array
+    {
+        if ($this->relationLoaded('roles')) {
+            $this->resolvedRoleNames = $this->roles
+                ->pluck('role_name')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            return $this->resolvedRoleNames;
+        }
+
+        if ($this->resolvedRoleNames === null) {
+            $this->resolvedRoleNames = $this->roles()
+                ->pluck('role_name')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        return $this->resolvedRoleNames;
     }
 
     public function isFrozen(): bool

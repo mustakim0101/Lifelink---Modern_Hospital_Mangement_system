@@ -18,6 +18,8 @@ class RoleMiddleware
             ], 401);
         }
 
+        $user->loadMissing('roles:id,role_name');
+
         if (! $user->hasRole(...$roles)) {
             return response()->json([
                 'message' => 'Forbidden: role not allowed',
