@@ -1,0 +1,53 @@
+
+Use these steps from the project root:
+`////\Lifelink---Modern_Hospital_Mangement_system`
+
+1. Create the Docker env file:
+```powershell
+Copy-Item .env.docker .env -Force
+```
+
+2. Start Docker:
+```powershell
+docker compose up -d --build
+```
+
+3. Install Laravel PHP dependencies, because `lifelink-app/vendor` is not present yet:
+```powershell
+docker compose exec app composer install
+```
+
+4. Create the Laravel app env inside `lifelink-app`:
+```powershell
+docker compose exec app cp .env.example .env
+```
+
+5. Generate Laravel app key:
+```powershell
+docker compose exec app php artisan key:generate --force
+```
+
+6. Generate JWT secret:
+```powershell
+docker compose exec app php artisan jwt:secret --force
+```
+
+7. Clear cached config:
+```powershell
+docker compose exec app php artisan config:clear
+```
+
+8. Open the app:
+`http://localhost:8000`
+
+Important note: according to [README.md](/s:/DB%20project%20after%20shadman/Lifelink---Modern_Hospital_Mangement_system/README.md) and [dev_log/README.md](/s:/DB%20project%20after%20shadman/Lifelink---Modern_Hospital_Mangement_system/dev_log/README.md), this project now uses the raw SQL files in `docker/mssql/init/schema` as the main database setup path. So first try it without running migrations. Only run this if the app later complains about missing tables:
+```powershell
+docker compose exec app php artisan migrate --force
+```
+
+If Docker still fails, check container status with:
+```powershell
+docker compose ps
+docker compose logs mssql --tail 100
+docker compose logs app --tail 100
+```
