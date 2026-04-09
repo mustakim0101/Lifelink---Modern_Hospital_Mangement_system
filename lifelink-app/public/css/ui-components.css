@@ -304,6 +304,12 @@
     letter-spacing: 0.06em;
 }
 
+.ui-table tr.is-selected,
+.nurse-table tr.is-selected,
+.it-table tr.is-selected {
+    background: rgba(224, 242, 254, 0.6);
+}
+
 .ui-console,
 .ll-debug,
 .nurse-console,
@@ -386,4 +392,19 @@
 .finder-support-copy {
     color: var(--ui-text-muted);
     font-size: 0.92rem;
+}
+
+.ll-debug-marker {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 12px;
+    padding: 6px 10px;
+    border: 1px dashed rgba(194, 65, 12, 0.35);
+    border-radius: 999px;
+    background: rgba(255, 237, 213, 0.9);
+    color: #9a3412;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }

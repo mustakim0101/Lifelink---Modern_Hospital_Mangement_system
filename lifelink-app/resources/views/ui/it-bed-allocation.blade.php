@@ -63,20 +63,276 @@
             </div>
         </div>
 
-        <div id="it-blood-bank" class="it-panel it-panel-switch ll-section is-initially-hidden" data-display="block">
+        <div id="it-blood-bank" class="it-panel it-panel-switch ll-section" data-display="block">
             <h3>Blood Bank operations</h3>
-            <p class="it-note">Blood Bank IT mode for donor coordination, donation logging, and request fulfillment.</p>
+            <p class="it-note">Blood Bank IT mode keeps the real request, donor, approval, fulfillment, and donation tools inline in this workspace.</p>
             <div class="it-summary">
                 <div class="it-stat"><small>Blood Bank access</small><strong id="bloodBankScopeStatus">Locked</strong></div>
                 <div class="it-stat"><small>Blood Bank departments</small><strong id="bloodBankScopeCount">0</strong></div>
             </div>
-            <div class="it-actions u-mt-4">
-                <a class="it-button primary" href="/ui/blood-matching">Open Blood Matching Center</a>
-                <a class="it-button soft" href="/ui/blood-matching#request-board">Open Request Board</a>
-                <a class="it-button soft" href="/ui/blood-matching#selected-request-actions">Open Approval + Fulfillment</a>
-                <a class="it-button soft" href="/ui/blood-matching#staff-donor-search">Open Donor Search</a>
-                <a class="it-button soft" href="/ui/blood-matching#staff-donation-logging">Open Donation Logging</a>
-                <a class="it-button soft" href="/ui/blood-bank-schema">Open Blood Bank Schema</a>
+            <div id="itBloodBankDebugMarker" class="ll-debug-marker" hidden>DEBUG: Blood Bank IT inline workspace mounted</div>
+            <div class="bbops-grid u-mt-4">
+                <div class="bbops-summary">
+                    <div class="it-stat"><small>Requests shown</small><strong id="bbRequestCount">0</strong></div>
+                    <div class="it-stat"><small>Accepted matches</small><strong id="bbAcceptedCount">0</strong></div>
+                    <div class="it-stat"><small>Donors shown</small><strong id="bbDonorCount">0</strong></div>
+                    <div class="it-stat"><small>Selected request</small><strong id="bbSelectedRequestLabel">None</strong></div>
+                </div>
+
+                <section id="request-board" class="bbops-section">
+                    <div class="bbops-card">
+                        <h3>Request Board</h3>
+                        <p class="it-note">Select a blood request here. The approval, donor search, and donation tools below will align to the selected request.</p>
+                        <div class="bbops-filter-grid">
+                            <div>
+                                <label class="it-label" for="bbStatusFilter">Request status</label>
+                                <select id="bbStatusFilter" class="it-select">
+                                    <option value="">All</option>
+                                    <option>Pending</option>
+                                    <option>Matched</option>
+                                    <option>Approved</option>
+                                    <option>Fulfilled</option>
+                                    <option>Rejected</option>
+                                    <option>Cancelled</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="it-label" for="bbBloodGroupFilter">Blood group</label>
+                                <select id="bbBloodGroupFilter" class="it-select">
+                                    <option value="">All</option>
+                                    <option>A+</option>
+                                    <option>A-</option>
+                                    <option>B+</option>
+                                    <option>B-</option>
+                                    <option>AB+</option>
+                                    <option>AB-</option>
+                                    <option>O+</option>
+                                    <option>O-</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="it-label" for="bbDepartmentFilter">Patient department</label>
+                                <select id="bbDepartmentFilter" class="it-select">
+                                    <option value="">All departments</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="it-label" for="bbFulfillmentBankId">Fulfillment bank</label>
+                                <select id="bbFulfillmentBankId" class="it-select">
+                                    <option value="">Keep request bank / none</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="it-label" for="bbRequestLimit">Request limit</label>
+                                <input id="bbRequestLimit" class="it-input" type="number" min="1" max="150" value="40">
+                            </div>
+                        </div>
+                        <div class="bbops-actions">
+                            <button class="it-button primary" type="button" onclick="loadBloodBankRequests()">Refresh request board</button>
+                            <button class="it-button soft" type="button" onclick="refreshBloodBankWorkspace()">Refresh full Blood Bank workspace</button>
+                        </div>
+                        <div class="it-table-wrap u-mt-3">
+                            <table class="it-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Patient</th>
+                                        <th>Need</th>
+                                        <th>Units</th>
+                                        <th>Status</th>
+                                        <th>Accepted</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bbRequestsBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="approval-fulfillment" class="bbops-section">
+                    <div class="bbops-toolbar">
+                        <div class="bbops-card">
+                            <h3>Approval + Fulfillment</h3>
+                            <p id="bbSelectedRequestHint" class="it-note">Pick a request from the Request Board to unlock request-specific actions.</p>
+                            <div id="bbSelectedRequestMeta" class="bbops-meta">No request selected.</div>
+                            <div class="bbops-action-grid">
+                                <div>
+                                    <label class="it-label" for="bbSelectedMatchId">Accepted match ID</label>
+                                    <input id="bbSelectedMatchId" class="it-input" type="number" placeholder="Choose from match timeline">
+                                </div>
+                                <div>
+                                    <label class="it-label" for="bbLinkedRequestId">Linked request ID</label>
+                                    <input id="bbLinkedRequestId" class="it-input" type="number" placeholder="Auto-filled from selected request">
+                                </div>
+                            </div>
+                            <label class="it-label" for="bbNotifyMessage">Notification message</label>
+                            <textarea id="bbNotifyMessage" class="it-textarea" placeholder="Please come to the blood bank within the next 3 days."></textarea>
+                            <label class="it-label" for="bbWorkflowNote">Workflow note</label>
+                            <textarea id="bbWorkflowNote" class="it-textarea" placeholder="Optional approval or fulfillment note"></textarea>
+                            <label class="it-label" for="bbConsumeInventory">Fulfillment mode</label>
+                            <div class="bbops-meta">
+                                <label><input id="bbConsumeInventory" type="checkbox"> Deduct inventory during fulfillment when stored blood is used.</label>
+                            </div>
+                            <div class="bbops-actions">
+                                <button class="it-button primary" type="button" onclick="notifyBloodBankDonors()">Auto notify donors</button>
+                                <button class="it-button soft" type="button" onclick="approveBloodBankMatch()">Approve accepted donor</button>
+                                <button class="it-button accent" type="button" onclick="fulfillBloodBankRequest()">Fulfill request</button>
+                            </div>
+                        </div>
+
+                        <div class="bbops-card">
+                            <h3>Match timeline</h3>
+                            <p class="it-note">Accepted donors from this table can feed both approval and donation logging.</p>
+                            <div class="it-table-wrap">
+                                <table class="it-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Match ID</th>
+                                            <th>Donor</th>
+                                            <th>Group</th>
+                                            <th>Status</th>
+                                            <th>Notified</th>
+                                            <th>Responded</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bbMatchesBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="bbops-section">
+                    <div class="bbops-card">
+                        <h3>Compatible donor suggestions</h3>
+                        <p class="it-note">Tick suggested donors before using Auto notify. This stays request-aware and uses the current selected request.</p>
+                        <div id="bbSuggestionsGrid" class="bbops-card-grid"></div>
+                    </div>
+                </section>
+
+                <section id="donor-search" class="bbops-section">
+                    <div class="bbops-toolbar">
+                        <div class="bbops-card">
+                            <h3>Donor Search</h3>
+                            <p class="it-note">Search across Blood Bank donors for request-linked matching or casual walk-in donation handling.</p>
+                            <div class="bbops-filter-grid">
+                                <div>
+                                    <label class="it-label" for="bbDonorSearchQuery">Donor search</label>
+                                    <input id="bbDonorSearchQuery" class="it-input" placeholder="Donor name, email, or donor id">
+                                </div>
+                                <div>
+                                    <label class="it-label" for="bbDonorSearchRequestId">Request filter</label>
+                                    <input id="bbDonorSearchRequestId" class="it-input" type="number" min="1" placeholder="Optional request id">
+                                </div>
+                                <div>
+                                    <label class="it-label" for="bbDonorSearchBloodGroup">Blood group</label>
+                                    <select id="bbDonorSearchBloodGroup" class="it-select">
+                                        <option value="">All</option>
+                                        <option>A+</option>
+                                        <option>A-</option>
+                                        <option>B+</option>
+                                        <option>B-</option>
+                                        <option>AB+</option>
+                                        <option>AB-</option>
+                                        <option>O+</option>
+                                        <option>O-</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="it-label" for="bbDonorSearchEligible">Eligibility</label>
+                                    <select id="bbDonorSearchEligible" class="it-select">
+                                        <option value="">All</option>
+                                        <option value="true">Eligible</option>
+                                        <option value="false">Not eligible</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="bbops-actions">
+                                <button class="it-button primary" type="button" onclick="loadBloodBankStaffDonors()">Refresh donor search</button>
+                            </div>
+                            <div id="bbStaffDonorGrid" class="bbops-card-grid"></div>
+                        </div>
+
+                        <div id="donation-logging" class="bbops-card">
+                            <h3>Donation Logging</h3>
+                            <p class="it-note">Record the actual donation after nurse screening. This supports both request-linked donations and non-request walk-ins.</p>
+                            <div class="bbops-action-grid">
+                                <div>
+                                    <label class="it-label" for="bbDonationDonorId">Donor ID</label>
+                                    <input id="bbDonationDonorId" class="it-input" type="number" placeholder="Auto-filled from donor selection">
+                                </div>
+                                <div>
+                                    <label class="it-label" for="bbDonationHealthCheckId">Health check ID</label>
+                                    <select id="bbDonationHealthCheckId" class="it-select">
+                                        <option value="">Select latest nurse screening</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="it-label" for="bbDonationBankId">Blood bank ID</label>
+                                    <select id="bbDonationBankId" class="it-select">
+                                        <option value="">Choose blood bank</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="it-label" for="bbDonationDateTime">Donation datetime</label>
+                                    <input id="bbDonationDateTime" class="it-input" type="datetime-local">
+                                </div>
+                                <div>
+                                    <label class="it-label" for="bbDonationBloodGroup">Blood group</label>
+                                    <select id="bbDonationBloodGroup" class="it-select">
+                                        <option>A+</option>
+                                        <option>A-</option>
+                                        <option>B+</option>
+                                        <option>B-</option>
+                                        <option>AB+</option>
+                                        <option>AB-</option>
+                                        <option>O+</option>
+                                        <option>O-</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="it-label" for="bbComponentType">Component type</label>
+                                    <select id="bbComponentType" class="it-select">
+                                        <option selected>WholeBlood</option>
+                                        <option>Plasma</option>
+                                        <option>Platelets</option>
+                                        <option>RBC</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="it-label" for="bbUnitsDonated">Units donated</label>
+                                    <input id="bbUnitsDonated" class="it-input" type="number" min="1" max="5" value="1">
+                                </div>
+                                <div>
+                                    <label class="it-label" for="bbDonationNotes">Donation note</label>
+                                    <input id="bbDonationNotes" class="it-input" placeholder="Optional staff note">
+                                </div>
+                            </div>
+                            <div class="bbops-actions">
+                                <button class="it-button accent" type="button" onclick="logBloodBankDonation()">Record donation</button>
+                                <button class="it-button soft" type="button" onclick="loadBloodBankDonationHealthChecks()">Refresh health checks</button>
+                                <a class="it-button soft" href="/ui/blood-bank-schema">Open Blood Bank schema</a>
+                            </div>
+                            <div class="it-table-wrap">
+                                <table class="it-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Health Check ID</th>
+                                            <th>Time</th>
+                                            <th>Weight</th>
+                                            <th>Temp</th>
+                                            <th>Hb</th>
+                                            <th>Checked by</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bbDonationHealthChecksBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
             </div>
         </div>
 
@@ -370,9 +626,38 @@ const state = {
     admissions: [],
     beds: [],
     careUnits: [],
+    bloodBank: {
+        requests: [],
+        matches: [],
+        suggestions: [],
+        staffDonors: [],
+        selectedRequestId: null,
+        selectedDonorIds: new Set(),
+        workspaceLoaded: false,
+        banksLoaded: false,
+    },
 };
 
 const BLOOD_BANK_DEPARTMENT = 'Blood Bank';
+
+function normalizeDepartmentName(value) {
+    if (!value) return '';
+    if (typeof value === 'string') return value.trim().toLowerCase();
+    if (typeof value === 'object') {
+        return String(
+            value.dept_name
+            || value.department
+            || value.department_name
+            || value.name
+            || ''
+        ).trim().toLowerCase();
+    }
+    return String(value).trim().toLowerCase();
+}
+
+function isBloodBankDepartment(department) {
+    return normalizeDepartmentName(department?.dept_name || department) === BLOOD_BANK_DEPARTMENT.toLowerCase();
+}
 
 function allowedPanels() {
     if (!state.scopeLoaded) {
@@ -406,6 +691,13 @@ function updateSidebarByScope() {
     });
 }
 
+function setVisibility(elementId, visible, displayValue = 'block') {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    element.hidden = !visible;
+    element.style.display = visible ? displayValue : 'none';
+}
+
 function setActivePanel(panelId) {
     const allowed = allowedPanels();
     if (!allowed.includes(panelId)) {
@@ -413,6 +705,11 @@ function setActivePanel(panelId) {
     }
 
     state.activePanel = panelId;
+    console.log('[ItDashboard] active panel selected', {
+        activePanel: panelId,
+        allowedPanels: allowed,
+        hash: window.location.hash || '',
+    });
 
     itPanelIds.forEach((id) => {
         const panel = document.getElementById(id);
@@ -426,6 +723,10 @@ function setActivePanel(panelId) {
     });
 
     renderDepartmentMode();
+
+    if (panelId === 'it-blood-bank' && allowed.includes('it-blood-bank')) {
+        maybeLoadBloodBankWorkspace();
+    }
 }
 
 function setupSidebarPanelNav() {
@@ -469,7 +770,16 @@ function refreshCtx() {
     }, null, 2);
 }
 
-async function call(path, method = 'GET', body = null) {
+function buildApiUrl(path, query = null) {
+    if (!query) {
+        return API + path;
+    }
+
+    const queryString = new URLSearchParams(query).toString();
+    return queryString ? `${API}${path}?${queryString}` : API + path;
+}
+
+async function call(path, method = 'GET', body = null, query = null) {
     const token = selectedToken();
     if (!token) return { status: 401, data: { message: 'Token missing in Auth Context.' } };
 
@@ -478,7 +788,7 @@ async function call(path, method = 'GET', body = null) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
     };
-    const res = await fetch(API + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+    const res = await fetch(buildApiUrl(path, query), { method, headers, body: body ? JSON.stringify(body) : undefined });
     const text = await res.text();
     let data = text;
     try { data = JSON.parse(text); } catch {}
@@ -527,11 +837,11 @@ function syncCounters() {
 }
 
 function hasBloodBankScope() {
-    return state.scopeDepartments.some((department) => String(department.dept_name || '').trim() === BLOOD_BANK_DEPARTMENT);
+    return state.scopeDepartments.some((department) => isBloodBankDepartment(department));
 }
 
 function hasNonBloodBankScope() {
-    return state.scopeDepartments.some((department) => String(department.dept_name || '').trim() !== BLOOD_BANK_DEPARTMENT);
+    return state.scopeDepartments.some((department) => !isBloodBankDepartment(department));
 }
 
 function renderDepartmentMode() {
@@ -547,11 +857,14 @@ function renderDepartmentMode() {
         return;
     }
 
-    document.getElementById('it-blood-bank').style.display = bloodBankAccess && selectedPanel === 'it-blood-bank' ? '' : 'none';
-    document.getElementById('standardItWorkArea').style.display = regularAccess ? '' : 'none';
-    document.getElementById('regularItLocked').style.display = regularAccess ? 'none' : '';
+    const bloodBankVisible = bloodBankAccess && selectedPanel === 'it-blood-bank';
+    const regularWorkspaceVisible = regularAccess && selectedPanel !== 'it-blood-bank';
+    setVisibility('it-blood-bank', bloodBankVisible, 'block');
+    setVisibility('itBloodBankDebugMarker', bloodBankVisible, 'block');
+    setVisibility('standardItWorkArea', regularWorkspaceVisible, 'block');
+    setVisibility('regularItLocked', !regularAccess && selectedPanel !== 'it-blood-bank', 'block');
     document.getElementById('bloodBankScopeStatus').textContent = bloodBankAccess ? 'Enabled' : 'Locked';
-    document.getElementById('bloodBankScopeCount').textContent = String(state.scopeDepartments.filter((department) => String(department.dept_name || '').trim() === BLOOD_BANK_DEPARTMENT).length);
+    document.getElementById('bloodBankScopeCount').textContent = String(state.scopeDepartments.filter((department) => isBloodBankDepartment(department)).length);
     regularLockedMessage.textContent = !state.scopeLoaded
         ? 'Load your departments to open the correct IT workspace.'
         : bloodBankAccess
@@ -561,10 +874,527 @@ function renderDepartmentMode() {
         ? 'Load your departments to open the correct IT workspace.'
         : bloodBankAccess && regularAccess
             ? 'Mixed IT scope is active: regular operations and Blood Bank operations are both available.'
-            : bloodBankAccess
+        : bloodBankAccess
                 ? 'Blood Bank IT mode is active for this account.'
                 : 'Regular IT mode is active for this account.';
+    console.log('[ItDashboard] scope decision', {
+        scopeLoaded: state.scopeLoaded,
+        departments: state.scopeDepartments.map((department) => department.dept_name || department.department || department),
+        bloodBankAccess,
+        regularAccess,
+        selectedPanel,
+        bloodBankSectionShown: bloodBankVisible,
+        regularWorkspaceShown: regularWorkspaceVisible,
+    });
+    console.log('[ItDashboard] Blood Bank section visibility', bloodBankVisible ? 'shown' : 'hidden');
     updateSidebarByScope();
+}
+
+function bloodBankSelectedRequest() {
+    return state.bloodBank.requests.find((request) => Number(request.id) === Number(state.bloodBank.selectedRequestId)) || null;
+}
+
+function bloodBankBadge(status) {
+    const normalized = String(status || '').toLowerCase();
+    if (['accepted', 'completed', 'fulfilled', 'eligible'].includes(normalized)) {
+        return `<span class="it-status admitted">${escapeHtml(status)}</span>`;
+    }
+    if (['pending', 'matched', 'approved', 'notified', 'suggested'].includes(normalized)) {
+        return `<span class="it-status default">${escapeHtml(status)}</span>`;
+    }
+    if (['declined', 'rejected', 'cancelled', 'not eligible'].includes(normalized)) {
+        return `<span class="it-status cancelled">${escapeHtml(status)}</span>`;
+    }
+    return `<span class="it-status transferred">${escapeHtml(status || '-')}</span>`;
+}
+
+function syncBloodBankStats() {
+    document.getElementById('bbRequestCount').textContent = String(state.bloodBank.requests.length);
+    document.getElementById('bbAcceptedCount').textContent = String(
+        state.bloodBank.matches.filter((row) => ['Accepted', 'Completed'].includes(String(row.status || ''))).length
+    );
+    document.getElementById('bbDonorCount').textContent = String(state.bloodBank.staffDonors.length);
+    const selected = bloodBankSelectedRequest();
+    document.getElementById('bbSelectedRequestLabel').textContent = selected ? `#${selected.id}` : 'None';
+}
+
+function renderBloodBankSelectedRequest() {
+    const request = bloodBankSelectedRequest();
+    const hint = document.getElementById('bbSelectedRequestHint');
+    const meta = document.getElementById('bbSelectedRequestMeta');
+
+    if (!request) {
+        hint.textContent = 'Pick a request from the Request Board to unlock request-specific actions.';
+        meta.textContent = 'No request selected.';
+        document.getElementById('bbLinkedRequestId').value = '';
+        return;
+    }
+
+    hint.textContent = `Request #${request.id} is active. Notify donors, approve an accepted match, then fulfill when blood is actually available.`;
+    meta.innerHTML = `
+        <strong>#${request.id}</strong> | ${escapeHtml(request.blood_group_needed || '-')} ${escapeHtml(request.component_type || '-')} | Units ${request.units_required ?? '-'}<br>
+        Patient: ${escapeHtml(request.patient_name || '-')} (${escapeHtml(request.patient_email || '-')})<br>
+        Department: ${escapeHtml(request.department_name || '-')} | Bank: ${escapeHtml(request.bank_name || 'Not set')}<br>
+        Inventory visible: <strong>${request.available_units ?? 0}</strong> | Accepted donors: <strong>${request.accepted_count ?? 0}</strong>
+    `;
+    document.getElementById('bbLinkedRequestId').value = String(request.id);
+    document.getElementById('bbDonorSearchRequestId').value = String(request.id);
+    if (request.blood_group_needed) {
+        document.getElementById('bbDonationBloodGroup').value = String(request.blood_group_needed);
+    }
+}
+
+function renderBloodBankRequests() {
+    const body = document.getElementById('bbRequestsBody');
+    if (!state.bloodBank.requests.length) {
+        body.innerHTML = '<tr><td colspan="6">No blood requests found.</td></tr>';
+        syncBloodBankStats();
+        renderBloodBankSelectedRequest();
+        return;
+    }
+
+    body.innerHTML = state.bloodBank.requests.map((request) => `
+        <tr class="${Number(state.bloodBank.selectedRequestId) === Number(request.id) ? 'is-selected' : ''}" onclick="selectBloodBankRequest(${Number(request.id)})">
+            <td>#${Number(request.id)}</td>
+            <td>${escapeHtml(request.patient_name || '-')}</td>
+            <td>${escapeHtml(request.blood_group_needed || '-')} / ${escapeHtml(request.component_type || '-')}</td>
+            <td>${request.units_required ?? '-'}</td>
+            <td>${bloodBankBadge(request.status)}</td>
+            <td>${request.accepted_count ?? 0}</td>
+        </tr>
+    `).join('');
+    syncBloodBankStats();
+    renderBloodBankSelectedRequest();
+}
+
+function toggleBloodBankSuggestedDonor(donorId, checked) {
+    if (checked) {
+        state.bloodBank.selectedDonorIds.add(Number(donorId));
+    } else {
+        state.bloodBank.selectedDonorIds.delete(Number(donorId));
+    }
+    renderBloodBankSuggestions(state.bloodBank.suggestions);
+}
+
+function renderBloodBankSuggestions(rows = []) {
+    state.bloodBank.suggestions = rows;
+    const grid = document.getElementById('bbSuggestionsGrid');
+    if (!rows.length) {
+        grid.innerHTML = '<div class="bbops-empty">No compatible donors found for the selected request.</div>';
+        return;
+    }
+
+    grid.innerHTML = rows.map((row) => `
+        <article class="bbops-card ${state.bloodBank.selectedDonorIds.has(Number(row.donor_id)) ? 'is-selected' : ''}">
+            <div class="bbops-card__head">
+                <label class="it-note" style="margin:0;">
+                    <input type="checkbox" ${state.bloodBank.selectedDonorIds.has(Number(row.donor_id)) ? 'checked' : ''} onchange="toggleBloodBankSuggestedDonor(${Number(row.donor_id)}, this.checked)">
+                    <strong>${escapeHtml(row.donor_name || `Donor #${row.donor_id}`)}</strong>
+                </label>
+                ${bloodBankBadge(row.compatibility_label || 'Compatible')}
+            </div>
+            <p class="it-note">${escapeHtml(row.donor_email || '-')}</p>
+            <div class="bbops-meta">
+                <span>Donor #${Number(row.donor_id)}</span>
+                <span>${escapeHtml(row.donor_blood_group || '-')}</span>
+                <span>${row.is_eligible ? 'Eligible' : 'Not eligible'}</span>
+            </div>
+            <div class="bbops-meta">
+                <span>Latest check: ${row.last_check_datetime ? new Date(row.last_check_datetime).toLocaleString() : 'No check yet'}</span>
+                <span>Week bags: ${row.max_bags_possible ?? 0}</span>
+            </div>
+        </article>
+    `).join('');
+}
+
+function useBloodBankMatch(matchId, donorId = null, group = '') {
+    document.getElementById('bbSelectedMatchId').value = String(matchId);
+    if (donorId) {
+        document.getElementById('bbDonationDonorId').value = String(donorId);
+        loadBloodBankDonationHealthChecks();
+    }
+    if (group) {
+        document.getElementById('bbDonationBloodGroup').value = group;
+    }
+}
+
+function renderBloodBankMatches() {
+    const body = document.getElementById('bbMatchesBody');
+    if (!state.bloodBank.matches.length) {
+        body.innerHTML = '<tr><td colspan="7">No match records yet.</td></tr>';
+        syncBloodBankStats();
+        return;
+    }
+
+    body.innerHTML = state.bloodBank.matches.map((row) => `
+        <tr>
+            <td>#${Number(row.id)}</td>
+            <td>${escapeHtml(row.donor_name || '-')}</td>
+            <td>${escapeHtml(row.donor_blood_group || '-')}</td>
+            <td>${bloodBankBadge(row.status)}</td>
+            <td>${row.notified_at ? new Date(row.notified_at).toLocaleString() : '-'}</td>
+            <td>${row.responded_at ? new Date(row.responded_at).toLocaleString() : '-'}</td>
+            <td>${['Accepted', 'Completed'].includes(String(row.status || ''))
+                ? `<button class="it-button soft" type="button" onclick="useBloodBankMatch(${Number(row.id)}, ${Number(row.donor_id)}, '${escapeHtml(row.donor_blood_group || '')}')">Use</button>`
+                : '<span class="it-note">Wait</span>'}
+            </td>
+        </tr>
+    `).join('');
+    syncBloodBankStats();
+}
+
+function renderBloodBankStaffDonors() {
+    const grid = document.getElementById('bbStaffDonorGrid');
+    if (!state.bloodBank.staffDonors.length) {
+        grid.innerHTML = '<div class="bbops-empty">No donors found for this search.</div>';
+        syncBloodBankStats();
+        return;
+    }
+
+    grid.innerHTML = state.bloodBank.staffDonors.map((row) => `
+        <article class="bbops-card">
+            <div class="bbops-card__head">
+                <strong>${escapeHtml(row.donor_name || `Donor #${row.donor_id}`)}</strong>
+                ${bloodBankBadge(row.is_eligible ? 'Eligible' : 'Not eligible')}
+            </div>
+            <p class="it-note">${escapeHtml(row.donor_email || '-')}</p>
+            <div class="bbops-meta">
+                <span>Donor #${Number(row.donor_id)}</span>
+                <span>${escapeHtml(row.blood_group || '-')}</span>
+                <span>Latest check #${row.latest_health_check_id ?? '-'}</span>
+            </div>
+            <div class="bbops-meta">
+                <span>Matched request: ${row.matched_request_id ? `#${row.matched_request_id}` : 'None'}</span>
+                <span>${escapeHtml(row.matched_request_status || 'No match')}</span>
+            </div>
+            <div class="bbops-actions">
+                <button class="it-button primary" type="button" onclick="selectBloodBankDonationDonor(${Number(row.donor_id)}, '${escapeHtml(row.blood_group || '')}', ${row.latest_health_check_id ?? 'null'}, ${row.matched_request_id ?? 'null'})">Use donor</button>
+            </div>
+        </article>
+    `).join('');
+    syncBloodBankStats();
+}
+
+function renderBloodBankDonationHealthChecks(rows = [], preferredId = null) {
+    const body = document.getElementById('bbDonationHealthChecksBody');
+    const select = document.getElementById('bbDonationHealthCheckId');
+
+    body.innerHTML = rows.length
+        ? rows.map((row) => `
+            <tr>
+                <td>${row.id}</td>
+                <td>${row.check_datetime ? new Date(row.check_datetime).toLocaleString() : '-'}</td>
+                <td>${row.weight_kg ?? '-'}</td>
+                <td>${row.temperature_c ?? '-'}</td>
+                <td>${row.hemoglobin ?? '-'}</td>
+                <td>${escapeHtml(row.checked_by_name || '-')}</td>
+            </tr>
+        `).join('')
+        : '<tr><td colspan="6">No donor health checks available.</td></tr>';
+
+    select.innerHTML = ['<option value="">Select latest nurse screening</option>']
+        .concat(rows.map((row) => `<option value="${row.id}">#${row.id} - ${row.check_datetime ? new Date(row.check_datetime).toLocaleString() : 'No date'}</option>`))
+        .join('');
+
+    if (preferredId) {
+        select.value = String(preferredId);
+    } else if (rows.length) {
+        select.value = String(rows[0].id);
+    }
+}
+
+async function loadBloodBankBanks() {
+    const result = await call('/blood/schema/banks');
+    write(result);
+    if (result.status >= 300) {
+        return;
+    }
+
+    const rows = Array.isArray(result.data?.banks) ? result.data.banks : [];
+    document.getElementById('bbFulfillmentBankId').innerHTML = ['<option value="">Keep request bank / none</option>']
+        .concat(rows.map((row) => `<option value="${row.id}">${escapeHtml(row.bank_name)}</option>`))
+        .join('');
+    document.getElementById('bbDonationBankId').innerHTML = ['<option value="">Choose blood bank</option>']
+        .concat(rows.map((row) => `<option value="${row.id}">${escapeHtml(row.bank_name)}</option>`))
+        .join('');
+    state.bloodBank.banksLoaded = true;
+}
+
+function bloodBankRequestQuery() {
+    const query = {};
+    const status = document.getElementById('bbStatusFilter').value.trim();
+    const bloodGroup = document.getElementById('bbBloodGroupFilter').value.trim();
+    const departmentId = document.getElementById('bbDepartmentFilter').value.trim();
+    const limit = document.getElementById('bbRequestLimit').value.trim();
+
+    if (status) query.status = status;
+    if (bloodGroup) query.bloodGroup = bloodGroup;
+    if (departmentId) query.departmentId = Number(departmentId);
+    if (limit) query.limit = Number(limit);
+    return query;
+}
+
+async function loadBloodBankRequests() {
+    const result = await call('/blood/matching/requests', 'GET', null, bloodBankRequestQuery());
+    write(result);
+    if (result.status >= 300) {
+        state.bloodBank.requests = [];
+        renderBloodBankRequests();
+        return;
+    }
+
+    state.bloodBank.requests = Array.isArray(result.data?.requests) ? result.data.requests : [];
+    renderBloodBankRequests();
+
+    if (!state.bloodBank.selectedRequestId && state.bloodBank.requests.length) {
+        await selectBloodBankRequest(state.bloodBank.requests[0].id);
+    } else if (state.bloodBank.selectedRequestId && !bloodBankSelectedRequest()) {
+        state.bloodBank.selectedRequestId = null;
+        state.bloodBank.matches = [];
+        renderBloodBankMatches();
+        renderBloodBankSuggestions([]);
+        renderBloodBankSelectedRequest();
+    }
+}
+
+async function loadBloodBankSuggestions() {
+    if (!state.bloodBank.selectedRequestId) {
+        renderBloodBankSuggestions([]);
+        return;
+    }
+
+    const result = await call(`/blood/matching/requests/${state.bloodBank.selectedRequestId}/suggestions`, 'GET', null, { limit: 20 });
+    write(result);
+    if (result.status >= 300) {
+        renderBloodBankSuggestions([]);
+        return;
+    }
+
+    renderBloodBankSuggestions(Array.isArray(result.data?.suggestions) ? result.data.suggestions : []);
+}
+
+async function loadBloodBankMatches() {
+    if (!state.bloodBank.selectedRequestId) {
+        state.bloodBank.matches = [];
+        renderBloodBankMatches();
+        return;
+    }
+
+    const result = await call(`/blood/matching/requests/${state.bloodBank.selectedRequestId}/matches`);
+    write(result);
+    if (result.status >= 300) {
+        state.bloodBank.matches = [];
+        renderBloodBankMatches();
+        return;
+    }
+
+    state.bloodBank.matches = Array.isArray(result.data?.matches) ? result.data.matches : [];
+    renderBloodBankMatches();
+}
+
+function bloodBankDonorQuery() {
+    const query = { limit: 20 };
+    const search = document.getElementById('bbDonorSearchQuery').value.trim();
+    const requestId = document.getElementById('bbDonorSearchRequestId').value.trim();
+    const bloodGroup = document.getElementById('bbDonorSearchBloodGroup').value.trim();
+    const eligible = document.getElementById('bbDonorSearchEligible').value.trim();
+
+    if (search) query.q = search;
+    if (requestId) query.requestId = Number(requestId);
+    if (bloodGroup) query.bloodGroup = bloodGroup;
+    if (eligible) query.eligible = eligible === 'true';
+    return query;
+}
+
+async function loadBloodBankStaffDonors() {
+    const result = await call('/blood/matching/donors', 'GET', null, bloodBankDonorQuery());
+    write(result);
+    if (result.status >= 300) {
+        state.bloodBank.staffDonors = [];
+        renderBloodBankStaffDonors();
+        return;
+    }
+
+    state.bloodBank.staffDonors = Array.isArray(result.data?.donors) ? result.data.donors : [];
+    renderBloodBankStaffDonors();
+}
+
+async function selectBloodBankRequest(requestId) {
+    const nextRequestId = Number(requestId);
+    if (Number(state.bloodBank.selectedRequestId) !== nextRequestId) {
+        state.bloodBank.selectedDonorIds.clear();
+        document.getElementById('bbSelectedMatchId').value = '';
+    }
+
+    state.bloodBank.selectedRequestId = nextRequestId;
+    renderBloodBankRequests();
+    await Promise.all([
+        loadBloodBankSuggestions(),
+        loadBloodBankMatches(),
+        loadBloodBankStaffDonors(),
+    ]);
+}
+
+async function notifyBloodBankDonors() {
+    if (!state.bloodBank.selectedRequestId) {
+        write({ status: 422, data: { message: 'Select a blood request first.' } });
+        return;
+    }
+
+    const payload = {
+        donorIds: Array.from(state.bloodBank.selectedDonorIds),
+        message: document.getElementById('bbNotifyMessage').value.trim() || null,
+        suggestedLimit: 6,
+    };
+
+    const result = await call(`/blood/matching/requests/${state.bloodBank.selectedRequestId}/notify`, 'POST', payload);
+    write(result);
+    if (result.status < 300) {
+        state.bloodBank.selectedDonorIds.clear();
+        await Promise.all([
+            loadBloodBankRequests(),
+            loadBloodBankSuggestions(),
+            loadBloodBankMatches(),
+        ]);
+    }
+}
+
+async function approveBloodBankMatch() {
+    if (!state.bloodBank.selectedRequestId) {
+        write({ status: 422, data: { message: 'Select a blood request first.' } });
+        return;
+    }
+
+    const matchId = Number(document.getElementById('bbSelectedMatchId').value || 0);
+    if (!matchId) {
+        write({ status: 422, data: { message: 'Choose an accepted donor match first.' } });
+        return;
+    }
+
+    const payload = {
+        matchId,
+        bloodBankId: document.getElementById('bbFulfillmentBankId').value ? Number(document.getElementById('bbFulfillmentBankId').value) : null,
+        note: document.getElementById('bbWorkflowNote').value.trim() || null,
+    };
+
+    const result = await call(`/blood/matching/requests/${state.bloodBank.selectedRequestId}/approve`, 'POST', payload);
+    write(result);
+    if (result.status < 300) {
+        await Promise.all([
+            loadBloodBankRequests(),
+            loadBloodBankMatches(),
+        ]);
+    }
+}
+
+async function fulfillBloodBankRequest() {
+    if (!state.bloodBank.selectedRequestId) {
+        write({ status: 422, data: { message: 'Select a blood request first.' } });
+        return;
+    }
+
+    const payload = {
+        matchId: document.getElementById('bbSelectedMatchId').value ? Number(document.getElementById('bbSelectedMatchId').value) : null,
+        bloodBankId: document.getElementById('bbFulfillmentBankId').value ? Number(document.getElementById('bbFulfillmentBankId').value) : null,
+        consumeInventory: !!document.getElementById('bbConsumeInventory').checked,
+        note: document.getElementById('bbWorkflowNote').value.trim() || null,
+    };
+
+    const result = await call(`/blood/matching/requests/${state.bloodBank.selectedRequestId}/fulfill`, 'POST', payload);
+    write(result);
+    if (result.status < 300) {
+        await Promise.all([
+            loadBloodBankRequests(),
+            loadBloodBankMatches(),
+        ]);
+    }
+}
+
+async function selectBloodBankDonationDonor(donorId, group = '', healthCheckId = null, requestId = null) {
+    document.getElementById('bbDonationDonorId').value = String(donorId);
+    if (group) {
+        document.getElementById('bbDonationBloodGroup').value = group;
+    }
+    if (requestId && !document.getElementById('bbLinkedRequestId').value) {
+        document.getElementById('bbLinkedRequestId').value = String(requestId);
+    }
+    await loadBloodBankDonationHealthChecks(healthCheckId);
+}
+
+async function loadBloodBankDonationHealthChecks(preferredId = null) {
+    const donorId = Number(document.getElementById('bbDonationDonorId').value || 0);
+    if (!donorId) {
+        renderBloodBankDonationHealthChecks([]);
+        return;
+    }
+
+    const result = await call(`/blood/matching/donors/${donorId}/health-checks`, 'GET', null, { limit: 12 });
+    write(result);
+    if (result.status >= 300) {
+        renderBloodBankDonationHealthChecks([]);
+        return;
+    }
+
+    renderBloodBankDonationHealthChecks(Array.isArray(result.data?.health_checks) ? result.data.health_checks : [], preferredId);
+}
+
+async function logBloodBankDonation() {
+    const donorId = Number(document.getElementById('bbDonationDonorId').value || 0);
+    if (!donorId) {
+        write({ status: 422, data: { message: 'Choose a donor first.' } });
+        return;
+    }
+
+    const payload = {
+        donorId,
+        donorHealthCheckId: Number(document.getElementById('bbDonationHealthCheckId').value || 0),
+        bloodBankId: Number(document.getElementById('bbDonationBankId').value || 0),
+        donationDateTime: document.getElementById('bbDonationDateTime').value || null,
+        bloodGroup: document.getElementById('bbDonationBloodGroup').value || null,
+        componentType: document.getElementById('bbComponentType').value || null,
+        unitsDonated: Number(document.getElementById('bbUnitsDonated').value || 1),
+        linkedRequestId: document.getElementById('bbLinkedRequestId').value ? Number(document.getElementById('bbLinkedRequestId').value) : null,
+        notes: document.getElementById('bbDonationNotes').value.trim() || null,
+    };
+
+    const result = await call('/blood/matching/donations', 'POST', payload);
+    write(result);
+    if (result.status < 300) {
+        await Promise.all([
+            loadBloodBankRequests(),
+            loadBloodBankStaffDonors(),
+        ]);
+    }
+}
+
+async function refreshBloodBankWorkspace() {
+    if (!hasBloodBankScope() || !selectedToken()) {
+        return;
+    }
+
+    if (!state.bloodBank.banksLoaded) {
+        await loadBloodBankBanks();
+    }
+
+    await loadBloodBankRequests();
+    if (state.bloodBank.selectedRequestId) {
+        await Promise.all([
+            loadBloodBankSuggestions(),
+            loadBloodBankMatches(),
+        ]);
+    }
+    await loadBloodBankStaffDonors();
+    state.bloodBank.workspaceLoaded = true;
+}
+
+async function maybeLoadBloodBankWorkspace() {
+    if (!hasBloodBankScope() || !selectedToken()) {
+        return;
+    }
+
+    if (!state.bloodBank.workspaceLoaded) {
+        await refreshBloodBankWorkspace();
+    }
 }
 
 function renderDoctors() {
@@ -737,6 +1567,7 @@ async function loadDepartmentSelectors() {
     setDepartmentOptions('filterDepartmentId', state.departments, 'All accessible departments');
     setDepartmentOptions('doctorSearchDepartmentId', state.departments, 'All accessible departments');
     setDepartmentOptions('patientSearchDepartmentId', state.departments, 'All patients');
+    setDepartmentOptions('bbDepartmentFilter', state.departments, 'All departments');
 }
 
 async function listDepartments() {
@@ -766,6 +1597,10 @@ async function loadDepartmentsScope() {
 
     if (result.status < 300 && hasNonBloodBankScope()) {
         await Promise.all([loadDoctors(), loadPatients()]);
+    }
+
+    if (result.status < 300 && hasBloodBankScope()) {
+        await maybeLoadBloodBankWorkspace();
     }
 }
 
@@ -942,6 +1777,11 @@ function initializeEmptyTables() {
     renderBeds();
     renderCareUnitsTable();
     renderBedsTable();
+    renderBloodBankRequests();
+    renderBloodBankMatches();
+    renderBloodBankSuggestions([]);
+    renderBloodBankStaffDonors();
+    renderBloodBankDonationHealthChecks([]);
     syncCounters();
     refreshCtx();
     renderDepartmentMode();

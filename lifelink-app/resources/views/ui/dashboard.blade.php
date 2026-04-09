@@ -105,14 +105,18 @@
             label: 'IT Worker',
             primaryLabel: 'IT operations dashboard',
             primaryHref: '/ui/it-bed-allocation',
-            primaryCopy: 'Manage department-scoped admissions, beds, and operational allocation flows.',
+            primaryCopy: 'Manage department-scoped admissions, beds, and inline Blood Bank operations from one IT workspace.',
             cards: [
-                { title: 'IT bed allocation', href: '/ui/it-bed-allocation', desc: 'Admission and bed assignment workflow.' },
+                { title: 'IT bed allocation', href: '/ui/it-bed-allocation', desc: 'Admission, bed assignment, and inline Blood Bank workflow panel.' },
                 { title: 'Ward setup', href: '/ui/ward-setup', desc: 'Care unit and bed structure setup.' },
                 { title: 'Advanced tools', href: '/ui/dev-tools', desc: 'Technical diagnostics for operations support.' }
             ],
             bloodBankCards: [
                 { title: 'Blood matching center', href: '/ui/blood-matching', desc: 'Request matching and donor-response operations.' },
+                { title: 'Request board', href: '/ui/blood-matching#request-board', desc: 'Open the active blood request queue and filters.' },
+                { title: 'Approval + fulfillment', href: '/ui/blood-matching#approval-fulfillment', desc: 'Approve accepted donors and fulfill requests.' },
+                { title: 'Donor search', href: '/ui/blood-matching#donor-search', desc: 'Search Blood Bank donors and inspect screening state.' },
+                { title: 'Donation logging', href: '/ui/blood-matching#donation-logging', desc: 'Record staff-owned donations and update inventory.' },
                 { title: 'Blood bank schema', href: '/ui/blood-bank-schema', desc: 'Bank, inventory, and donor setup tables.' }
             ]
         },

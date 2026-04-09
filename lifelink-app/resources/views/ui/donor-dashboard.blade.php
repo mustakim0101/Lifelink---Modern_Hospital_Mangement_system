@@ -281,7 +281,7 @@
     <div class="donor-grid">
         <div id="donor-access" class="donor-card ll-section donor-panel" data-display="block">
             <h3>Access and donor role</h3>
-            <p class="donor-hint">Use USER_TOKEN first. Enable donor role if needed.</p>
+            <p class="donor-hint">Use USER_TOKEN first. Enable donor role if needed. Blood Bank nurses handle health checks, and Blood Bank IT staff log actual donations.</p>
             <label class="donor-label" for="tokenInput">Bearer token</label>
             <input id="tokenInput" class="donor-input" placeholder="Paste donor token">
             <div class="donor-row" style="margin-top: 12px;">
@@ -352,6 +352,7 @@
 
         <div id="donor-history" class="donor-card ll-section donor-panel" data-display="block">
             <h3>Donation history</h3>
+            <p class="donor-hint">This is a read-only history view for donors. Actual donation entry is staff-owned and does not appear in the donor workspace.</p>
             <div class="donor-actions" style="margin-top: 12px;">
                 <button id="btnDonations" class="donor-btn donor-btn-main" type="button" onclick="loadDonations()">Refresh Donations</button>
             </div>
