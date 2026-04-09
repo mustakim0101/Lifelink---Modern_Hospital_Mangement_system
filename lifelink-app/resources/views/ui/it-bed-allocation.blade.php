@@ -9,237 +9,6 @@
 @section('meta_title', 'IT Workflow')
 @section('meta_copy', 'Department assignment, ward setup, admissions, and beds')
 
-@push('styles')
-<style>
-    :root {
-        --it-ink: #15273b;
-        --it-muted: #617586;
-        --it-line: rgba(21, 39, 59, 0.12);
-        --it-card: rgba(255, 255, 255, 0.94);
-        --it-primary: #1d4ed8;
-        --it-primary-strong: #1e40af;
-        --it-accent: #0f766e;
-        --it-orange: #ea580c;
-        --it-danger: #b91c1c;
-        --it-shadow: 0 18px 38px rgba(15, 34, 48, 0.12);
-    }
-
-    .it-grid,
-    .it-split,
-    .it-controls,
-    .it-actions,
-    .it-summary,
-    .it-table-grid,
-    .it-card-grid {
-        display: grid;
-        gap: 12px;
-    }
-
-    .it-grid { gap: 14px; }
-    .it-panel-switch { display: none; }
-    .it-split { grid-template-columns: repeat(12, minmax(0, 1fr)); }
-    .it-col-4 { grid-column: span 4; }
-    .it-col-5 { grid-column: span 5; }
-    .it-col-6 { grid-column: span 6; }
-    .it-col-7 { grid-column: span 7; }
-
-    .it-panel,
-    .it-card {
-        border: 1px solid var(--it-line);
-        border-radius: 18px;
-        background: var(--it-card);
-        box-shadow: var(--it-shadow);
-        padding: 16px;
-    }
-
-    .it-panel h3,
-    .it-card h3 { margin: 0; }
-
-    .it-note {
-        margin: 6px 0 0;
-        color: var(--it-muted);
-        font-size: 0.94rem;
-        line-height: 1.7;
-    }
-
-    .it-controls {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        margin-top: 12px;
-    }
-
-    .it-label {
-        display: block;
-        margin-bottom: 6px;
-        color: var(--it-muted);
-        font-size: 0.75rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-    }
-
-    .it-input,
-    .it-select,
-    .it-textarea {
-        width: 100%;
-        border-radius: 12px;
-        border: 1px solid rgba(21, 39, 59, 0.16);
-        background: #fbfdff;
-        color: var(--it-ink);
-        font: inherit;
-        padding: 11px 12px;
-        outline: none;
-    }
-
-    .it-input:focus,
-    .it-select:focus,
-    .it-textarea:focus {
-        border-color: var(--it-primary);
-        box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
-    }
-
-    .it-textarea {
-        min-height: 86px;
-        resize: vertical;
-    }
-
-    .it-actions {
-        grid-template-columns: repeat(3, max-content);
-        justify-content: start;
-        margin-top: 12px;
-    }
-
-    .it-button {
-        border: 0;
-        border-radius: 12px;
-        padding: 10px 14px;
-        font: inherit;
-        font-size: 0.95rem;
-        font-weight: 700;
-        cursor: pointer;
-    }
-
-    .it-button.primary { background: var(--it-primary); color: #fff; }
-    .it-button.primary:hover { background: var(--it-primary-strong); }
-    .it-button.soft { background: rgba(21, 39, 59, 0.08); color: var(--it-ink); }
-    .it-button.accent { background: var(--it-accent); color: #fff; }
-    .it-button.warm { background: var(--it-orange); color: #fff; }
-    .it-button.danger { background: var(--it-danger); color: #fff; }
-
-    .it-summary { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-
-    .it-stat,
-    .it-chip {
-        border: 1px solid var(--it-line);
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.84);
-        padding: 12px;
-    }
-
-    .it-stat small,
-    .it-chip small {
-        display: block;
-        margin-bottom: 6px;
-        color: var(--it-muted);
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        font-weight: 800;
-    }
-
-    .it-stat strong {
-        display: block;
-        font-size: 1.45rem;
-    }
-
-    .it-card-grid { margin-top: 12px; }
-
-    .it-card__head,
-    .it-card__meta {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .it-status {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 999px;
-        padding: 5px 10px;
-        font-size: 0.74rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-    }
-
-    .it-status.admitted { background: rgba(15, 118, 110, 0.12); color: var(--it-accent); }
-    .it-status.discharged,
-    .it-status.cancelled { background: rgba(185, 28, 28, 0.1); color: var(--it-danger); }
-    .it-status.transferred { background: rgba(234, 88, 12, 0.12); color: var(--it-orange); }
-    .it-status.default { background: rgba(21, 39, 59, 0.08); color: var(--it-ink); }
-
-    .it-table-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-
-    .it-table-wrap {
-        overflow: auto;
-        border: 1px solid var(--it-line);
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.9);
-        margin-top: 12px;
-    }
-
-    .it-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.84rem;
-    }
-
-    .it-table th,
-    .it-table td {
-        padding: 9px 10px;
-        border-bottom: 1px solid rgba(21, 39, 59, 0.08);
-        text-align: left;
-        white-space: nowrap;
-    }
-
-    .it-table th {
-        background: rgba(246, 250, 255, 0.95);
-        color: var(--it-muted);
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-    }
-
-    .it-console {
-        margin: 12px 0 0;
-        min-height: 140px;
-        max-height: 320px;
-        overflow: auto;
-        border-radius: 14px;
-        border: 1px solid var(--it-line);
-        background: #101c33;
-        color: #d7e3ff;
-        padding: 12px;
-        font-size: 12px;
-    }
-
-    @media (max-width: 1120px) {
-        .it-col-4,
-        .it-col-5,
-        .it-col-6,
-        .it-col-7 { grid-column: span 12; }
-    }
-
-    @media (max-width: 820px) {
-        .it-controls,
-        .it-actions,
-        .it-summary,
-        .it-table-grid { grid-template-columns: 1fr; }
-    }
-</style>
-@endpush
-
 @section('sidebar_nav')
     <a class="is-active" href="#it-overview" data-panel="it-overview" data-mode="all">
         <strong>Overview</strong>
@@ -269,7 +38,7 @@
         <div id="it-overview" class="it-split ll-section it-panel-switch" data-display="grid">
             <div class="it-panel it-col-4">
                 <h3>IT worker session</h3>
-                <p class="it-note">Use the logged-in IT worker token here. If "load my departments" returns nothing, admin has not finished your department assignment yet.</p>
+                <p class="it-note">Use the logged-in IT worker token here.</p>
                 <label class="it-label" for="tokenInput">IT worker token</label>
                 <input id="tokenInput" class="it-input" placeholder="IT worker token">
                 <div class="it-actions">
@@ -279,12 +48,12 @@
             </div>
 
             <div class="it-panel it-col-4">
-                <h3>What this page controls</h3>
-                <p class="it-note">Admit to a department, assign an available bed, and discharge later to release capacity.</p>
+                <h3>Detected scope</h3>
+                <p id="scopeModeSummary" class="it-note">Load your departments to open the correct IT workspace.</p>
             </div>
 
             <div class="it-panel it-col-4">
-                <h3>Quick context</h3>
+                <h3>Current totals</h3>
                 <div class="it-summary">
                     <div class="it-stat"><small>Scoped depts</small><strong id="scopeCount">0</strong></div>
                     <div class="it-stat"><small>Care units</small><strong id="careUnitCount">0</strong></div>
@@ -294,17 +63,26 @@
             </div>
         </div>
 
-        <div id="it-blood-bank" class="it-panel it-panel-switch ll-section" data-display="block" style="display:none;">
+        <div id="it-blood-bank" class="it-panel it-panel-switch ll-section is-initially-hidden" data-display="block">
             <h3>Blood Bank operations</h3>
-            <p class="it-note">This account has Blood Bank department scope. Use the Blood Matching Center for donor matching, donor notifications, donation logging, and request-linked blood workflow actions.</p>
+            <p class="it-note">Blood Bank IT mode for donor coordination, donation logging, and request fulfillment.</p>
             <div class="it-summary">
                 <div class="it-stat"><small>Blood Bank access</small><strong id="bloodBankScopeStatus">Locked</strong></div>
                 <div class="it-stat"><small>Blood Bank departments</small><strong id="bloodBankScopeCount">0</strong></div>
             </div>
-            <div class="it-actions" style="margin-top: 16px;">
+            <div class="it-actions u-mt-4">
                 <a class="it-button primary" href="/ui/blood-matching">Open Blood Matching Center</a>
+                <a class="it-button soft" href="/ui/blood-matching#request-board">Open Request Board</a>
+                <a class="it-button soft" href="/ui/blood-matching#selected-request-actions">Open Approval + Fulfillment</a>
+                <a class="it-button soft" href="/ui/blood-matching#staff-donor-search">Open Donor Search</a>
+                <a class="it-button soft" href="/ui/blood-matching#staff-donation-logging">Open Donation Logging</a>
                 <a class="it-button soft" href="/ui/blood-bank-schema">Open Blood Bank Schema</a>
             </div>
+        </div>
+
+        <div id="regularItLocked" class="it-panel ll-section it-panel-switch" data-display="block">
+            <h3>Regular IT operations</h3>
+            <p id="regularItLockedMessage" class="it-note">Load your departments to open the correct IT workspace.</p>
         </div>
 
         <div id="standardItWorkArea">
@@ -388,7 +166,7 @@
                     <button class="it-button soft" type="button" onclick="listCareUnits()">List care units</button>
                 </div>
 
-                <div class="it-controls" style="margin-top: 16px;">
+                <div class="it-controls u-mt-4">
                     <div>
                         <label class="it-label" for="careUnitId">Care unit ID</label>
                         <input id="careUnitId" class="it-input" type="number" placeholder="Care unit ID">
@@ -457,7 +235,7 @@
                     <button class="it-button warm" type="button" onclick="createAdmission()">Create admission</button>
                 </div>
 
-                <div class="it-controls" style="margin-top: 16px;">
+                <div class="it-controls u-mt-4">
                     <div>
                         <label class="it-label" for="filterDepartmentId">Filter department</label>
                         <select id="filterDepartmentId" class="it-select">
@@ -501,7 +279,7 @@
                     <button class="it-button accent" type="button" onclick="assignBed()">Assign bed</button>
                 </div>
 
-                <div class="it-controls" style="margin-top: 16px;">
+                <div class="it-controls u-mt-4">
                     <div>
                         <label class="it-label" for="dischargeAdmissionId">Discharge admission ID</label>
                         <input id="dischargeAdmissionId" class="it-input" type="number" placeholder="Admission to discharge">
@@ -598,7 +376,7 @@ const BLOOD_BANK_DEPARTMENT = 'Blood Bank';
 
 function allowedPanels() {
     if (!state.scopeLoaded) {
-        return ['it-overview', 'it-directory', 'it-admission', 'it-reference', 'it-debug'];
+        return ['it-overview', 'it-debug'];
     }
 
     const blood = hasBloodBankScope();
@@ -758,8 +536,11 @@ function hasNonBloodBankScope() {
 
 function renderDepartmentMode() {
     const bloodBankAccess = hasBloodBankScope();
+    const regularAccess = hasNonBloodBankScope();
     const selectedPanel = state.activePanel || 'it-overview';
     const allowed = allowedPanels();
+    const modeSummary = document.getElementById('scopeModeSummary');
+    const regularLockedMessage = document.getElementById('regularItLockedMessage');
 
     if (!allowed.includes(selectedPanel)) {
         setActivePanel(allowed[0]);
@@ -767,9 +548,22 @@ function renderDepartmentMode() {
     }
 
     document.getElementById('it-blood-bank').style.display = bloodBankAccess && selectedPanel === 'it-blood-bank' ? '' : 'none';
-    document.getElementById('standardItWorkArea').style.display = bloodBankAccess && !hasNonBloodBankScope() ? 'none' : '';
+    document.getElementById('standardItWorkArea').style.display = regularAccess ? '' : 'none';
+    document.getElementById('regularItLocked').style.display = regularAccess ? 'none' : '';
     document.getElementById('bloodBankScopeStatus').textContent = bloodBankAccess ? 'Enabled' : 'Locked';
     document.getElementById('bloodBankScopeCount').textContent = String(state.scopeDepartments.filter((department) => String(department.dept_name || '').trim() === BLOOD_BANK_DEPARTMENT).length);
+    regularLockedMessage.textContent = !state.scopeLoaded
+        ? 'Load your departments to open the correct IT workspace.'
+        : bloodBankAccess
+            ? 'This account is scoped only to Blood Bank, so ward and bed operations stay hidden.'
+            : 'No non-Blood-Bank department scope was detected for this account.';
+    modeSummary.textContent = !state.scopeLoaded
+        ? 'Load your departments to open the correct IT workspace.'
+        : bloodBankAccess && regularAccess
+            ? 'Mixed IT scope is active: regular operations and Blood Bank operations are both available.'
+            : bloodBankAccess
+                ? 'Blood Bank IT mode is active for this account.'
+                : 'Regular IT mode is active for this account.';
     updateSidebarByScope();
 }
 
@@ -789,7 +583,7 @@ function renderDoctors() {
                 </div>
                 <span class="it-status default">${escapeHtml(doctor.department || 'Unknown department')}</span>
             </div>
-            <div class="it-card__meta" style="margin-top: 12px;">
+            <div class="it-card__meta u-mt-3">
                 <span class="it-chip"><small>Doctor ID</small><strong>#${doctor.doctor_id}</strong></span>
             </div>
             <div class="it-actions">
@@ -815,7 +609,7 @@ function renderPatientsDirectory() {
                 </div>
                 <span class="it-status default">${escapeHtml(patient.blood_group || 'Blood group not set')}</span>
             </div>
-            <div class="it-card__meta" style="margin-top: 12px;">
+            <div class="it-card__meta u-mt-3">
                 <span class="it-chip"><small>Patient ID</small><strong>#${patient.patient_user_id}</strong></span>
             </div>
             <div class="it-actions">
@@ -841,12 +635,12 @@ function renderAdmissions() {
                 </div>
                 <span class="it-status ${statusClass(admission.status)}">${escapeHtml(admission.status || 'Unknown')}</span>
             </div>
-            <div class="it-card__meta" style="margin-top: 12px;">
+            <div class="it-card__meta u-mt-3">
                 <span class="it-chip"><small>Admission</small><strong>#${admission.id}</strong></span>
                 <span class="it-chip"><small>Care level</small><strong>${escapeHtml(admission.care_level_assigned || admission.care_level_requested || '-')}</strong></span>
                 <span class="it-chip"><small>Bed</small><strong>${escapeHtml(admission.active_bed_assignment?.bed_code || 'Not assigned')}</strong></span>
             </div>
-            <p class="it-note" style="margin-top: 12px;">${escapeHtml(admission.diagnosis || 'No diagnosis')}</p>
+            <p class="it-note u-mt-3">${escapeHtml(admission.diagnosis || 'No diagnosis')}</p>
             <div class="it-actions">
                 <button class="it-button soft" type="button" onclick="pickAdmission(${admission.id})">Use admission ID</button>
                 <button class="it-button danger" type="button" onclick="prefillDischarge(${admission.id})">Prepare discharge</button>
@@ -871,7 +665,7 @@ function renderBeds() {
                 </div>
                 <span class="it-status default">${escapeHtml(bed.status || 'Unknown')}</span>
             </div>
-            <div class="it-card__meta" style="margin-top: 12px;">
+            <div class="it-card__meta u-mt-3">
                 <span class="it-chip"><small>Bed ID</small><strong>#${bed.id}</strong></span>
                 <span class="it-chip"><small>Unit</small><strong>${escapeHtml(bed.unit_type || '-')}</strong></span>
                 <span class="it-chip"><small>Floor</small><strong>${escapeHtml(bed.floor ?? '-')}</strong></span>
@@ -962,6 +756,13 @@ async function loadDepartmentsScope() {
         state.scopeDepartments = [];
     }
     renderDepartmentMode();
+
+    if (!allowedPanels().includes(state.activePanel) || state.activePanel === 'it-overview') {
+        const initialHash = (window.location.hash || '').replace('#', '');
+        const nextPanel = allowedPanels().includes(initialHash) ? initialHash : allowedPanels()[1] || allowedPanels()[0];
+        setActivePanel(nextPanel);
+        history.replaceState(null, '', `#${nextPanel}`);
+    }
 
     if (result.status < 300 && hasNonBloodBankScope()) {
         await Promise.all([loadDoctors(), loadPatients()]);

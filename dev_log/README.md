@@ -3114,3 +3114,17 @@ Implementation notes:
 - Panel switching remains donor-style and hash-aware.
 - If hash points to an unavailable panel for current scope, safe fallback opens first allowed panel.
 - Existing IDs, actions, API calls, and Blood Bank operation links were preserved.
+
+### UI stabilization pass before full redesign (2026-04-09)
+
+What changed:
+1. Removed prototype-style helper copy from the public landing page, auth pages, workspace hub, nurse dashboard, and IT dashboard.
+2. Adjusted shared layout widths and action-row wrapping so the app uses desktop space better and button groups do not crowd each other.
+3. Changed nurse dashboard first render to a safe neutral state until `/api/nurse/profile` confirms department mode, then show only the allowed sidebar panel set.
+4. Changed IT dashboard first render to a safe neutral state until `/api/ward/it/departments` confirms scope, then show only the allowed sidebar panel set.
+5. Restored Blood Bank IT launch actions inside the IT dashboard for request board, approval/fulfillment, donor search, donation logging, and schema access.
+
+Why this was needed:
+- the CSS extraction pass improved architecture, but it still left noisy prototype text, boxed-in layouts, and incorrect first-render navigation for nurse and IT users
+- Blood Bank users should never see the wrong operational mode first, even for a moment
+- this cleanup prepares the Blade project for the later redesign pass without changing backend workflows

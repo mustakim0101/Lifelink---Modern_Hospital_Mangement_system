@@ -9,318 +9,17 @@
 @section('meta_title', 'Nurse Workflow')
 @section('meta_copy', 'Department monitoring and bedside updates')
 
-@push('styles')
-<style>
-    :root {
-        --nurse-ink: #14233a;
-        --nurse-muted: #5f718c;
-        --nurse-card: rgba(255, 255, 255, 0.92);
-        --nurse-line: rgba(20, 35, 58, 0.12);
-        --nurse-teal: #0d9488;
-        --nurse-teal-dark: #0b746b;
-        --nurse-orange: #f97316;
-        --nurse-alert: #dc2626;
-        --nurse-ok: #16a34a;
-        --nurse-shadow: 0 18px 35px rgba(16, 29, 57, 0.12);
-    }
-
-    .nurse-grid,
-    .nurse-control-grid,
-    .nurse-stat-grid,
-    .nurse-summary-grid,
-    .nurse-actions,
-    .nurse-split {
-        display: grid;
-        gap: 12px;
-    }
-
-    .nurse-grid {
-        gap: 14px;
-    }
-    .nurse-panel-switch { display: none; }
-
-    .nurse-panel {
-        border: 1px solid var(--nurse-line);
-        background: var(--nurse-card);
-        border-radius: 18px;
-        box-shadow: var(--nurse-shadow);
-        padding: 16px;
-    }
-
-    .nurse-panel h3 {
-        margin: 0;
-    }
-
-    .nurse-note {
-        margin: 6px 0 0;
-        color: var(--nurse-muted);
-        font-size: 0.94rem;
-        line-height: 1.7;
-    }
-
-    .nurse-split {
-        grid-template-columns: repeat(12, minmax(0, 1fr));
-    }
-
-    .nurse-col-4 { grid-column: span 4; }
-    .nurse-col-5 { grid-column: span 5; }
-    .nurse-col-7 { grid-column: span 7; }
-    .nurse-col-12 { grid-column: span 12; }
-
-    .nurse-control-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        margin-top: 12px;
-    }
-
-    .nurse-label {
-        display: block;
-        margin-bottom: 6px;
-        color: var(--nurse-muted);
-        font-size: 0.75rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-    }
-
-    .nurse-input,
-    .nurse-select,
-    .nurse-textarea {
-        width: 100%;
-        border: 1px solid rgba(20, 35, 58, 0.2);
-        background: rgba(255, 255, 255, 0.92);
-        border-radius: 12px;
-        padding: 11px 12px;
-        font: inherit;
-        color: var(--nurse-ink);
-        outline: none;
-    }
-
-    .nurse-input:focus,
-    .nurse-select:focus,
-    .nurse-textarea:focus {
-        border-color: var(--nurse-teal);
-        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
-    }
-
-    .nurse-textarea {
-        min-height: 90px;
-        resize: vertical;
-    }
-
-    .nurse-actions {
-        grid-template-columns: repeat(3, max-content);
-        margin-top: 12px;
-        justify-content: start;
-    }
-
-    .nurse-button {
-        border: 0;
-        border-radius: 12px;
-        padding: 10px 14px;
-        font: inherit;
-        font-size: 0.95rem;
-        font-weight: 700;
-        cursor: pointer;
-    }
-
-    .nurse-button.primary { background: var(--nurse-teal); color: #fff; }
-    .nurse-button.primary:hover { background: var(--nurse-teal-dark); }
-    .nurse-button.soft { background: rgba(20, 35, 58, 0.08); color: var(--nurse-ink); }
-    .nurse-button.warm { background: var(--nurse-orange); color: #fff; }
-
-    .nurse-stat-grid {
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        margin-top: 12px;
-    }
-
-    .nurse-stat,
-    .nurse-summary,
-    .nurse-pill,
-    .nurse-list-item {
-        border: 1px solid var(--nurse-line);
-        background: rgba(255, 255, 255, 0.86);
-        border-radius: 14px;
-    }
-
-    .nurse-stat {
-        padding: 12px;
-        text-align: center;
-    }
-
-    .nurse-stat strong {
-        display: block;
-        font-size: 1.5rem;
-    }
-
-    .nurse-stat span {
-        color: var(--nurse-muted);
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.07em;
-        font-weight: 800;
-    }
-
-    .nurse-list {
-        display: grid;
-        gap: 10px;
-        margin-top: 12px;
-        max-height: 520px;
-        overflow: auto;
-        padding-right: 4px;
-    }
-
-    .nurse-list-item {
-        padding: 12px;
-        cursor: pointer;
-    }
-
-    .nurse-list-item.is-active {
-        border-color: rgba(13, 148, 136, 0.44);
-        background: rgba(13, 148, 136, 0.08);
-    }
-
-    .nurse-item-head,
-    .nurse-item-meta {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .nurse-item-head strong {
-        font-size: 1rem;
-    }
-
-    .nurse-pill {
-        display: inline-flex;
-        align-items: center;
-        padding: 5px 9px;
-        font-size: 0.74rem;
-        font-weight: 800;
-    }
-
-    .nurse-pill.live { color: var(--nurse-ok); background: rgba(22, 163, 74, 0.12); }
-    .nurse-pill.off { color: var(--nurse-alert); background: rgba(220, 38, 38, 0.1); }
-    .nurse-pill.bed { color: var(--nurse-teal-dark); background: rgba(13, 148, 136, 0.12); }
-
-    .nurse-mini {
-        border-radius: 999px;
-        background: rgba(20, 35, 58, 0.08);
-        color: var(--nurse-ink);
-        font-size: 0.74rem;
-        padding: 4px 8px;
-        font-weight: 700;
-    }
-
-    .nurse-section-title {
-        margin: 14px 0 8px;
-        color: var(--nurse-muted);
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        font-weight: 800;
-    }
-
-    .nurse-summary-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .nurse-summary {
-        padding: 10px 11px;
-    }
-
-    .nurse-summary small {
-        display: block;
-        color: var(--nurse-muted);
-        font-size: 0.72rem;
-        margin-bottom: 4px;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        font-weight: 800;
-    }
-
-    .nurse-summary strong {
-        font-size: 0.95rem;
-        word-break: break-word;
-    }
-
-    .nurse-table-wrap {
-        overflow: auto;
-        border: 1px solid var(--nurse-line);
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.9);
-    }
-
-    .nurse-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.85rem;
-    }
-
-    .nurse-table th,
-    .nurse-table td {
-        padding: 9px 10px;
-        border-bottom: 1px solid rgba(20, 35, 58, 0.08);
-        text-align: left;
-        white-space: nowrap;
-    }
-
-    .nurse-table th {
-        background: rgba(246, 250, 255, 0.95);
-        color: var(--nurse-muted);
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-    }
-
-    .nurse-console {
-        margin: 12px 0 0;
-        min-height: 140px;
-        max-height: 300px;
-        overflow: auto;
-        border-radius: 14px;
-        border: 1px solid var(--nurse-line);
-        background: #11203a;
-        color: #d7e3ff;
-        padding: 12px;
-        font-size: 12px;
-    }
-
-    @media (max-width: 1100px) {
-        .nurse-col-4,
-        .nurse-col-5,
-        .nurse-col-7 {
-            grid-column: span 12;
-        }
-
-        .nurse-stat-grid {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-    }
-
-    @media (max-width: 780px) {
-        .nurse-control-grid,
-        .nurse-summary-grid,
-        .nurse-stat-grid,
-        .nurse-actions {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-@endpush
-
 @section('sidebar_nav')
-    <a class="is-active" href="#nurse-overview">
+    <a class="is-active" href="#nurse-overview" data-panel="nurse-overview" data-mode="all">
         <strong>Overview</strong>
     </a>
-    <a href="#nurse-monitoring">
+    <a href="#nurse-monitoring" data-panel="nurse-monitoring" data-mode="regular">
         <strong>Patient Monitoring</strong>
     </a>
-    <a href="#nurse-blood-bank">
+    <a href="#nurse-blood-bank" data-panel="nurse-blood-bank" data-mode="blood">
         <strong>Blood Bank Screening</strong>
     </a>
-    <a href="#nurse-debug">
+    <a href="#nurse-debug" data-panel="nurse-debug" data-mode="all">
         <strong>API Response</strong>
     </a>
 @endsection
@@ -333,7 +32,7 @@
         <div id="nurse-overview" class="nurse-split ll-section nurse-panel-switch" data-display="grid">
             <div class="nurse-panel nurse-col-4">
                 <h3>Nurse session</h3>
-                <p class="nurse-note">Use the logged-in nurse token here. If profile loading fails, it usually means admin has not finished nurse setup yet.</p>
+                <p class="nurse-note">Use the logged-in nurse token here.</p>
                 <label class="nurse-label" for="nurseTokenInput">Nurse token</label>
                 <input id="nurseTokenInput" class="nurse-input" placeholder="Bearer token for nurse">
                 <div class="nurse-actions">
@@ -342,8 +41,8 @@
             </div>
 
             <div class="nurse-panel nurse-col-4">
-                <h3>What "load profile" means</h3>
-                <p class="nurse-note">Loads your admin-provisioned nurse profile and department scope.</p>
+                <h3>Current mode</h3>
+                <p id="nurseModeSummary" class="nurse-note">Load your profile to unlock the correct nurse workspace.</p>
                 <div class="nurse-actions">
                     <button class="nurse-button soft" type="button" onclick="loadNurseProfile()">Reload profile</button>
                 </div>
@@ -351,7 +50,7 @@
 
             <div class="nurse-panel nurse-col-4">
                 <h3>Department filters</h3>
-                <p class="nurse-note">Filters admissions in your own department by status or search text.</p>
+                <p class="nurse-note">Filter department admissions by status or search.</p>
                 <div class="nurse-control-grid">
                     <div>
                         <label class="nurse-label" for="statusFilter">Admission status</label>
@@ -375,6 +74,10 @@
         </div>
 
         <div id="nurse-monitoring" class="ll-section nurse-panel-switch" data-display="block">
+            <div id="regularNurseLocked" class="nurse-panel nurse-mode-state">
+                <h3>Patient monitoring</h3>
+                <p id="regularNurseLockedMessage" class="nurse-note">Load your nurse profile to open the correct workflow.</p>
+            </div>
             <div id="regularNurseSection" class="nurse-panel">
                 <h3>Department snapshot</h3>
                 <div class="nurse-stat-grid">
@@ -386,7 +89,7 @@
                 </div>
             </div>
 
-            <div id="regularNurseWorkArea" class="nurse-split" style="margin-top: 12px;">
+            <div id="regularNurseWorkArea" class="nurse-split u-mt-3">
                 <div class="nurse-panel nurse-col-5">
                     <h3>Patient monitoring list</h3>
                     <p class="nurse-note">Select an admission to open monitoring detail, recent vitals, and linked records.</p>
@@ -486,10 +189,10 @@
 
         <div id="nurse-blood-bank" class="nurse-panel ll-section nurse-panel-switch" data-display="block">
             <h3>Blood Bank donor screening</h3>
-            <p class="nurse-note">Visible only for nurses assigned to the Blood Bank department.</p>
+            <p class="nurse-note">Blood Bank-only nurse workspace.</p>
 
             <div id="bloodBankLocked" class="nurse-note">Load your nurse profile first to see whether Blood Bank donor screening is available for this account.</div>
-            <div id="bloodBankSection" style="display:none;">
+            <div id="bloodBankSection" class="is-initially-hidden">
                 <div class="nurse-control-grid">
                     <div>
                         <label class="nurse-label" for="bbDonorQuery">Search donor</label>
@@ -505,7 +208,7 @@
                     <button class="nurse-button soft" type="button" onclick="loadSelectedDonorHealthChecks()">Refresh selected donor history</button>
                 </div>
 
-                <div class="nurse-split" style="margin-top: 14px;">
+                <div class="nurse-split u-mt-3">
                     <div class="nurse-panel nurse-col-5">
                         <h3>Blood Bank donor list</h3>
                         <div id="bloodBankDonorList" class="nurse-list"></div>
@@ -587,9 +290,10 @@
 const API = '/api';
 const out = document.getElementById('out');
 const nursePanelIds = ['nurse-overview', 'nurse-monitoring', 'nurse-blood-bank', 'nurse-debug'];
-const nurseNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[href^="#nurse-"]'));
+const nurseNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[data-panel]'));
 
 const state = {
+    activePanel: 'nurse-overview',
     nurse: null,
     nurseProfileLoaded: false,
     profileRequested: false,
@@ -615,11 +319,43 @@ const state = {
     },
 };
 
+function allowedNursePanels() {
+    if (!state.nurseProfileLoaded || !state.nurse) {
+        return ['nurse-overview', 'nurse-debug'];
+    }
+
+    if (state.nurse.department === 'Blood Bank') {
+        return ['nurse-overview', 'nurse-blood-bank', 'nurse-debug'];
+    }
+
+    return ['nurse-overview', 'nurse-monitoring', 'nurse-debug'];
+}
+
+function preferredNursePanel() {
+    const allowed = allowedNursePanels();
+    return allowed.find((panelId) => panelId !== 'nurse-overview' && panelId !== 'nurse-debug') || allowed[0];
+}
+
+function updateNurseSidebarByMode() {
+    const allowed = allowedNursePanels();
+    nurseNavLinks.forEach((link) => {
+        const panelId = link.dataset.panel || '';
+        link.style.display = allowed.includes(panelId) ? '' : 'none';
+    });
+}
+
 function write(data) {
     out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
 }
 
 function setActivePanel(panelId) {
+    const allowed = allowedNursePanels();
+    if (!allowed.includes(panelId)) {
+        panelId = preferredNursePanel();
+    }
+
+    state.activePanel = panelId;
+
     nursePanelIds.forEach((id) => {
         const panel = document.getElementById(id);
         if (!panel) return;
@@ -640,7 +376,7 @@ function setupSidebarPanelNav() {
     nurseNavLinks.forEach((link) => {
         link.addEventListener('click', (event) => {
             event.preventDefault();
-            const panelId = (link.getAttribute('href') || '').replace('#', '');
+            const panelId = link.dataset.panel || '';
             if (!nursePanelIds.includes(panelId)) return;
             setActivePanel(panelId);
             history.replaceState(null, '', `#${panelId}`);
@@ -648,7 +384,8 @@ function setupSidebarPanelNav() {
     });
 
     const initialHash = (window.location.hash || '').replace('#', '');
-    const initialPanel = nursePanelIds.includes(initialHash) ? initialHash : nursePanelIds[0];
+    updateNurseSidebarByMode();
+    const initialPanel = nursePanelIds.includes(initialHash) ? initialHash : preferredNursePanel();
     setActivePanel(initialPanel);
 }
 
@@ -758,7 +495,7 @@ function renderPatients() {
                     <span class="nurse-mini">${escapeHtml(patient.care_level_assigned || patient.care_level_requested || 'Care TBD')}</span>
                     ${bed}
                 </div>
-                <div class="nurse-item-meta" style="margin-top: 6px;">${latest}</div>
+                <div class="nurse-item-meta u-mt-1">${latest}</div>
             </article>
         `;
     }).join('');
@@ -823,14 +560,30 @@ function renderRecords(records = []) {
 function renderBloodBankAccess() {
     const profileLoaded = state.nurseProfileLoaded;
     const isBloodBank = state.nurse?.department === 'Blood Bank';
-    document.getElementById('regularNurseSection').style.display = profileLoaded && isBloodBank ? 'none' : '';
-    document.getElementById('regularNurseWorkArea').style.display = profileLoaded && isBloodBank ? 'none' : '';
+    const hasRegularMode = profileLoaded && state.nurse && !isBloodBank;
+    const regularLockedMessage = document.getElementById('regularNurseLockedMessage');
+    const modeSummary = document.getElementById('nurseModeSummary');
+
+    document.getElementById('regularNurseLocked').style.display = hasRegularMode ? 'none' : '';
+    document.getElementById('regularNurseSection').style.display = hasRegularMode ? '' : 'none';
+    document.getElementById('regularNurseWorkArea').style.display = hasRegularMode ? '' : 'none';
     document.getElementById('bloodBankSection').style.display = isBloodBank ? '' : 'none';
+    regularLockedMessage.textContent = !profileLoaded
+        ? 'Load your nurse profile to open the correct workflow.'
+        : isBloodBank
+            ? 'This nurse account is in Blood Bank mode, so regular patient monitoring is hidden.'
+            : 'Regular patient monitoring is unavailable until nurse setup is complete.';
     document.getElementById('bloodBankLocked').textContent = !profileLoaded
         ? 'Load your nurse profile first to see whether Blood Bank donor screening is available for this account.'
         : isBloodBank
             ? 'Blood Bank donor screening is enabled for this nurse profile.'
             : 'Blood Bank donor screening is available only when the nurse profile belongs to the Blood Bank department.';
+    modeSummary.textContent = !profileLoaded
+        ? 'Load your profile to unlock the correct nurse workspace.'
+        : isBloodBank
+            ? 'Blood Bank nurse mode is active for this account.'
+            : `Regular nurse mode is active for ${state.nurse?.department || 'this department'}.`;
+    updateNurseSidebarByMode();
 }
 
 function renderBloodBankDonors() {
@@ -851,7 +604,7 @@ function renderBloodBankDonors() {
                 <span class="nurse-mini">Donor #${Number(donor.donor_id)}</span>
                 <span class="nurse-mini">${escapeHtml(donor.blood_group || '-')}</span>
             </div>
-            <div class="nurse-item-meta" style="margin-top: 6px;">
+            <div class="nurse-item-meta u-mt-1">
                 <span class="nurse-mini">Latest check: ${donor.latest_health_check?.check_datetime ? new Date(donor.latest_health_check.check_datetime).toLocaleString() : 'None'}</span>
             </div>
         </article>
@@ -915,6 +668,11 @@ async function loadNurseProfile(options = {}) {
             state.bloodBankDonorsLoaded = false;
         }
         renderBloodBankAccess();
+        if (!allowedNursePanels().includes(state.activePanel) || state.activePanel === 'nurse-overview') {
+            const panelId = preferredNursePanel();
+            setActivePanel(panelId);
+            history.replaceState(null, '', `#${panelId}`);
+        }
         write(result);
         return state.nurse;
     })();

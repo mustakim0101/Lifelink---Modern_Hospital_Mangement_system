@@ -4,512 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LifeLink | Modern Hospital Management</title>
-    <style>
-        :root {
-            --bg: #eef3f7;
-            --surface: rgba(255, 255, 255, 0.9);
-            --text: #183244;
-            --muted: #5d7280;
-            --line: rgba(24, 50, 68, 0.12);
-            --primary: #0f766e;
-            --primary-strong: #0a4d56;
-            --secondary: #1d4ed8;
-            --accent: #f97316;
-            --shadow: 0 18px 44px rgba(16, 40, 60, 0.12);
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            font-family: "Segoe UI", "Trebuchet MS", sans-serif;
-            color: var(--text);
-            background:
-                radial-gradient(circle at top left, rgba(29, 78, 216, 0.14), transparent 24rem),
-                radial-gradient(circle at top right, rgba(15, 118, 110, 0.12), transparent 24rem),
-                linear-gradient(180deg, #f7fbfd 0%, var(--bg) 100%);
-        }
-
-        a { color: inherit; text-decoration: none; }
-
-        .shell {
-            width: min(1160px, calc(100% - 24px));
-            margin: 0 auto;
-        }
-
-        .topbar {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            backdrop-filter: blur(12px);
-            background: rgba(247, 251, 253, 0.9);
-            border-bottom: 1px solid rgba(24, 50, 68, 0.08);
-        }
-
-        .topbar-inner {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 0;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .brand-mark {
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            display: grid;
-            place-items: center;
-            color: #fff;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-        }
-
-        .brand-copy strong {
-            display: block;
-            font-size: 1.08rem;
-        }
-
-        .brand-copy span {
-            color: var(--muted);
-            font-size: 0.9rem;
-        }
-
-        .topnav {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .topnav a {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 36px;
-            padding: 8px 13px;
-            border-radius: 999px;
-            font-size: 0.9rem;
-            color: var(--muted);
-        }
-
-        .topnav a:hover {
-            background: rgba(15, 118, 110, 0.09);
-            color: var(--text);
-        }
-
-        .topnav .cta {
-            color: #fff;
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-        }
-
-        main {
-            padding: 28px 0 40px;
-            display: grid;
-            gap: 18px;
-        }
-
-        .hero {
-            border: 1px solid var(--line);
-            border-radius: 24px;
-            background: var(--surface);
-            box-shadow: var(--shadow);
-            padding: 22px;
-            display: grid;
-            grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-            gap: 14px;
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            border-radius: 999px;
-            padding: 6px 12px;
-            background: rgba(15, 118, 110, 0.1);
-            color: var(--primary-strong);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            font-size: 0.72rem;
-            font-weight: 800;
-        }
-
-        h1 {
-            margin: 12px 0 10px;
-            font-size: clamp(1.9rem, 3vw, 3.2rem);
-            line-height: 1.06;
-        }
-
-        .hero p,
-        .card p,
-        .list li,
-        .meta p {
-            margin: 0;
-            color: var(--muted);
-            line-height: 1.6;
-        }
-
-        .hero-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 14px;
-        }
-
-        .button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 38px;
-            padding: 8px 14px;
-            border-radius: 999px;
-            font-weight: 700;
-            border: 1px solid var(--line);
-            background: rgba(255, 255, 255, 0.88);
-        }
-
-        .button.primary {
-            color: #fff;
-            border: 0;
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-        }
-
-        .meta {
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.92);
-            padding: 14px;
-            display: grid;
-            gap: 8px;
-        }
-
-        .meta strong {
-            display: block;
-            font-size: 1.06rem;
-        }
-
-        .grid {
-            display: grid;
-            gap: 12px;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-
-        .card {
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            background: var(--surface);
-            box-shadow: var(--shadow);
-            padding: 14px;
-        }
-
-        .card h2 {
-            margin: 0 0 8px;
-            font-size: 1.06rem;
-        }
-
-        .list {
-            margin: 10px 0 0;
-            padding-left: 18px;
-            display: grid;
-            gap: 6px;
-        }
-
-        .auth-grid {
-            display: grid;
-            gap: 12px;
-            grid-template-columns: 1.2fr 0.8fr;
-        }
-
-        .finder-section {
-            border: 1px solid var(--line);
-            border-radius: 24px;
-            background:
-                radial-gradient(circle at top left, rgba(29, 78, 216, 0.1), transparent 18rem),
-                radial-gradient(circle at bottom right, rgba(15, 118, 110, 0.12), transparent 20rem),
-                rgba(255, 255, 255, 0.82);
-            box-shadow: var(--shadow);
-            padding: 22px;
-            display: grid;
-            gap: 18px;
-        }
-
-        .finder-header {
-            display: grid;
-            gap: 8px;
-            max-width: 680px;
-        }
-
-        .finder-header h2,
-        .finder-panel h3 {
-            margin: 0;
-        }
-
-        .finder-shell {
-            display: grid;
-            gap: 16px;
-            grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
-            align-items: stretch;
-        }
-
-        .anatomy-card,
-        .finder-panel {
-            border: 1px solid var(--line);
-            border-radius: 22px;
-            background: rgba(255, 255, 255, 0.9);
-            overflow: hidden;
-        }
-
-        .anatomy-card {
-            padding: 18px;
-            background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(236, 246, 250, 0.96)),
-                rgba(255, 255, 255, 0.92);
-        }
-
-        .anatomy-stage {
-            position: relative;
-            min-height: 560px;
-            border-radius: 18px;
-            border: 1px solid rgba(24, 50, 68, 0.08);
-            background:
-                radial-gradient(circle at top, rgba(15, 118, 110, 0.12), transparent 16rem),
-                linear-gradient(180deg, rgba(248, 251, 253, 0.98), rgba(228, 238, 244, 0.88));
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .anatomy-figure {
-            position: relative;
-            width: min(100%, 540px);
-            aspect-ratio: 4598 / 5329;
-        }
-
-        .anatomy-stage img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            filter: drop-shadow(0 18px 34px rgba(24, 50, 68, 0.14));
-        }
-
-        .finder-hotspot {
-            position: absolute;
-            top: var(--top);
-            left: var(--left);
-            width: var(--width);
-            height: var(--height);
-            transform: translate(-50%, -50%);
-            border: 0;
-            border-radius: 999px;
-            background: transparent;
-            color: transparent;
-            cursor: pointer;
-            transition: transform 0.18s ease;
-            z-index: 1;
-        }
-
-        .finder-hotspot[data-region="bones-joints"] {
-            z-index: 0;
-        }
-
-        .finder-hotspot[data-region="hands-arms"],
-        .finder-hotspot[data-region="legs"] {
-            z-index: 0;
-        }
-
-        .finder-hotspot[data-region="eyes"]::before {
-            background:
-                radial-gradient(circle at center, rgba(29, 78, 216, 0.24), rgba(15, 118, 110, 0.16) 58%, transparent 78%);
-        }
-
-        .finder-hotspot::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            border: 1.5px solid transparent;
-            background:
-                radial-gradient(circle at center, rgba(29, 78, 216, 0.18), rgba(15, 118, 110, 0.12) 55%, transparent 75%);
-            opacity: 0;
-            box-shadow: 0 16px 34px rgba(15, 118, 110, 0.12);
-            transition: opacity 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-        }
-
-        .finder-hotspot:hover,
-        .finder-hotspot.is-active {
-            transform: translate(-50%, -50%) scale(1.03);
-        }
-
-        .finder-hotspot:hover::before,
-        .finder-hotspot:focus-visible::before,
-        .finder-hotspot.is-active::before {
-            opacity: 1;
-            border-color: rgba(15, 118, 110, 0.35);
-            box-shadow: 0 18px 36px rgba(15, 118, 110, 0.18);
-        }
-
-        .finder-hotspot[data-region="eyes"]:hover::before,
-        .finder-hotspot[data-region="eyes"]:focus-visible::before,
-        .finder-hotspot[data-region="eyes"].is-active::before {
-            border-color: rgba(29, 78, 216, 0.42);
-            box-shadow: 0 18px 38px rgba(29, 78, 216, 0.22);
-        }
-
-        .finder-hotspot:focus-visible {
-            outline: 2px solid rgba(29, 78, 216, 0.45);
-            outline-offset: 3px;
-        }
-
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
-        }
-
-        .finder-panel {
-            padding: 18px;
-            display: grid;
-            gap: 14px;
-            align-content: start;
-        }
-
-        .finder-panel-top {
-            display: grid;
-            gap: 8px;
-        }
-
-        .finder-kicker {
-            display: inline-flex;
-            width: fit-content;
-            align-items: center;
-            gap: 8px;
-            border-radius: 999px;
-            padding: 6px 12px;
-            background: rgba(29, 78, 216, 0.08);
-            color: var(--secondary);
-            font-size: 0.78rem;
-            font-weight: 800;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-        }
-
-        .finder-panel p {
-            margin: 0;
-            color: var(--muted);
-            line-height: 1.6;
-        }
-
-        .finder-departments {
-            display: grid;
-            gap: 8px;
-        }
-
-        .finder-departments strong {
-            font-size: 0.95rem;
-        }
-
-        .finder-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .finder-tags span {
-            display: inline-flex;
-            align-items: center;
-            min-height: 34px;
-            padding: 6px 12px;
-            border-radius: 999px;
-            background: rgba(15, 118, 110, 0.08);
-            color: var(--primary-strong);
-            border: 1px solid rgba(15, 118, 110, 0.12);
-            font-weight: 700;
-            font-size: 0.88rem;
-        }
-
-        .finder-note {
-            padding: 12px 14px;
-            border-radius: 16px;
-            background: rgba(24, 50, 68, 0.04);
-            border: 1px solid rgba(24, 50, 68, 0.08);
-        }
-
-        .finder-support {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 10px;
-            margin-top: 14px;
-        }
-
-        .finder-support-copy {
-            color: var(--muted);
-            font-size: 0.92rem;
-            font-weight: 600;
-        }
-
-        .finder-support-button {
-            min-height: 38px;
-            padding: 8px 14px;
-            border-radius: 999px;
-            border: 1px solid rgba(29, 78, 216, 0.16);
-            background: rgba(29, 78, 216, 0.08);
-            color: var(--secondary);
-            font-weight: 800;
-            cursor: pointer;
-            transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
-        }
-
-        .finder-support-button:hover,
-        .finder-support-button:focus-visible,
-        .finder-support-button.is-active {
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-            color: #fff;
-            border-color: transparent;
-            transform: translateY(-1px);
-            outline: none;
-        }
-
-        .stack {
-            display: grid;
-            gap: 10px;
-        }
-
-        .page-hidden { display: none !important; }
-
-        @media (max-width: 980px) {
-            .hero,
-            .grid,
-            .auth-grid,
-            .finder-shell {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 720px) {
-            .shell { width: min(100% - 16px, 1160px); }
-            .topbar-inner { flex-direction: column; align-items: flex-start; }
-            .finder-section,
-            .anatomy-card,
-            .finder-panel { padding: 16px; }
-            .anatomy-stage { min-height: 480px; }
-            .finder-hotspot {
-                min-width: 38px;
-                min-height: 38px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/css/ui-system.css">
 </head>
 <body>
     <header class="topbar">
@@ -546,10 +41,8 @@
                     </div>
                 </article>
                 <aside class="meta">
-                    <strong>What this page does</strong>
-                    <p>Explains the product before login and routes signed-in users back to authenticated workflow pages.</p>
-                    <strong>Who it serves</strong>
-                    <p>Admin, IT, doctor, nurse, patient, donor, and applicant roles.</p>
+                    <strong>Connected workflows</strong>
+                    <p>Admissions, bedside care, donor coordination, and blood response in one system.</p>
                 </aside>
             </section>
 
@@ -557,7 +50,7 @@
                 <div class="finder-header">
                     <span class="badge">Guided Discovery</span>
                     <h2 id="finder-title">Find the right department</h2>
-                    <p>Use the body map to quickly understand which LifeLink-supported department is best suited for a symptom area, urgent care path, or support need.</p>
+                    <p>Use the body map to identify the most relevant department path.</p>
                 </div>
 
                 <div class="finder-shell">
@@ -568,7 +61,7 @@
                                 <button class="finder-hotspot" type="button" data-region="eyes" style="--top: 19.4%; --left: 22.9%; --width: 9.8%; --height: 4.9%;" aria-label="Eyes" aria-pressed="false" aria-controls="finder-panel">
                                     <span class="sr-only">Eyes</span>
                                 </button>
-                                <button class="finder-hotspot is-active" type="button" data-region="brain" style="--top: 16.5%; --left: 22.9%; --width: 12.2%; --height: 7.6%;" aria-label="Brain" aria-pressed="true" aria-controls="finder-panel">
+                                <button class="finder-hotspot is-active" type="button" data-region="brain" style="--top: 15.9%; --left: 22.9%; --width: 10.6%; --height: 6.4%;" aria-label="Brain" aria-pressed="true" aria-controls="finder-panel">
                                     <span class="sr-only">Brain</span>
                                 </button>
                                 <button class="finder-hotspot" type="button" data-region="left-lung" style="--top: 31.2%; --left: 19.2%; --width: 9.4%; --height: 11.8%;" aria-label="Left lung" aria-pressed="false" aria-controls="finder-panel">
@@ -586,7 +79,7 @@
                                 <button class="finder-hotspot" type="button" data-region="stomach" style="--top: 39.6%; --left: 26.2%; --width: 7.9%; --height: 7.2%;" aria-label="Stomach" aria-pressed="false" aria-controls="finder-panel">
                                     <span class="sr-only">Stomach</span>
                                 </button>
-                                <button class="finder-hotspot" type="button" data-region="left-kidney" style="--top: 45.1%; --left: 20.7%; --width: 4.1%; --height: 4.8%;" aria-label="Left kidney" aria-pressed="false" aria-controls="finder-panel">
+                                <button class="finder-hotspot" type="button" data-region="left-kidney" style="--top: 45.8%; --left: 21.9%; --width: 3.6%; --height: 4.3%;" aria-label="Left kidney" aria-pressed="false" aria-controls="finder-panel">
                                     <span class="sr-only">Left kidney</span>
                                 </button>
                                 <button class="finder-hotspot" type="button" data-region="right-kidney" style="--top: 45.1%; --left: 25.7%; --width: 4.1%; --height: 4.8%;" aria-label="Right kidney" aria-pressed="false" aria-controls="finder-panel">
@@ -595,7 +88,7 @@
                                 <button class="finder-hotspot" type="button" data-region="intestines" style="--top: 50.9%; --left: 23.1%; --width: 11.1%; --height: 6.8%;" aria-label="Intestines" aria-pressed="false" aria-controls="finder-panel">
                                     <span class="sr-only">Intestines</span>
                                 </button>
-                                <button class="finder-hotspot" type="button" data-region="bladder" style="--top: 55.9%; --left: 23.1%; --width: 4.8%; --height: 3.2%;" aria-label="Bladder" aria-pressed="false" aria-controls="finder-panel">
+                                <button class="finder-hotspot" type="button" data-region="bladder" style="--top: 56.6%; --left: 23.1%; --width: 5.3%; --height: 3.7%;" aria-label="Bladder" aria-pressed="false" aria-controls="finder-panel">
                                     <span class="sr-only">Bladder</span>
                                 </button>
                                 <button class="finder-hotspot" type="button" data-region="hands-arms" style="--top: 45.2%; --left: 35.8%; --width: 7.2%; --height: 22.8%;" aria-label="Hands and arms" aria-pressed="false" aria-controls="finder-panel">
@@ -634,7 +127,7 @@
                         </div>
 
                         <div class="finder-note">
-                            <p id="finder-region-note">Hover or tap the anatomy itself to preview the most relevant department path, then continue into LifeLink for secure workflow access.</p>
+                            <p id="finder-region-note">Hover or tap the anatomy to preview the most relevant department path, then continue into LifeLink.</p>
                         </div>
 
                         <div class="hero-actions">
@@ -661,13 +154,8 @@
 
             <section id="entry" class="auth-grid">
                 <div id="logged-out-entry" class="card stack">
-                    <h2>Start here</h2>
-                    <p>Use login for existing users. Use registration only for new patient, donor, or applicant accounts.</p>
-                    <ul class="list">
-                        <li>Login routes users to role-specific workflow pages.</li>
-                        <li>Applicants stay in application workspace until approval.</li>
-                        <li>Donor and patient registration open role onboarding paths.</li>
-                    </ul>
+                    <h2>Account entry</h2>
+                    <p>Login for existing users, or create a patient, donor, or applicant account.</p>
                     <div class="hero-actions">
                         <a class="button primary" href="/ui/login">Login</a>
                         <a class="button" href="/ui/register/patient">Patient Register</a>
@@ -678,22 +166,12 @@
 
                 <div id="logged-in-entry" class="card stack page-hidden">
                     <h2>Session detected</h2>
-                    <p>You are already signed in. Continue to your workspace or log out before switching account.</p>
+                    <p>Continue to your workspace or sign out before switching account.</p>
                     <div class="hero-actions">
                         <a id="logged-dashboard-link" class="button primary" href="/ui/dashboard">Go to dashboard</a>
                         <button id="logout-button" class="button" type="button">Logout</button>
                     </div>
                 </div>
-
-                <article class="card">
-                    <h2>Quick links</h2>
-                    <ul class="list">
-                        <li><a href="/ui/applications">Application flow prototype</a></li>
-                        <li><a href="/ui/it-bed-allocation">IT operations prototype</a></li>
-                        <li><a href="/ui/blood-matching">Blood matching prototype</a></li>
-                        <li><a href="/ui/patient-portal">Patient portal prototype</a></li>
-                    </ul>
-                </article>
             </section>
         </main>
     </div>
