@@ -49,7 +49,7 @@
         </div>
 
         <div class="row">
-            <div class="card">
+            <div id="request-board" class="card">
                 <h3>How to use this page</h3>
                 <p class="hint">This is the real Blood Bank operations page. Test it in this order so the workflow stays understandable.</p>
                 <ol class="steps">
@@ -61,7 +61,7 @@
                 </ol>
             </div>
 
-            <div class="card">
+            <div id="selected-request-actions" class="card">
                 <h3>Auth status</h3>
                 <p id="authStatus" class="hint">Checking stored token state.</p>
                 <div class="actions" style="margin-top:12px">
@@ -73,7 +73,7 @@
         </div>
 
         <div class="row">
-            <div class="card">
+            <div id="staff-donor-search" class="card">
                 <h3>Request board</h3>
                 <p class="hint">This is the entry point. Pick one blood request and the rest of the page will align to that request.</p>
                 <div class="controls" style="margin-top:12px">
@@ -87,7 +87,7 @@
                 <div class="wrap"><table class="table"><thead><tr><th>ID</th><th>Patient</th><th>Need</th><th>Units</th><th>Status</th><th>Accepted</th></tr></thead><tbody id="requestsBody"></tbody></table></div>
             </div>
 
-            <div class="card">
+            <div id="staff-donation-logging" class="card">
                 <h3>Selected request actions</h3>
                 <p class="hint">Use this after a request is selected. Notify donors first, then approve an accepted donor, then fulfill the request when blood is actually available.</p>
                 <p id="selectedHint" class="hint">Pick a request to start donor matching.</p>

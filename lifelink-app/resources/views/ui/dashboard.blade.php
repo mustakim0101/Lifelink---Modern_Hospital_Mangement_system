@@ -4,244 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LifeLink | Workspace Hub</title>
-    <style>
-        :root {
-            --hub-bg: #edf4f7;
-            --hub-surface: rgba(255, 255, 255, 0.9);
-            --hub-line: rgba(20, 45, 63, 0.12);
-            --hub-text: #143145;
-            --hub-muted: #607686;
-            --hub-primary: #0f766e;
-            --hub-secondary: #1d4ed8;
-            --hub-danger: #b91c1c;
-            --hub-shadow: 0 18px 42px rgba(16, 42, 60, 0.12);
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            color: var(--hub-text);
-            font-family: "Segoe UI", "Trebuchet MS", sans-serif;
-            background:
-                radial-gradient(circle at top left, rgba(29, 78, 216, 0.14), transparent 24rem),
-                radial-gradient(circle at right, rgba(15, 118, 110, 0.14), transparent 24rem),
-                linear-gradient(180deg, #f8fbfd 0%, var(--hub-bg) 100%);
-        }
-
-        a { color: inherit; text-decoration: none; }
-
-        .hub-shell {
-            width: min(1280px, calc(100% - 24px));
-            margin: 0 auto;
-            padding: 16px 0 30px;
-        }
-
-        .hub-topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 14px;
-        }
-
-        .hub-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .hub-mark {
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            display: grid;
-            place-items: center;
-            color: #fff;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--hub-secondary), var(--hub-primary));
-            box-shadow: 0 12px 22px rgba(29, 78, 216, 0.24);
-        }
-
-        .hub-brand strong {
-            display: block;
-            font-size: 1.04rem;
-        }
-
-        .hub-brand span {
-            color: var(--hub-muted);
-            font-size: 0.9rem;
-        }
-
-        .hub-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .hub-chip {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 38px;
-            padding: 8px 14px;
-            border: 1px solid var(--hub-line);
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.78);
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .hub-layout {
-            display: grid;
-            grid-template-columns: 290px minmax(0, 1fr);
-            gap: 14px;
-        }
-
-        .hub-rail,
-        .hub-main {
-            border: 1px solid var(--hub-line);
-            border-radius: 20px;
-            background: var(--hub-surface);
-            box-shadow: var(--hub-shadow);
-        }
-
-        .hub-rail {
-            padding: 14px;
-            align-self: start;
-            position: sticky;
-            top: 12px;
-            display: grid;
-            gap: 12px;
-        }
-
-        .hub-main {
-            padding: 14px;
-            display: grid;
-            gap: 12px;
-        }
-
-        .hub-block {
-            border: 1px solid var(--hub-line);
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.86);
-            padding: 14px;
-        }
-
-        .hub-label {
-            display: block;
-            margin-bottom: 6px;
-            color: var(--hub-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.07em;
-            font-size: 0.72rem;
-            font-weight: 800;
-        }
-
-        .hub-title {
-            margin: 0;
-            font-size: 1.24rem;
-        }
-
-        .hub-copy {
-            margin: 6px 0 0;
-            color: var(--hub-muted);
-            line-height: 1.6;
-            font-size: 0.93rem;
-        }
-
-        .hub-primary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 38px;
-            padding: 8px 14px;
-            border: 0;
-            border-radius: 999px;
-            color: #fff;
-            background: linear-gradient(135deg, var(--hub-secondary), var(--hub-primary));
-            font-weight: 700;
-        }
-
-        .hub-stats {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
-        }
-
-        .hub-stat {
-            border: 1px solid var(--hub-line);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-        }
-
-        .hub-stat strong {
-            display: block;
-            font-size: 0.95rem;
-        }
-
-        .hub-stat span {
-            color: var(--hub-muted);
-            font-size: 0.82rem;
-        }
-
-        .hub-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px;
-        }
-
-        .hub-card {
-            border: 1px solid var(--hub-line);
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 14px;
-        }
-
-        .hub-card h3 {
-            margin: 0 0 8px;
-            font-size: 1rem;
-        }
-
-        .hub-card p {
-            margin: 0;
-            color: var(--hub-muted);
-            font-size: 0.9rem;
-            line-height: 1.55;
-        }
-
-        .hub-card .hub-actions {
-            margin-top: 10px;
-        }
-
-        .hub-notice {
-            padding: 12px;
-            border-radius: 14px;
-            border: 1px solid rgba(185, 28, 28, 0.2);
-            color: var(--hub-danger);
-            background: rgba(185, 28, 28, 0.08);
-        }
-
-        .hidden { display: none; }
-
-        @media (max-width: 980px) {
-            .hub-layout,
-            .hub-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .hub-rail {
-                position: static;
-            }
-        }
-
-        @media (max-width: 720px) {
-            .hub-shell { width: min(100% - 16px, 1280px); }
-            .hub-topbar { flex-direction: column; align-items: flex-start; }
-            .hub-stats { grid-template-columns: 1fr; }
-        }
-    </style>
+    <link rel="stylesheet" href="/css/ui-system.css">
 </head>
 <body>
     <div class="hub-shell">
@@ -264,17 +27,17 @@
                 <article class="hub-block">
                     <span class="hub-label">Signed In</span>
                     <strong id="user-email">No active session</strong>
-                    <p class="hub-copy">Identity and session summary.</p>
+                    <p class="hub-copy">Current session.</p>
                 </article>
                 <article class="hub-block">
                     <span class="hub-label">Detected Roles</span>
                     <strong id="role-list">None</strong>
-                    <p class="hub-copy">Primary route and tools adjust to your active roles.</p>
+                    <p class="hub-copy">Available workspaces.</p>
                 </article>
                 <article id="admin-tools-card" class="hub-block hidden">
                     <span class="hub-label">Admin / IT</span>
                     <strong>Advanced tools</strong>
-                    <p class="hub-copy">Open diagnostics only when normal workflow pages are not enough.</p>
+                    <p class="hub-copy">Diagnostics and raw checks.</p>
                     <div class="hub-actions">
                         <a class="hub-primary" href="/ui/dev-tools">Open advanced tools</a>
                     </div>
@@ -285,14 +48,14 @@
                 <section class="hub-block">
                     <span class="hub-label">Workspace Hub</span>
                     <h1 id="welcome-line" class="hub-title">Organized access for your role.</h1>
-                    <p id="welcome-copy" class="hub-copy">This hub highlights your next operational page and related tools.</p>
+                    <p id="welcome-copy" class="hub-copy">Open the right workspace and related tools.</p>
                 </section>
 
                 <section class="hub-block">
                     <span class="hub-label">Primary Destination</span>
                     <h2 id="primary-title" class="hub-title">Sign in required</h2>
-                    <p id="primary-copy" class="hub-copy">Log in first to unlock role-aware routing.</p>
-                    <div class="hub-actions" style="margin-top: 10px;">
+                    <p id="primary-copy" class="hub-copy">Log in to unlock role-aware routing.</p>
+                    <div class="hub-actions u-mt-2">
                         <a id="primary-link" class="hub-primary" href="/ui/login">Open login page</a>
                     </div>
                 </section>
@@ -349,7 +112,8 @@
                 { title: 'Advanced tools', href: '/ui/dev-tools', desc: 'Technical diagnostics for operations support.' }
             ],
             bloodBankCards: [
-                { title: 'Blood matching center', href: '/ui/blood-matching', desc: 'Request matching and donor-response operations.' }
+                { title: 'Blood matching center', href: '/ui/blood-matching', desc: 'Request matching and donor-response operations.' },
+                { title: 'Blood bank schema', href: '/ui/blood-bank-schema', desc: 'Bank, inventory, and donor setup tables.' }
             ]
         },
         Doctor: {
@@ -477,7 +241,7 @@
         const bloodBankItAccess = await hasBloodBankItAccess();
 
         welcomeLine.textContent = `Welcome back, ${config.label}.`;
-        welcomeCopy.textContent = `This hub keeps your role workflow clear and routes you to operational pages quickly.`;
+        welcomeCopy.textContent = 'Open the right workspace and related tools.';
         primaryTitle.textContent = config.primaryLabel;
         primaryCopy.textContent = config.primaryCopy;
         primaryLink.href = config.primaryHref;

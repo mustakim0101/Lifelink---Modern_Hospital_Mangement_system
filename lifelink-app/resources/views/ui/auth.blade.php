@@ -3,27 +3,27 @@
     $config = [
         'login' => [
             'title' => 'Login',
-            'badge' => 'Existing Account',
-            'headline' => 'Login and continue into the correct role workspace.',
-            'copy' => 'Every existing account uses the same login flow. Registration is split into separate entry pages by user type.',
+            'badge' => 'LifeLink Access',
+            'headline' => 'Sign in to your workspace.',
+            'copy' => 'Use one login for every existing account.',
         ],
         'patient' => [
             'title' => 'Patient Registration',
-            'badge' => 'Patient Entry',
-            'headline' => 'Create a patient account with patient-related details only.',
-            'copy' => 'This path is for patient-side access such as appointments, records, and blood requests.',
+            'badge' => 'Patient Registration',
+            'headline' => 'Create a patient account.',
+            'copy' => 'Patient access for appointments, records, and blood requests.',
         ],
         'donor' => [
             'title' => 'Donor Registration',
-            'badge' => 'Donor Entry',
-            'headline' => 'Create a donor account and initialize the donor profile.',
-            'copy' => 'This path is for blood donor onboarding and donor-specific profile details.',
+            'badge' => 'Donor Registration',
+            'headline' => 'Create a donor account.',
+            'copy' => 'Blood donor onboarding and donor profile setup.',
         ],
         'applicant' => [
             'title' => 'Applicant Registration',
-            'badge' => 'Applicant Entry',
-            'headline' => 'Create an applicant account and submit the first application.',
-            'copy' => 'This path is for hiring flow entry, not for donor or patient profile setup.',
+            'badge' => 'Applicant Registration',
+            'headline' => 'Create an applicant account.',
+            'copy' => 'Hiring flow entry for doctor, nurse, and IT worker applications.',
         ],
     ][$mode] ?? null;
 
@@ -56,136 +56,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LifeLink | {{ $config['title'] }}</title>
-    <style>
-        :root {
-            --bg: #eef5f8;
-            --surface: rgba(255,255,255,0.88);
-            --line: rgba(22,49,67,0.12);
-            --text: #163143;
-            --muted: #607482;
-            --primary: #0f766e;
-            --secondary: #1d4ed8;
-            --danger: #b91c1c;
-            --success: #15803d;
-            --warning: #b45309;
-            --shadow: 0 24px 60px rgba(17,42,60,0.12);
-        }
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            font-family: "Segoe UI", "Trebuchet MS", sans-serif;
-            color: var(--text);
-            background:
-                radial-gradient(circle at top left, rgba(29,78,216,0.14), transparent 24rem),
-                radial-gradient(circle at right, rgba(15,118,110,0.14), transparent 24rem),
-                linear-gradient(180deg, #f8fbfd 0%, var(--bg) 100%);
-        }
-        a { color: inherit; text-decoration: none; }
-        .shell { width: min(1100px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 40px; }
-        .topline, .row, .session-grid { display: grid; gap: 14px; }
-        .topline { grid-template-columns: 1fr auto; align-items: center; margin-bottom: 20px; }
-        .crumbs { display: flex; gap: 10px; color: var(--muted); font-weight: 600; }
-        .mini-link, .path-link, .ghost-link {
-            padding: 10px 14px;
-            border-radius: 999px;
-            border: 1px solid var(--line);
-            background: rgba(255,255,255,0.74);
-        }
-        .layout { display: grid; grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.1fr); gap: 20px; }
-        .panel {
-            border: 1px solid var(--line);
-            border-radius: 26px;
-            background: var(--surface);
-            box-shadow: var(--shadow);
-            padding: 24px;
-        }
-        .hero {
-            background:
-                radial-gradient(circle at top left, rgba(249,115,22,0.16), transparent 18rem),
-                linear-gradient(160deg, rgba(255,255,255,0.92), rgba(229,245,244,0.84));
-        }
-        .badge {
-            display: inline-flex;
-            padding: 8px 14px;
-            border-radius: 999px;
-            background: rgba(15,118,110,0.1);
-            color: #0b625d;
-            font-size: 0.8rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-        }
-        h1 {
-            margin: 18px 0 12px;
-            font-family: Georgia, "Times New Roman", serif;
-            font-size: clamp(2rem, 4vw, 3.3rem);
-            line-height: 1.06;
-        }
-        h2 { margin: 0 0 8px; font-size: 1.35rem; }
-        p { margin: 0; color: var(--muted); line-height: 1.75; }
-        .path-list { display: grid; gap: 12px; margin-top: 20px; }
-        .path-link { display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
-        .path-link span { color: var(--muted); font-size: 0.92rem; }
-        .field { display: grid; gap: 8px; margin-top: 14px; }
-        .field label { font-weight: 700; font-size: 0.94rem; }
-        .field input, .field select, .field textarea {
-            width: 100%;
-            padding: 13px 14px;
-            border-radius: 14px;
-            border: 1px solid rgba(22,49,67,0.14);
-            background: #fbfdff;
-            color: var(--text);
-            font: inherit;
-        }
-        .field textarea { min-height: 90px; resize: vertical; }
-        .button-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
-        .button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 13px 18px;
-            border-radius: 999px;
-            border: 0;
-            cursor: pointer;
-            font: inherit;
-            font-weight: 700;
-        }
-        .button-primary { color: #fff; background: linear-gradient(135deg, var(--secondary), var(--primary)); }
-        .button-secondary { color: var(--text); background: rgba(22,49,67,0.06); }
-        .button-warm { color: #fff; background: linear-gradient(135deg, #ea580c, #c2410c); }
-        .message, .session-card, .advanced-card, .help-card {
-            margin-top: 18px;
-            padding: 16px;
-            border-radius: 18px;
-            border: 1px solid var(--line);
-            background: rgba(255,255,255,0.72);
-        }
-        .message { display: none; }
-        .message.show { display: block; }
-        .message.success { color: var(--success); background: rgba(21,128,61,0.08); border-color: rgba(21,128,61,0.18); }
-        .message.error { color: var(--danger); background: rgba(185,28,28,0.08); border-color: rgba(185,28,28,0.18); }
-        .message.info { color: var(--warning); background: rgba(180,83,9,0.08); border-color: rgba(180,83,9,0.18); }
-        .session-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 12px; }
-        .session-grid div { padding: 12px; border-radius: 14px; background: rgba(22,49,67,0.05); }
-        .session-grid small { display: block; margin-bottom: 6px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.72rem; font-weight: 800; }
-        .advanced-toggle { margin-top: 18px; border: 0; background: none; color: var(--secondary); font-weight: 700; cursor: pointer; padding: 0; }
-        .advanced-card { display: none; }
-        .advanced-card.show { display: block; }
-        .help-card strong { display: block; margin-bottom: 8px; }
-        @media (max-width: 920px) {
-            .layout, .session-grid, .topline { grid-template-columns: 1fr; }
-        }
-    </style>
+    <link rel="stylesheet" href="/css/ui-system.css">
 </head>
 <body>
     <div class="shell">
+        <header class="topbar">
+            <div class="topbar-inner">
+                <div class="brand">
+                    <div class="brand-mark">LL</div>
+                    <div class="brand-copy">
+                        <strong>LifeLink</strong>
+                        <span>{{ $config['title'] }}</span>
+                    </div>
+                </div>
+                <nav class="topnav">
+                    <a href="/">Public Home</a>
+                    <a href="/ui/login">Login</a>
+                    <a href="/ui/register/patient">Patient Register</a>
+                    <a href="/ui/register/donor">Donor Register</a>
+                    <a href="/ui/register/applicant">Applicant Register</a>
+                </nav>
+            </div>
+        </header>
+
         <div class="topline">
             <div class="crumbs">
                 <a href="/">Public Home</a>
                 <span>/</span>
                 <span>{{ $config['title'] }}</span>
             </div>
-            <a class="mini-link" href="/ui">Prototype Directory</a>
+            <a class="mini-link" href="/ui/dashboard">Workspace Hub</a>
         </div>
 
         <section class="layout">
@@ -198,21 +98,16 @@
                     @foreach ($otherLinks as $link)
                         <a class="path-link" href="{{ $link['href'] }}">
                             <strong>{{ $link['label'] }}</strong>
-                            <span>Open page</span>
+                            <span>Open</span>
                         </a>
                     @endforeach
-                </div>
-
-                <div class="help-card">
-                    <strong>Flow direction</strong>
-                    <p>Login remains one shared page. Registration now has separate entry pages so each user type sees only its own form fields.</p>
                 </div>
             </article>
 
             <article class="panel">
                 @if ($mode === 'login')
-                    <h2>Login for all users</h2>
-                    <p>Use your email and password to access the correct role-based workspace.</p>
+                    <h2>Login</h2>
+                    <p>Enter your email and password.</p>
 
                     <div class="field">
                         <label for="loginEmail">Email</label>
@@ -260,7 +155,7 @@
                     </div>
                 @elseif ($mode === 'patient')
                     <h2>Register as patient</h2>
-                    <p>Create a patient account for appointments, records, and blood request actions.</p>
+                    <p>Create a patient account for appointments, records, and blood requests.</p>
                     <div class="field"><label for="patientName">Full name</label><input id="patientName" type="text" value="Patient UI"></div>
                     <div class="field"><label for="patientEmail">Email</label><input id="patientEmail" type="email" value="patient_ui@demo.com"></div>
                     <div class="field"><label for="patientPassword">Password</label><input id="patientPassword" type="password" value="patient12345"></div>
@@ -282,7 +177,7 @@
                     </div>
                 @elseif ($mode === 'donor')
                     <h2>Register as blood donor</h2>
-                    <p>Create the account and initialize the donor profile.</p>
+                    <p>Create the account and donor profile.</p>
                     <div class="field"><label for="donorName">Full name</label><input id="donorName" type="text" value="Donor UI"></div>
                     <div class="field"><label for="donorEmail">Email</label><input id="donorEmail" type="email" value="donor_ui@demo.com"></div>
                     <div class="field"><label for="donorPassword">Password</label><input id="donorPassword" type="password" value="donor12345"></div>
@@ -302,7 +197,7 @@
                     </div>
                 @else
                     <h2>Register as job applicant</h2>
-                    <p>Create the account and submit the first job application. Only doctor applicants choose a preferred department here; nurse and IT worker department assignment will be handled by admin review.</p>
+                    <p>Create the account and submit the first job application.</p>
                     <div class="field"><label for="applicantName">Full name</label><input id="applicantName" type="text" value="Applicant UI"></div>
                     <div class="field"><label for="applicantEmail">Email</label><input id="applicantEmail" type="email" value="applicant_ui@demo.com"></div>
                     <div class="field"><label for="applicantPassword">Password</label><input id="applicantPassword" type="password" value="applicant12345"></div>
@@ -320,6 +215,7 @@
                             <option value="">Select department</option>
                         </select>
                     </div>
+                    <p class="ll-helper-tight">Doctor applicants can choose a preferred department here. Nurse and IT assignments are completed after admin review.</p>
                     <div class="button-row">
                         <button class="button button-primary" type="button" onclick="registerApplicant()">Create applicant account</button>
                         <a class="ghost-link" href="/ui/login">Already have an account?</a>
