@@ -10,15 +10,25 @@
 <body>
     <div class="app-shell">
         <header class="app-shell__topbar">
-            <a class="app-shell__brand" href="/">
-                <div class="app-shell__mark">LL</div>
-                <div>
-                    <strong>LifeLink Workspace</strong>
-                    @if(trim($__env->yieldContent('workspace_label', 'Role-aware authenticated mode')) !== '')
-                        <span>@yield('workspace_label', 'Role-aware authenticated mode')</span>
-                    @endif
+            <div class="app-shell__topbar-main">
+                <a class="app-shell__brand" href="/">
+                    <div class="app-shell__mark">LL</div>
+                    <div class="app-shell__brand-copy">
+                        <strong>LifeLink Workspace</strong>
+                        @if(trim($__env->yieldContent('workspace_label', 'Role-aware authenticated mode')) !== '')
+                            <span>@yield('workspace_label', 'Role-aware authenticated mode')</span>
+                        @else
+                            <span>Authenticated care operations</span>
+                        @endif
+                    </div>
+                </a>
+
+                <div class="app-shell__session-pill" aria-live="polite">
+                    <span class="app-shell__session-label">Active session</span>
+                    <strong id="shell-topbar-user">No active session</strong>
+                    <span id="shell-topbar-role">No role detected</span>
                 </div>
-            </a>
+            </div>
 
             <div class="app-shell__actions">
                 <a class="app-shell__chip" href="/">Public Home</a>
@@ -40,12 +50,14 @@
                     <p>@yield('hero_description', 'This area is part of the authenticated product flow.')</p>
                 @endif
                 @hasSection('hero_extra')
-                    @yield('hero_extra')
+                    <div class="app-shell__hero-extra">
+                        @yield('hero_extra')
+                    </div>
                 @endif
             </div>
 
             <div class="app-shell__hero-meta">
-                <div class="app-shell__meta-card">
+                <div class="app-shell__meta-card app-shell__meta-card--identity">
                     <small>Signed in as</small>
                     <strong id="shell-user-name">No active session</strong>
                     <span id="shell-user-meta">No role detected</span>
@@ -62,7 +74,11 @@
 
         <section class="app-shell__body">
             <aside class="app-shell__sidebar">
-                <nav class="app-shell__nav">
+                <div class="app-shell__sidebar-head">
+                    <span class="app-shell__sidebar-eyebrow">Workspace navigation</span>
+                    <p class="app-shell__sidebar-copy">Move between role-aware sections without leaving the current authenticated flow.</p>
+                </div>
+                <nav class="app-shell__nav" aria-label="Workspace sections">
                     @yield('sidebar_nav')
                 </nav>
                 @yield('sidebar')
@@ -74,7 +90,7 @@
                         @yield('section_nav')
                     </div>
                 @endif
-                <div class="app-shell__content-body">
+                <div class="app-shell__content-body ui-card ui-card--shell">
                     @yield('content')
                 </div>
             </main>
@@ -114,6 +130,8 @@
         const roles = JSON.parse(localStorage.getItem('CURRENT_USER_ROLES') || '[]');
         const userName = document.getElementById('shell-user-name');
         const userMeta = document.getElementById('shell-user-meta');
+        const topbarUser = document.getElementById('shell-topbar-user');
+        const topbarRole = document.getElementById('shell-topbar-role');
         const preferredRole = window.lifeLinkShell.getPreferredRole(roles);
         const identity = fullName || email;
         const metaParts = [];
@@ -124,6 +142,8 @@
 
         if (userName) userName.textContent = identity;
         if (userMeta) userMeta.textContent = metaParts.join(' | ');
+        if (topbarUser) topbarUser.textContent = identity;
+        if (topbarRole) topbarRole.textContent = preferredRole ? `${preferredRole} workflow` : 'No role detected';
     })();
     </script>
     @stack('scripts')

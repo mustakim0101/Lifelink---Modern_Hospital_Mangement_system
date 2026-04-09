@@ -6,51 +6,90 @@
     <title>LifeLink | Modern Hospital Management</title>
     <link rel="stylesheet" href="/css/ui-system.css">
 </head>
-<body>
-    <header class="topbar">
+<body class="welcome-page">
+    <header class="topbar topbar--public">
         <div class="shell topbar-inner">
             <div class="brand">
                 <div class="brand-mark">LL</div>
                 <div class="brand-copy">
                     <strong>LifeLink</strong>
-                    <span>Hospital coordination for care, beds, and blood response.</span>
+                    <span>Modern hospital operations, patient access, and blood response.</span>
                 </div>
             </div>
 
             <nav class="topnav">
                 <a href="#overview">Overview</a>
-                <a href="#modules">Services</a>
+                <a href="#find-department">Department Finder</a>
+                <a href="#modules">Platform</a>
                 <a href="#entry">Entry</a>
                 <a id="auth-nav-link" href="/ui/login">Login / Register</a>
-                <a id="session-nav-link" class="cta" href="/ui">Explore UI</a>
+                <a id="session-nav-link" class="cta" href="/ui">Workspace</a>
             </nav>
         </div>
     </header>
 
     <div class="shell">
-        <main>
-            <section class="hero" id="overview">
-                <article>
-                    <span class="badge">Public Mode</span>
-                    <h1>One platform for hospital operations and donor response.</h1>
-                    <p>LifeLink connects admissions, bed allocation, patient access, and blood-request workflows in one role-aware system.</p>
+        <main class="welcome-main">
+            <section class="welcome-hero" id="overview">
+                <article class="welcome-hero__copy">
+                    <span class="badge">Healthcare SaaS</span>
+                    <h1>Coordinate hospital care, access, and blood operations from one calm system.</h1>
+                    <p>LifeLink brings together admissions, bed management, patient-facing access, staff workspaces, and Blood Bank response in a single role-aware experience.</p>
                     <div class="hero-actions">
                         <a class="button primary" href="/ui/login">Open Login</a>
-                        <a class="button" href="#modules">See Modules</a>
-                        <a class="button" href="/ui/dashboard">Workspace Hub</a>
+                        <a class="button" href="#find-department">Find a Department</a>
+                        <a class="button" href="/ui/dashboard">Open Workspace Hub</a>
+                    </div>
+                    <div class="welcome-proof">
+                        <div class="welcome-proof__item">
+                            <strong>Role-aware entry</strong>
+                            <span>Launch the right workspace without changing the existing routing or session behavior.</span>
+                        </div>
+                        <div class="welcome-proof__item">
+                            <strong>Operational coverage</strong>
+                            <span>Admissions, clinical coordination, and Blood Bank workflows stay connected in one product surface.</span>
+                        </div>
                     </div>
                 </article>
-                <aside class="meta">
-                    <strong>Connected workflows</strong>
-                    <p>Admissions, bedside care, donor coordination, and blood response in one system.</p>
+                <aside class="welcome-hero__aside">
+                    <article class="welcome-highlight">
+                        <span class="welcome-highlight__label">Deployment-ready feel</span>
+                        <strong>Built for patients, clinicians, operations, and donor-response teams.</strong>
+                        <p>Calmer hierarchy, stronger cards, and cleaner entry points make LifeLink feel intentional from the first screen.</p>
+                    </article>
+                    <div class="welcome-metrics">
+                        <article class="welcome-metric">
+                            <strong>7</strong>
+                            <span>Role paths</span>
+                        </article>
+                        <article class="welcome-metric">
+                            <strong>1</strong>
+                            <span>Unified workspace system</span>
+                        </article>
+                        <article class="welcome-metric">
+                            <strong>24/7</strong>
+                            <span>Operational posture</span>
+                        </article>
+                    </div>
                 </aside>
+            </section>
+
+            <section class="welcome-bands" aria-label="LifeLink strengths">
+                <article class="welcome-band">
+                    <span class="hub-label">Operational Core</span>
+                    <h2>Trusted structure for admissions, clinical work, and donor response.</h2>
+                </article>
+                <article class="welcome-band">
+                    <span class="hub-label">Session-aware Entry</span>
+                    <p>Signed-out visitors can move into login or registration, while active sessions can continue directly into the right dashboard.</p>
+                </article>
             </section>
 
             <section class="finder-section" id="find-department" aria-labelledby="finder-title">
                 <div class="finder-header">
-                    <span class="badge">Guided Discovery</span>
+                    <span class="badge">Department Finder</span>
                     <h2 id="finder-title">Find the right department</h2>
-                    <p>Use the body map to identify the most relevant department path.</p>
+                    <p>Use the anatomy guide to surface the most relevant department path before you continue into LifeLink.</p>
                 </div>
 
                 <div class="finder-shell">
@@ -132,30 +171,35 @@
 
                         <div class="hero-actions">
                             <a class="button primary" href="/ui/login">Continue to Login</a>
+                            <a class="button" href="#entry">See account entry</a>
                         </div>
                     </aside>
                 </div>
             </section>
 
-            <section id="modules" class="grid">
-                <article class="card">
+            <section id="modules" class="welcome-module-grid">
+                <article class="card welcome-module-card">
+                    <span class="hub-label">Identity</span>
                     <h2>Role-aware authentication</h2>
-                    <p>Single login entry with route decisions based on active role.</p>
+                    <p>One entry layer for patients, staff, donors, and applicants with workspace routing that stays tied to current roles.</p>
                 </article>
-                <article class="card">
+                <article class="card welcome-module-card">
+                    <span class="hub-label">Operations</span>
                     <h2>Admissions and beds</h2>
-                    <p>Department scope, care units, admissions, and bed assignment.</p>
+                    <p>Department scope, care units, patient movement, and bed allocation live inside the same operational surface.</p>
                 </article>
-                <article class="card">
+                <article class="card welcome-module-card">
+                    <span class="hub-label">Blood Bank</span>
                     <h2>Blood operations</h2>
-                    <p>Donor readiness, matching, notifications, and fulfillment flow.</p>
+                    <p>Donor screening, matching, notifications, approval, fulfillment, and donation logging stay connected end to end.</p>
                 </article>
             </section>
 
-            <section id="entry" class="auth-grid">
-                <div id="logged-out-entry" class="card stack">
-                    <h2>Account entry</h2>
-                    <p>Login for existing users, or create a patient, donor, or applicant account.</p>
+            <section id="entry" class="welcome-entry-grid">
+                <div id="logged-out-entry" class="card stack welcome-entry-card">
+                    <span class="hub-label">Account Entry</span>
+                    <h2>Choose the right way into LifeLink.</h2>
+                    <p>Sign in to an existing account or create the right public entry for patients, donors, and staff applicants.</p>
                     <div class="hero-actions">
                         <a class="button primary" href="/ui/login">Login</a>
                         <a class="button" href="/ui/register/patient">Patient Register</a>
@@ -164,12 +208,22 @@
                     </div>
                 </div>
 
-                <div id="logged-in-entry" class="card stack page-hidden">
-                    <h2>Session detected</h2>
-                    <p>Continue to your workspace or sign out before switching account.</p>
+                <div id="logged-in-entry" class="card stack welcome-entry-card page-hidden">
+                    <span class="hub-label">Active Session</span>
+                    <h2>Continue into your workspace.</h2>
+                    <p>A session is already available in this browser. Move forward or sign out before switching accounts.</p>
                     <div class="hero-actions">
                         <a id="logged-dashboard-link" class="button primary" href="/ui/dashboard">Go to dashboard</a>
                         <button id="logout-button" class="button" type="button">Logout</button>
+                    </div>
+                </div>
+
+                <div class="card stack welcome-entry-card welcome-entry-card--support">
+                    <span class="hub-label">Care Access</span>
+                    <h2>Need help choosing a route?</h2>
+                    <p>Use the department finder for symptom-based guidance, then enter through the login or registration path that fits your role.</p>
+                    <div class="hero-actions">
+                        <a class="button" href="#find-department">Open anatomy guide</a>
                     </div>
                 </div>
             </section>
