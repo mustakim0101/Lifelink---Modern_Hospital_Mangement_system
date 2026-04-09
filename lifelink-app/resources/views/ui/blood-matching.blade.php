@@ -35,7 +35,7 @@
 @section('sidebar')
     <div class="app-shell__sidebar-card">
         <strong>Blood Bank scope</strong>
-        <p>This board is intended for admins and IT workers assigned to the <code>Blood Bank</code> department.</p>
+        <p>This board is intended for admins and IT workers assigned to the <code>Blood Bank</code> department. The same operational sections are now also surfaced inline inside the IT dashboard Blood Bank panel.</p>
     </div>
 @endsection
 
@@ -49,7 +49,7 @@
         </div>
 
         <div class="row">
-            <div id="request-board" class="card">
+            <div id="blood-matching-center" class="card">
                 <h3>How to use this page</h3>
                 <p class="hint">This is the real Blood Bank operations page. Test it in this order so the workflow stays understandable.</p>
                 <ol class="steps">
@@ -61,7 +61,7 @@
                 </ol>
             </div>
 
-            <div id="selected-request-actions" class="card">
+            <div id="auth-status-panel" class="card">
                 <h3>Auth status</h3>
                 <p id="authStatus" class="hint">Checking stored token state.</p>
                 <div class="actions" style="margin-top:12px">
@@ -73,7 +73,7 @@
         </div>
 
         <div class="row">
-            <div id="staff-donor-search" class="card">
+            <div id="request-board" class="card">
                 <h3>Request board</h3>
                 <p class="hint">This is the entry point. Pick one blood request and the rest of the page will align to that request.</p>
                 <div class="controls" style="margin-top:12px">
@@ -87,7 +87,8 @@
                 <div class="wrap"><table class="table"><thead><tr><th>ID</th><th>Patient</th><th>Need</th><th>Units</th><th>Status</th><th>Accepted</th></tr></thead><tbody id="requestsBody"></tbody></table></div>
             </div>
 
-            <div id="staff-donation-logging" class="card">
+            <div id="approval-fulfillment" class="card">
+                <div id="selected-request-actions"></div>
                 <h3>Selected request actions</h3>
                 <p class="hint">Use this after a request is selected. Notify donors first, then approve an accepted donor, then fulfill the request when blood is actually available.</p>
                 <p id="selectedHint" class="hint">Pick a request to start donor matching.</p>
@@ -123,7 +124,8 @@
         </div>
 
         <div class="row">
-            <div class="card">
+            <div id="donor-search" class="card">
+                <div id="staff-donor-search"></div>
                 <h3>Staff donor search</h3>
                 <p class="hint">This is the broader staff lookup area. Use it when you want donors outside the current suggestions list or for casual donation handling.</p>
                 <div class="controls" style="margin-top:12px">
@@ -136,7 +138,8 @@
                 <div id="staffDonorGrid" class="cards" style="margin-top:12px"></div>
             </div>
 
-            <div class="card">
+            <div id="donation-logging" class="card">
+                <div id="staff-donation-logging"></div>
                 <h3>Staff donation logging</h3>
                 <p class="hint">This logs the real physical donation after a Blood Bank nurse health check. It supports both request-linked donations and casual walk-in donations.</p>
                 <div class="controls" style="margin-top:12px">

@@ -189,10 +189,17 @@
 
         <div id="nurse-blood-bank" class="nurse-panel ll-section nurse-panel-switch" data-display="block">
             <h3>Blood Bank donor screening</h3>
-            <p class="nurse-note">Blood Bank-only nurse workspace.</p>
+            <p class="nurse-note">Blood Bank-only donor screening workflow for nurse-owned health checks and eligibility updates.</p>
 
             <div id="bloodBankLocked" class="nurse-note">Load your nurse profile first to see whether Blood Bank donor screening is available for this account.</div>
-            <div id="bloodBankSection" class="is-initially-hidden">
+            <div id="bloodBankSection" hidden>
+                <div id="bloodBankDebugMarker" class="ll-debug-marker" hidden>DEBUG: Blood Bank nurse real panel mounted</div>
+                <div class="nurse-summary-grid">
+                    <div class="nurse-summary"><small>Step 1</small><strong>Search and select donor</strong></div>
+                    <div class="nurse-summary"><small>Step 2</small><strong>Review latest screening history</strong></div>
+                    <div class="nurse-summary"><small>Step 3</small><strong>Log current health check</strong></div>
+                    <div class="nurse-summary"><small>Step 4</small><strong>Confirm backend eligibility result</strong></div>
+                </div>
                 <div class="nurse-control-grid">
                     <div>
                         <label class="nurse-label" for="bbDonorQuery">Search donor</label>
@@ -201,6 +208,30 @@
                     <div>
                         <label class="nurse-label" for="bbRequestId">Filter by request ID</label>
                         <input id="bbRequestId" class="nurse-input" type="number" min="1" placeholder="Optional accepted request id">
+                    </div>
+                </div>
+                <div class="nurse-control-grid">
+                    <div>
+                        <label class="nurse-label" for="bbBloodGroupFilter">Blood group</label>
+                        <select id="bbBloodGroupFilter" class="nurse-select">
+                            <option value="">All groups</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="nurse-label" for="bbEligibilityFilter">Eligibility</label>
+                        <select id="bbEligibilityFilter" class="nurse-select">
+                            <option value="">All donors</option>
+                            <option value="true">Eligible</option>
+                            <option value="false">Not eligible</option>
+                        </select>
                     </div>
                 </div>
                 <div class="nurse-actions">
@@ -218,6 +249,10 @@
                         <h3>Donor health check entry</h3>
                         <div id="bbSelectedDonor" class="nurse-summary-grid">
                             <div class="nurse-note">Select a donor card from the left list.</div>
+                        </div>
+                        <div class="nurse-section-title">Latest screening status</div>
+                        <div id="bbSelectedDonorStatus" class="nurse-summary-grid">
+                            <div class="nurse-note">Latest donor eligibility and last screening details will appear here.</div>
                         </div>
                         <div class="nurse-control-grid">
                             <div>
@@ -247,6 +282,7 @@
                             <div>
                                 <label class="nurse-label">Eligibility result</label>
                                 <div id="bbEligibilityResult" class="nurse-pill bed">Waiting for staff entry</div>
+                                <p id="bbEligibilityReason" class="nurse-note u-mt-1">Backend evaluation reason will appear after save.</p>
                             </div>
                         </div>
                         <label class="nurse-label" for="bbHealthNote">Health check note</label>
@@ -319,12 +355,35 @@ const state = {
     },
 };
 
+function normalizeDepartmentName(value) {
+    if (!value) return '';
+    if (typeof value === 'string') return value.trim().toLowerCase();
+    if (typeof value === 'object') {
+        return String(
+            value.dept_name
+            || value.department
+            || value.department_name
+            || value.name
+            || ''
+        ).trim().toLowerCase();
+    }
+    return String(value).trim().toLowerCase();
+}
+
+function isBloodBankNurse() {
+    return normalizeDepartmentName(
+        state.nurse?.department
+        || state.nurse?.department_name
+        || state.nurse?.dept_name
+    ) === 'blood bank';
+}
+
 function allowedNursePanels() {
     if (!state.nurseProfileLoaded || !state.nurse) {
         return ['nurse-overview', 'nurse-debug'];
     }
 
-    if (state.nurse.department === 'Blood Bank') {
+    if (isBloodBankNurse()) {
         return ['nurse-overview', 'nurse-blood-bank', 'nurse-debug'];
     }
 
@@ -348,6 +407,13 @@ function write(data) {
     out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
 }
 
+function setVisibility(elementId, visible, displayValue = 'block') {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    element.hidden = !visible;
+    element.style.display = visible ? displayValue : 'none';
+}
+
 function setActivePanel(panelId) {
     const allowed = allowedNursePanels();
     if (!allowed.includes(panelId)) {
@@ -355,6 +421,11 @@ function setActivePanel(panelId) {
     }
 
     state.activePanel = panelId;
+    console.log('[NurseDashboard] active panel selected', {
+        activePanel: panelId,
+        allowedPanels: allowed,
+        hash: window.location.hash || '',
+    });
 
     nursePanelIds.forEach((id) => {
         const panel = document.getElementById(id);
@@ -396,12 +467,12 @@ async function maybeLoadPanelData(panelId) {
 
     await loadNurseProfile({ force: false });
 
-    if (panelId === 'nurse-monitoring' && state.nurse?.department !== 'Blood Bank') {
+    if (panelId === 'nurse-monitoring' && !isBloodBankNurse()) {
         await loadPatients({ force: false });
         return;
     }
 
-    if (panelId === 'nurse-blood-bank' && state.nurse?.department === 'Blood Bank') {
+    if (panelId === 'nurse-blood-bank' && isBloodBankNurse()) {
         await loadBloodBankDonors({ force: false });
     }
 }
@@ -559,30 +630,40 @@ function renderRecords(records = []) {
 
 function renderBloodBankAccess() {
     const profileLoaded = state.nurseProfileLoaded;
-    const isBloodBank = state.nurse?.department === 'Blood Bank';
+    const isBloodBank = isBloodBankNurse();
     const hasRegularMode = profileLoaded && state.nurse && !isBloodBank;
     const regularLockedMessage = document.getElementById('regularNurseLockedMessage');
     const modeSummary = document.getElementById('nurseModeSummary');
+    const bloodBankLocked = document.getElementById('bloodBankLocked');
+    const bloodBankVisible = profileLoaded && isBloodBank;
 
-    document.getElementById('regularNurseLocked').style.display = hasRegularMode ? 'none' : '';
-    document.getElementById('regularNurseSection').style.display = hasRegularMode ? '' : 'none';
-    document.getElementById('regularNurseWorkArea').style.display = hasRegularMode ? '' : 'none';
-    document.getElementById('bloodBankSection').style.display = isBloodBank ? '' : 'none';
+    setVisibility('regularNurseLocked', !hasRegularMode, 'block');
+    setVisibility('regularNurseSection', hasRegularMode, 'block');
+    setVisibility('regularNurseWorkArea', hasRegularMode, 'grid');
+    setVisibility('bloodBankLocked', !bloodBankVisible, 'block');
+    setVisibility('bloodBankSection', bloodBankVisible, 'block');
+    setVisibility('bloodBankDebugMarker', bloodBankVisible, 'block');
     regularLockedMessage.textContent = !profileLoaded
         ? 'Load your nurse profile to open the correct workflow.'
         : isBloodBank
             ? 'This nurse account is in Blood Bank mode, so regular patient monitoring is hidden.'
             : 'Regular patient monitoring is unavailable until nurse setup is complete.';
-    document.getElementById('bloodBankLocked').textContent = !profileLoaded
+    bloodBankLocked.textContent = !profileLoaded
         ? 'Load your nurse profile first to see whether Blood Bank donor screening is available for this account.'
-        : isBloodBank
-            ? 'Blood Bank donor screening is enabled for this nurse profile.'
-            : 'Blood Bank donor screening is available only when the nurse profile belongs to the Blood Bank department.';
+        : 'Blood Bank donor screening is available only when the nurse profile belongs to the Blood Bank department.';
     modeSummary.textContent = !profileLoaded
         ? 'Load your profile to unlock the correct nurse workspace.'
         : isBloodBank
             ? 'Blood Bank nurse mode is active for this account.'
             : `Regular nurse mode is active for ${state.nurse?.department || 'this department'}.`;
+    console.log('[NurseDashboard] mode decision', {
+        profileLoaded,
+        department: state.nurse?.department || state.nurse?.department_name || state.nurse?.dept_name || null,
+        isBloodBank,
+        bloodBankSectionShown: bloodBankVisible,
+        regularSectionShown: hasRegularMode,
+    });
+    console.log('[NurseDashboard] Blood Bank section visibility', bloodBankVisible ? 'shown' : 'hidden');
     updateNurseSidebarByMode();
 }
 
@@ -616,6 +697,8 @@ function renderSelectedBloodBankDonor(donor = null) {
     if (!donor) {
         root.innerHTML = '<div class="nurse-note">Select a donor card from the left list.</div>';
         document.getElementById('bbDonorId').value = '';
+        renderSelectedBloodBankDonorStatus(null);
+        resetBloodBankEligibilityFeedback();
         return;
     }
 
@@ -626,6 +709,16 @@ function renderSelectedBloodBankDonor(donor = null) {
         <div class="nurse-summary"><small>Donor ID</small><strong>#${Number(donor.donor_id)}</strong></div>
         <div class="nurse-summary"><small>Blood group</small><strong>${escapeHtml(donor.blood_group || '-')}</strong></div>
     `;
+    renderSelectedBloodBankDonorStatus(donor);
+    const latestCheck = donor.latest_health_check || null;
+    if (latestCheck) {
+        applyEligibilityFeedback({
+            is_eligible: !!donor.is_eligible,
+            reason: latestCheck.notes || 'Latest Blood Bank nurse screening loaded.',
+        });
+    } else {
+        resetBloodBankEligibilityFeedback();
+    }
 }
 
 function renderBloodBankHealthChecks(checks = []) {
@@ -645,6 +738,46 @@ function renderBloodBankHealthChecks(checks = []) {
             <td>${escapeHtml(check.notes || '-')}</td>
         </tr>
     `).join('');
+}
+
+function renderSelectedBloodBankDonorStatus(donor = null) {
+    const root = document.getElementById('bbSelectedDonorStatus');
+    if (!root) return;
+
+    if (!donor) {
+        root.innerHTML = '<div class="nurse-note">Latest donor eligibility and last screening details will appear here.</div>';
+        return;
+    }
+
+    const latestCheck = donor.latest_health_check || null;
+    root.innerHTML = `
+        <div class="nurse-summary"><small>Eligibility</small><strong>${donor.is_eligible ? 'Eligible' : 'Not Eligible'}</strong></div>
+        <div class="nurse-summary"><small>Last donation</small><strong>${donor.last_donation_date ? new Date(donor.last_donation_date).toLocaleDateString() : 'No donation logged'}</strong></div>
+        <div class="nurse-summary"><small>Latest check</small><strong>${latestCheck?.check_datetime ? new Date(latestCheck.check_datetime).toLocaleString() : 'No screening yet'}</strong></div>
+        <div class="nurse-summary"><small>Latest note</small><strong>${escapeHtml(latestCheck?.notes || 'No screening note yet')}</strong></div>
+    `;
+}
+
+function resetBloodBankEligibilityFeedback() {
+    const result = document.getElementById('bbEligibilityResult');
+    const reason = document.getElementById('bbEligibilityReason');
+    result.className = 'nurse-pill bed';
+    result.textContent = 'Waiting for staff entry';
+    reason.textContent = 'Backend evaluation reason will appear after save.';
+}
+
+function applyEligibilityFeedback(eligibility = null) {
+    const result = document.getElementById('bbEligibilityResult');
+    const reason = document.getElementById('bbEligibilityReason');
+
+    if (!eligibility || typeof eligibility.is_eligible !== 'boolean') {
+        resetBloodBankEligibilityFeedback();
+        return;
+    }
+
+    result.className = `nurse-pill ${eligibility.is_eligible ? 'live' : 'off'}`;
+    result.textContent = eligibility.is_eligible ? 'Eligible by backend' : 'Not eligible by backend';
+    reason.textContent = eligibility.reason || 'Eligibility evaluated by the Blood Bank nurse workflow.';
 }
 
 async function loadNurseProfile(options = {}) {
@@ -809,8 +942,12 @@ async function loadBloodBankDonors(options = {}) {
     const query = {};
     const search = document.getElementById('bbDonorQuery').value.trim();
     const requestId = document.getElementById('bbRequestId').value.trim();
+    const bloodGroup = document.getElementById('bbBloodGroupFilter').value.trim();
+    const eligible = document.getElementById('bbEligibilityFilter').value;
     if (search) query.q = search;
     if (requestId) query.requestId = Number(requestId);
+    if (bloodGroup) query.bloodGroup = bloodGroup;
+    if (eligible) query.eligible = eligible === 'true';
     const queryKey = JSON.stringify(query);
 
     if (!force && state.bloodBankDonorsLoaded && state.bloodBankDonorsQueryKey === queryKey) {
@@ -829,10 +966,13 @@ async function loadBloodBankDonors(options = {}) {
             state.bloodBankDonorsLoaded = true;
             state.bloodBankDonorsQueryKey = queryKey;
             renderBloodBankDonors();
-            if (state.selectedDonorId && !state.bloodBankDonors.some((entry) => Number(entry.donor_id) === Number(state.selectedDonorId))) {
+            const selectedDonor = state.bloodBankDonors.find((entry) => Number(entry.donor_id) === Number(state.selectedDonorId)) || null;
+            if (state.selectedDonorId && !selectedDonor) {
                 state.selectedDonorId = null;
                 renderSelectedBloodBankDonor(null);
                 renderBloodBankHealthChecks([]);
+            } else if (selectedDonor) {
+                renderSelectedBloodBankDonor(selectedDonor);
             }
         }
         write(result);
@@ -896,16 +1036,19 @@ function previewEligibility() {
     const hbRaw = document.getElementById('bbHemoglobin').value.trim();
     const hb = hbRaw ? Number(hbRaw) : null;
     const result = document.getElementById('bbEligibilityResult');
+    const reason = document.getElementById('bbEligibilityReason');
 
     if (!weight || !temp) {
-        result.className = 'nurse-pill bed';
-        result.textContent = 'Waiting for staff entry';
+        resetBloodBankEligibilityFeedback();
         return;
     }
 
     const eligible = weight >= 45 && temp >= 36.0 && temp <= 37.8 && (hb === null || hb >= 12.5);
     result.className = `nurse-pill ${eligible ? 'live' : 'off'}`;
     result.textContent = eligible ? 'Eligible by current values' : 'Not eligible by current values';
+    reason.textContent = eligible
+        ? 'Preview only. Saving will request the backend eligibility decision.'
+        : 'Preview only. Saving will request the backend eligibility decision and rejection reason.';
 }
 
 async function logBloodBankHealthCheck() {
@@ -927,9 +1070,14 @@ async function logBloodBankHealthCheck() {
     write(result);
 
     if (result.status < 300) {
-        previewEligibility();
+        applyEligibilityFeedback(result.data?.eligibility || null);
         delete state.donorHealthChecksByDonor[donorId];
         state.bloodBankDonorsLoaded = false;
+        const donor = result.data?.donor || null;
+        if (donor) {
+            state.selectedDonorId = Number(donor.donor_id);
+            renderSelectedBloodBankDonor(donor);
+        }
         await Promise.all([
             loadSelectedDonorHealthChecks({ force: true }),
             loadBloodBankDonors({ force: true }),
@@ -947,7 +1095,9 @@ async function bootNurseDashboard() {
     renderBloodBankAccess();
     renderBloodBankDonors();
     renderSelectedBloodBankDonor(null);
+    renderSelectedBloodBankDonorStatus(null);
     renderBloodBankHealthChecks([]);
+    resetBloodBankEligibilityFeedback();
     useStoredUserToken();
 
     if (document.getElementById('nurseTokenInput').value.trim()) {

@@ -3128,3 +3128,170 @@ Why this was needed:
 - the CSS extraction pass improved architecture, but it still left noisy prototype text, boxed-in layouts, and incorrect first-render navigation for nurse and IT users
 - Blood Bank users should never see the wrong operational mode first, even for a moment
 - this cleanup prepares the Blade project for the later redesign pass without changing backend workflows
+
+### Blood Bank operational UI restoration pass (2026-04-09)
+
+What changed:
+1. Blood Bank nurse mode in `ui/nurse-dashboard.blade.php` now visibly exposes the full donor screening workflow:
+- donor search text filter
+- request-linked donor filter
+- blood group and eligibility filters
+- donor selection cards
+- selected donor summary with eligibility and latest screening context
+- donor health-check history table
+- nurse-owned health-check form for weight, temperature, optional hemoglobin, and notes
+- visible backend eligibility result and reason after save
+2. Blood Bank IT mode in `ui/it-bed-allocation.blade.php` now presents the operational launch surface more clearly with grouped actions for:
+- Blood Matching Center
+- Request Board
+- Approval + Fulfillment
+- Donor Search
+- Donation Logging
+- Blood Bank Schema
+3. `ui/blood-matching.blade.php` now has section anchors aligned to the real workflow sections:
+- `#request-board`
+- `#approval-fulfillment`
+- `#donor-search`
+- `#donation-logging`
+- legacy hash anchors were kept in place for compatibility
+4. `ui/dashboard.blade.php` now restores Blood Bank IT workspace shortcuts for all current Blood Bank operations, not only the main center and schema page.
+5. Donor-facing UI remains locked to donor-owned actions only:
+- weekly availability
+- notifications
+- accept or decline responses
+- donation history view
+- no donor self-entry for health checks
+- no donor self-entry for actual donation logging
+
+Visibility gating now:
+1. Blood Bank nurse:
+- `/api/nurse/profile` must resolve with `department === Blood Bank`
+- only `Overview`, `Blood Bank Screening`, and `API Response` remain visible
+- regular patient monitoring stays hidden
+2. Non-Blood-Bank nurse:
+- regular monitoring remains visible
+- Blood Bank donor screening stays hidden
+3. Blood-Bank-only IT:
+- `/api/ward/it/departments` must resolve with only `Blood Bank` scope
+- Blood Bank operations launcher panel is visible
+- regular ward/admission/bed workflow stays hidden
+4. Regular IT:
+- regular IT panels remain visible
+- Blood Bank-only launchers stay hidden
+5. Mixed-scope IT:
+- both regular IT panels and Blood Bank launcher panel remain available
+
+Why this was needed:
+- backend Blood Bank operations were already implemented, but the Blade UI was still undersurfacing or ambiguously linking parts of the workflow
+- Blood Bank nurse screening ownership and Blood Bank IT fulfillment ownership had to be reflected more explicitly in the live UI
+- the workspace hub needed to expose the real Blood Bank IT entry points without opening them for non-Blood-Bank staff
+
+### Blood Bank inline workspace correction pass (2026-04-09)
+
+What changed:
+1. `ui/it-bed-allocation.blade.php` no longer uses a launcher-only Blood Bank panel. The Blood Bank Operations panel now renders inline:
+- Request Board filters and request table
+- selected-request approval and fulfillment controls
+- compatible donor suggestion cards
+- match timeline
+- donor search cards
+- donation logging form with donor ID, health check ID, blood bank ID, datetime, blood group, component type, units, linked request, and notes
+2. `ui/nurse-dashboard.blade.php` now suppresses the Blood Bank lock/placeholder note once a Blood Bank nurse profile is confirmed, so the real donor screening controls are the visible focus of the panel.
+3. `ui/donor-dashboard.blade.php` now explicitly documents that health checks and donation logging are staff-owned and keeps donor history read-only.
+4. `ui/dashboard.blade.php` now describes the IT dashboard as the place where inline Blood Bank operations appear, not only bed allocation.
+5. Shared Blood Bank workspace styling was added to:
+- `public/css/ui-dashboard.css`
+- `public/css/ui-components.css`
+
+Why the previous UI still looked wrong:
+1. The Blood Bank nurse backend workflow existed, but the panel still kept a lock-state message mounted above the operational area, which made the rendered workspace still feel like a placeholder until profile gating completed.
+2. The Blood Bank IT dashboard panel literally contained launcher anchors to `/ui/blood-matching` and related hash sections instead of the actual request, donor, approval, fulfillment, and donation controls.
+3. Routes were not the issue; `/ui/nurse-dashboard` and `/ui/it-bed-allocation` were already pointing directly at the current Blade files. The problem was the rendered branch inside those files.
+
+### Blood Bank visibility diagnosis + minimal fix pass (2026-04-09)
+
+What changed:
+1. `ui/nurse-dashboard.blade.php`
+- replaced the nested Blood Bank workspace's CSS-only hidden class with an explicit `hidden`/`display` toggle driven by one helper
+- added a visible marker above the real donor screening controls:
+  - `DEBUG: Blood Bank nurse real panel mounted`
+- added console logs for:
+  - nurse mode decision
+  - active panel selection
+  - Blood Bank section shown/hidden
+
+2. `ui/it-bed-allocation.blade.php`
+- removed the extra `is-initially-hidden` class from the main `#it-blood-bank` panel
+- removed the stale launcher-only shortcut block that still linked out to `/ui/blood-matching`
+- added a visible marker above the inline IT Blood Bank workspace:
+  - `DEBUG: Blood Bank IT inline workspace mounted`
+- added console logs for:
+  - IT scope decision
+  - active panel selection
+  - Blood Bank section shown/hidden
+
+3. `public/css/ui-components.css`
+- added a small reusable `.ll-debug-marker` style for temporary UI verification labels
+
+Why this pass was needed:
+1. the real Blood Bank nurse controls were present in HTML but nested inside a wrapper that started hidden and only became visible after profile gating logic ran
+2. the Blood Bank IT panel also depended on layered panel/scope toggles and still included stale launcher-only markup, which made the branch harder to verify visually
+3. this pass keeps the existing workflows and APIs, but makes the rendered branch much easier to confirm in the browser and console
+
+### Blood Bank nurse + IT hidden-workspace incident note (2026-04-09)
+
+Problem summary:
+1. Blood Bank nurse and Blood Bank IT users had working backend flows and matching route targets, but the real workspace UI still looked missing or locked.
+2. The issue was not route mismatch, missing Blade markup, or missing features.
+3. The actual failure was layered visibility logic in the Blade/CSS render path.
+
+Root cause:
+1. Nurse:
+- the real Blood Bank controls already existed in `resources/views/ui/nurse-dashboard.blade.php`
+- the workspace started hidden through `.is-initially-hidden` in `public/css/ui-utilities.css`
+- dashboard panels also defaulted to hidden through `public/css/ui-dashboard.css`
+- until `renderBloodBankAccess()` confirmed Blood Bank mode, the lock note stayed as the only visible branch
+2. IT:
+- the Blood Bank panel in `resources/views/ui/it-bed-allocation.blade.php` carried an extra hidden state on the container
+- visibility was split across `setActivePanel()` and `renderDepartmentMode()`
+- the panel also still included stale launcher-only shortcut markup linking to `/ui/blood-matching`, so it read like a launcher instead of the inline workspace
+
+Files/functions involved:
+1. Nurse:
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+- `lifelink-app/public/css/ui-utilities.css`
+- `lifelink-app/public/css/ui-dashboard.css`
+- `renderBloodBankAccess()`
+2. IT:
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+- `renderDepartmentMode()`
+- `setActivePanel()`
+3. Routing check:
+- `lifelink-app/routes/web.php`
+- route targets were confirmed correct and were not the blocker
+
+Solution applied:
+1. Nurse:
+- replaced the CSS-only hidden wrapper with an explicit helper-driven `hidden`/display toggle
+- updated `renderBloodBankAccess()` so the real donor workspace becomes the visible branch as soon as Blood Bank mode is confirmed
+2. IT:
+- removed the extra hidden class from the main Blood Bank panel
+- removed the stale launcher-only shortcut block
+- updated `renderDepartmentMode()` so the normal IT workspace is hidden while `#it-blood-bank` is active for Blood Bank users
+3. Verification support:
+- added temporary UI debug markers for nurse and IT Blood Bank branches
+- added console logs for active panel and department/scope mode decisions
+- added `.ll-debug-marker` styling in `lifelink-app/public/css/ui-components.css`
+
+Verification status:
+1. Code-level verification completed.
+2. `php artisan view:clear` was run successfully in `lifelink-app`.
+3. Browser verification should confirm:
+- Blood Bank nurse sees donor search, donor list, health-check form, and history table at `/ui/nurse-dashboard#nurse-blood-bank`
+- Blood Bank IT sees inline request board, approval/fulfillment, donor search, and donation logging at `/ui/it-bed-allocation#it-blood-bank`
+- mixed-scope IT users see the regular IT area disappear only while the Blood Bank panel is active
+
+Recommended retest steps:
+1. hard refresh browser after Blade changes
+2. if output still looks stale, run `php artisan optimize:clear` from `lifelink-app`
+3. re-check browser console for the temporary nurse/IT Blood Bank debug logs

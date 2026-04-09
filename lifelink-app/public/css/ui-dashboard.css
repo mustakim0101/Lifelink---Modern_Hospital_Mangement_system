@@ -232,6 +232,105 @@
     margin-top: 12px;
 }
 
+.bbops-grid,
+.bbops-summary,
+.bbops-toolbar,
+.bbops-filter-grid,
+.bbops-action-grid,
+.bbops-card-grid,
+.bbops-shortcuts {
+    display: grid;
+    gap: 12px;
+}
+
+.bbops-grid {
+    gap: 14px;
+}
+
+.bbops-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.bbops-toolbar,
+.bbops-action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bbops-filter-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.bbops-card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.bbops-section > * + * {
+    margin-top: 12px;
+}
+
+.bbops-card {
+    padding: 14px;
+    border: 1px solid var(--ui-border);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.bbops-card.is-selected {
+    border-color: rgba(3, 105, 161, 0.3);
+    background: rgba(224, 242, 254, 0.52);
+}
+
+.bbops-card__head,
+.bbops-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.bbops-meta {
+    color: var(--ui-text-muted);
+    font-size: 0.92rem;
+    line-height: 1.7;
+}
+
+.bbops-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.bbops-empty {
+    padding: 16px;
+    border: 1px dashed var(--ui-border-strong);
+    border-radius: 16px;
+    color: var(--ui-text-muted);
+    background: rgba(248, 250, 252, 0.84);
+}
+
+.bbops-shortcuts {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.bbops-shortcut {
+    display: block;
+    padding: 12px 14px;
+    border: 1px solid var(--ui-border);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--ui-text);
+    text-decoration: none;
+}
+
+.bbops-shortcut span {
+    display: block;
+    margin-top: 6px;
+    color: var(--ui-text-muted);
+    font-size: 0.88rem;
+}
+
 .it-table-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -339,6 +438,13 @@
 
     .nurse-stat-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .bbops-summary,
+    .bbops-filter-grid,
+    .bbops-toolbar,
+    .bbops-action-grid {
+        grid-template-columns: 1fr;
     }
 }
 
