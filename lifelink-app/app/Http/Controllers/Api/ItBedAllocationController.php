@@ -20,6 +20,7 @@ class ItBedAllocationController extends Controller
 {
     private const CARE_LEVELS = ['Ward', 'ICU', 'NICU', 'CCU'];
     private const ADMISSION_STATUS = ['Admitted', 'Discharged', 'Transferred', 'Cancelled'];
+    private const NON_DIRECTORY_PATIENT_ROLES = ['Admin', 'ITWorker', 'Doctor', 'Nurse'];
 
     public function myDepartments(): JsonResponse
     {
@@ -97,7 +98,10 @@ class ItBedAllocationController extends Controller
         $this->ensureDepartmentAccessible($actor, $validated['departmentId']);
 
         $patient = User::query()->findOrFail($validated['patientUserId']);
-        if (! $patient->hasRole('Patient')) {
+        if (
+            ! $patient->hasRole('Patient')
+            || $patient->hasRole(...self::NON_DIRECTORY_PATIENT_ROLES)
+        ) {
             return response()->json([
                 'message' => 'Selected user is not a patient.',
             ], 422);
@@ -238,6 +242,7 @@ class ItBedAllocationController extends Controller
         $query = User::query()
             ->with('patientProfile:patient_id,blood_group')
             ->whereHas('roles', fn ($roleQuery) => $roleQuery->where('role_name', 'Patient'))
+            ->whereDoesntHave('roles', fn ($roleQuery) => $roleQuery->whereIn('role_name', self::NON_DIRECTORY_PATIENT_ROLES))
             ->orderBy('id');
 
         if (! empty($validated['q'])) {
