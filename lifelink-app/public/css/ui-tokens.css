@@ -1,14 +1,18 @@
 :root {
     --ui-bg: #f8fafb;
+    --ui-bg-canvas: #f3f7fb;
     --ui-bg-soft: #f1f5f9;
     --ui-surface: #ffffff;
     --ui-surface-soft: #f8fbfd;
     --ui-surface-muted: #f4f8fb;
+    --ui-surface-elevated: rgba(255, 255, 255, 0.92);
     --ui-text: #0f172a;
     --ui-text-soft: #1e293b;
     --ui-text-muted: #64748b;
+    --ui-text-faint: #94a3b8;
     --ui-border: #e2e8f0;
     --ui-border-strong: #cbd5e1;
+    --ui-border-soft: rgba(148, 163, 184, 0.2);
     --ui-primary: #0369a1;
     --ui-primary-strong: #075985;
     --ui-primary-soft: #e0f2fe;
@@ -33,12 +37,16 @@
     --ui-shadow-sm: 0 6px 18px rgba(15, 23, 42, 0.06);
     --ui-shadow-md: 0 18px 40px rgba(15, 23, 42, 0.10);
     --ui-shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.14);
+    --ui-shadow-xl: 0 30px 70px rgba(15, 23, 42, 0.12);
     --ui-space-1: 6px;
     --ui-space-2: 10px;
     --ui-space-3: 14px;
     --ui-space-4: 18px;
     --ui-space-5: 24px;
     --ui-space-6: 32px;
+    --ui-space-7: 40px;
+    --ui-shell-max: 1560px;
+    --ui-shell-content-max: 1320px;
     --ui-font-body: "Manrope", "Segoe UI", "Trebuchet MS", sans-serif;
     --ui-font-display: "Sora", "Segoe UI", "Trebuchet MS", sans-serif;
     --ll-space-1: var(--ui-space-1);

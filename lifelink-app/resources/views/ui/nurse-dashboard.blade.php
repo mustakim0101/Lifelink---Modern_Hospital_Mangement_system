@@ -193,7 +193,6 @@
 
             <div id="bloodBankLocked" class="nurse-note">Load your nurse profile first to see whether Blood Bank donor screening is available for this account.</div>
             <div id="bloodBankSection" hidden>
-                <div id="bloodBankDebugMarker" class="ll-debug-marker" hidden>DEBUG: Blood Bank nurse real panel mounted</div>
                 <div class="nurse-summary-grid">
                     <div class="nurse-summary"><small>Step 1</small><strong>Search and select donor</strong></div>
                     <div class="nurse-summary"><small>Step 2</small><strong>Review latest screening history</strong></div>
@@ -421,11 +420,6 @@ function setActivePanel(panelId) {
     }
 
     state.activePanel = panelId;
-    console.log('[NurseDashboard] active panel selected', {
-        activePanel: panelId,
-        allowedPanels: allowed,
-        hash: window.location.hash || '',
-    });
 
     nursePanelIds.forEach((id) => {
         const panel = document.getElementById(id);
@@ -642,7 +636,6 @@ function renderBloodBankAccess() {
     setVisibility('regularNurseWorkArea', hasRegularMode, 'grid');
     setVisibility('bloodBankLocked', !bloodBankVisible, 'block');
     setVisibility('bloodBankSection', bloodBankVisible, 'block');
-    setVisibility('bloodBankDebugMarker', bloodBankVisible, 'block');
     regularLockedMessage.textContent = !profileLoaded
         ? 'Load your nurse profile to open the correct workflow.'
         : isBloodBank
@@ -656,14 +649,6 @@ function renderBloodBankAccess() {
         : isBloodBank
             ? 'Blood Bank nurse mode is active for this account.'
             : `Regular nurse mode is active for ${state.nurse?.department || 'this department'}.`;
-    console.log('[NurseDashboard] mode decision', {
-        profileLoaded,
-        department: state.nurse?.department || state.nurse?.department_name || state.nurse?.dept_name || null,
-        isBloodBank,
-        bloodBankSectionShown: bloodBankVisible,
-        regularSectionShown: hasRegularMode,
-    });
-    console.log('[NurseDashboard] Blood Bank section visibility', bloodBankVisible ? 'shown' : 'hidden');
     updateNurseSidebarByMode();
 }
 

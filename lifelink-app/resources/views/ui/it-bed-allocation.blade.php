@@ -70,7 +70,6 @@
                 <div class="it-stat"><small>Blood Bank access</small><strong id="bloodBankScopeStatus">Locked</strong></div>
                 <div class="it-stat"><small>Blood Bank departments</small><strong id="bloodBankScopeCount">0</strong></div>
             </div>
-            <div id="itBloodBankDebugMarker" class="ll-debug-marker" hidden>DEBUG: Blood Bank IT inline workspace mounted</div>
             <div class="bbops-grid u-mt-4">
                 <div class="bbops-summary">
                     <div class="it-stat"><small>Requests shown</small><strong id="bbRequestCount">0</strong></div>
@@ -705,11 +704,6 @@ function setActivePanel(panelId) {
     }
 
     state.activePanel = panelId;
-    console.log('[ItDashboard] active panel selected', {
-        activePanel: panelId,
-        allowedPanels: allowed,
-        hash: window.location.hash || '',
-    });
 
     itPanelIds.forEach((id) => {
         const panel = document.getElementById(id);
@@ -860,7 +854,6 @@ function renderDepartmentMode() {
     const bloodBankVisible = bloodBankAccess && selectedPanel === 'it-blood-bank';
     const regularWorkspaceVisible = regularAccess && selectedPanel !== 'it-blood-bank';
     setVisibility('it-blood-bank', bloodBankVisible, 'block');
-    setVisibility('itBloodBankDebugMarker', bloodBankVisible, 'block');
     setVisibility('standardItWorkArea', regularWorkspaceVisible, 'block');
     setVisibility('regularItLocked', !regularAccess && selectedPanel !== 'it-blood-bank', 'block');
     document.getElementById('bloodBankScopeStatus').textContent = bloodBankAccess ? 'Enabled' : 'Locked';
@@ -877,16 +870,6 @@ function renderDepartmentMode() {
         : bloodBankAccess
                 ? 'Blood Bank IT mode is active for this account.'
                 : 'Regular IT mode is active for this account.';
-    console.log('[ItDashboard] scope decision', {
-        scopeLoaded: state.scopeLoaded,
-        departments: state.scopeDepartments.map((department) => department.dept_name || department.department || department),
-        bloodBankAccess,
-        regularAccess,
-        selectedPanel,
-        bloodBankSectionShown: bloodBankVisible,
-        regularWorkspaceShown: regularWorkspaceVisible,
-    });
-    console.log('[ItDashboard] Blood Bank section visibility', bloodBankVisible ? 'shown' : 'hidden');
     updateSidebarByScope();
 }
 

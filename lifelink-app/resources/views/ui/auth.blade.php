@@ -58,15 +58,15 @@
     <title>LifeLink | {{ $config['title'] }}</title>
     <link rel="stylesheet" href="/css/ui-system.css">
 </head>
-<body>
-    <div class="shell">
-        <header class="topbar">
-            <div class="topbar-inner">
+<body class="auth-page">
+    <div class="shell auth-shell">
+        <header class="topbar topbar--public">
+            <div class="topbar-inner auth-shell__topbar">
                 <div class="brand">
                     <div class="brand-mark">LL</div>
                     <div class="brand-copy">
                         <strong>LifeLink</strong>
-                        <span>{{ $config['title'] }}</span>
+                        <span>Secure access and role-based registration.</span>
                     </div>
                 </div>
                 <nav class="topnav">
@@ -79,7 +79,7 @@
             </div>
         </header>
 
-        <div class="topline">
+        <div class="topline auth-shell__crumbs">
             <div class="crumbs">
                 <a href="/">Public Home</a>
                 <span>/</span>
@@ -88,26 +88,41 @@
             <a class="mini-link" href="/ui/dashboard">Workspace Hub</a>
         </div>
 
-        <section class="layout">
-            <article class="panel hero">
-                <span class="badge">{{ $config['badge'] }}</span>
-                <h1>{{ $config['headline'] }}</h1>
-                <p>{{ $config['copy'] }}</p>
+        <section class="auth-layout">
+            <article class="auth-intro">
+                <div class="auth-intro__panel">
+                    <span class="badge">{{ $config['badge'] }}</span>
+                    <h1>{{ $config['headline'] }}</h1>
+                    <p>{{ $config['copy'] }}</p>
+                    <div class="auth-intro__trust">
+                        <article class="auth-trust-card">
+                            <strong>Single access layer</strong>
+                            <span>One login can route into the correct workspace without changing the current auth behavior.</span>
+                        </article>
+                        <article class="auth-trust-card">
+                            <strong>Dedicated public entry</strong>
+                            <span>Patients, donors, and applicants still keep their own registration journeys.</span>
+                        </article>
+                    </div>
+                </div>
 
-                <div class="path-list">
+                <div class="path-list auth-links">
                     @foreach ($otherLinks as $link)
                         <a class="path-link" href="{{ $link['href'] }}">
                             <strong>{{ $link['label'] }}</strong>
-                            <span>Open</span>
+                            <span>Switch</span>
                         </a>
                     @endforeach
                 </div>
             </article>
 
-            <article class="panel">
+            <article class="auth-card">
                 @if ($mode === 'login')
-                    <h2>Login</h2>
-                    <p>Enter your email and password.</p>
+                    <div class="auth-card__header">
+                        <span class="hub-label">Secure Login</span>
+                        <h2>Sign in</h2>
+                        <p>Enter your email and password to continue.</p>
+                    </div>
 
                     <div class="field">
                         <label for="loginEmail">Email</label>
@@ -123,7 +138,7 @@
                         <button class="button button-secondary" type="button" onclick="useLastEmail()">Use last email</button>
                     </div>
 
-                    <div class="session-card">
+                    <div class="session-card auth-session-card">
                         <strong>Current session</strong>
                         <div class="session-grid">
                             <div><small>User</small><strong id="session-user">No active session</strong></div>
@@ -135,7 +150,7 @@
                         </div>
                     </div>
 
-                    <button class="advanced-toggle" type="button" onclick="toggleAdvanced()">Need bootstrap or setup tools?</button>
+                    <button class="advanced-toggle" type="button" onclick="toggleAdvanced()">Need bootstrap tools?</button>
                     <div id="advanced-card" class="advanced-card">
                         <div class="field">
                             <label for="adminName">Admin full name</label>
@@ -154,8 +169,11 @@
                         </div>
                     </div>
                 @elseif ($mode === 'patient')
-                    <h2>Register as patient</h2>
-                    <p>Create a patient account for appointments, records, and blood requests.</p>
+                    <div class="auth-card__header">
+                        <span class="hub-label">Patient Access</span>
+                        <h2>Create a patient account</h2>
+                        <p>Set up patient access for appointments, records, and blood requests.</p>
+                    </div>
                     <div class="field"><label for="patientName">Full name</label><input id="patientName" type="text" value="Patient UI"></div>
                     <div class="field"><label for="patientEmail">Email</label><input id="patientEmail" type="email" value="patient_ui@demo.com"></div>
                     <div class="field"><label for="patientPassword">Password</label><input id="patientPassword" type="password" value="patient12345"></div>
@@ -176,8 +194,11 @@
                         <a class="ghost-link" href="/ui/login">Already have an account?</a>
                     </div>
                 @elseif ($mode === 'donor')
-                    <h2>Register as blood donor</h2>
-                    <p>Create the account and donor profile.</p>
+                    <div class="auth-card__header">
+                        <span class="hub-label">Donor Access</span>
+                        <h2>Create a donor account</h2>
+                        <p>Create the account first, then continue with donor profile setup.</p>
+                    </div>
                     <div class="field"><label for="donorName">Full name</label><input id="donorName" type="text" value="Donor UI"></div>
                     <div class="field"><label for="donorEmail">Email</label><input id="donorEmail" type="email" value="donor_ui@demo.com"></div>
                     <div class="field"><label for="donorPassword">Password</label><input id="donorPassword" type="password" value="donor12345"></div>
@@ -196,8 +217,11 @@
                         <a class="ghost-link" href="/ui/login">Already have an account?</a>
                     </div>
                 @else
-                    <h2>Register as job applicant</h2>
-                    <p>Create the account and submit the first job application.</p>
+                    <div class="auth-card__header">
+                        <span class="hub-label">Applicant Access</span>
+                        <h2>Create an applicant account</h2>
+                        <p>Create the account, then submit the first job application.</p>
+                    </div>
                     <div class="field"><label for="applicantName">Full name</label><input id="applicantName" type="text" value="Applicant UI"></div>
                     <div class="field"><label for="applicantEmail">Email</label><input id="applicantEmail" type="email" value="applicant_ui@demo.com"></div>
                     <div class="field"><label for="applicantPassword">Password</label><input id="applicantPassword" type="password" value="applicant12345"></div>
@@ -222,7 +246,7 @@
                     </div>
                 @endif
 
-                <div id="message" class="message"></div>
+                <div id="message" class="message auth-message"></div>
             </article>
         </section>
     </div>

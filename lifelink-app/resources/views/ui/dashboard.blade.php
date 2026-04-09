@@ -6,14 +6,14 @@
     <title>LifeLink | Workspace Hub</title>
     <link rel="stylesheet" href="/css/ui-system.css">
 </head>
-<body>
-    <div class="hub-shell">
+<body class="workspace-page">
+    <div class="hub-shell workspace-shell">
         <header class="hub-topbar">
             <div class="hub-brand">
                 <div class="hub-mark">LL</div>
                 <div>
                     <strong>LifeLink Workspace Hub</strong>
-                    <span>Role-aware routing and operational shortcuts.</span>
+                    <span>Role-aware routing, session context, and operational shortcuts.</span>
                 </div>
             </div>
             <div class="hub-actions">
@@ -27,7 +27,7 @@
                 <article class="hub-block">
                     <span class="hub-label">Signed In</span>
                     <strong id="user-email">No active session</strong>
-                    <p class="hub-copy">Current session.</p>
+                    <p class="hub-copy">Current browser session.</p>
                 </article>
                 <article class="hub-block">
                     <span class="hub-label">Detected Roles</span>
@@ -45,36 +45,40 @@
             </aside>
 
             <main class="hub-main">
-                <section class="hub-block">
-                    <span class="hub-label">Workspace Hub</span>
-                    <h1 id="welcome-line" class="hub-title">Organized access for your role.</h1>
-                    <p id="welcome-copy" class="hub-copy">Open the right workspace and related tools.</p>
+                <section class="workspace-hero">
+                    <article class="hub-block workspace-hero__main">
+                        <span class="hub-label">Workspace Hub</span>
+                        <h1 id="welcome-line" class="hub-title">Organized access for your role.</h1>
+                        <p id="welcome-copy" class="hub-copy">Open the right workspace and related tools.</p>
+                    </article>
+
+                    <article class="hub-block workspace-hero__side">
+                        <span class="hub-label">Session Summary</span>
+                        <div class="hub-stats">
+                            <div class="hub-stat">
+                                <strong id="session-token-state">No token</strong>
+                                <span>Token state</span>
+                            </div>
+                            <div class="hub-stat">
+                                <strong id="session-role-count">0</strong>
+                                <span>Role count</span>
+                            </div>
+                        </div>
+                    </article>
                 </section>
 
-                <section class="hub-block">
-                    <span class="hub-label">Primary Destination</span>
-                    <h2 id="primary-title" class="hub-title">Sign in required</h2>
-                    <p id="primary-copy" class="hub-copy">Log in to unlock role-aware routing.</p>
+                <section class="hub-block workspace-primary">
+                    <div class="workspace-primary__copy">
+                        <span class="hub-label">Primary Destination</span>
+                        <h2 id="primary-title" class="hub-title">Sign in required</h2>
+                        <p id="primary-copy" class="hub-copy">Log in to unlock role-aware routing.</p>
+                    </div>
                     <div class="hub-actions u-mt-2">
                         <a id="primary-link" class="hub-primary" href="/ui/login">Open login page</a>
                     </div>
                 </section>
 
-                <section class="hub-block">
-                    <span class="hub-label">Session Snapshot</span>
-                    <div class="hub-stats">
-                        <div class="hub-stat">
-                            <strong id="session-token-state">No token</strong>
-                            <span>Token state</span>
-                        </div>
-                        <div class="hub-stat">
-                            <strong id="session-role-count">0</strong>
-                            <span>Role count</span>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="hub-block">
+                <section class="hub-block workspace-shortcuts">
                     <span class="hub-label">Role Shortcuts</span>
                     <div id="action-grid" class="hub-grid"></div>
                 </section>
