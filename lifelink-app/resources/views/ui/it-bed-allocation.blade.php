@@ -33,6 +33,35 @@
 @section('sidebar')
 @endsection
 
+@push('styles')
+<style>
+    .it-directory-grid-fixed {
+        height: 640px;
+        overflow: auto;
+        align-content: start;
+    }
+
+    .it-pagination {
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .it-pagination__meta {
+        color: #5f718c;
+        font-size: 0.85rem;
+        font-weight: 700;
+    }
+
+    .it-pagination__controls {
+        display: flex;
+        gap: 8px;
+    }
+</style>
+@endpush
+
 @section('content')
     <div class="it-grid">
         <div id="it-overview" class="it-split ll-section it-panel-switch" data-display="grid">
@@ -360,7 +389,8 @@
                 <div class="it-actions">
                     <button class="it-button soft" type="button" onclick="loadDoctors()">Load doctors</button>
                 </div>
-                <div id="doctorCards" class="it-card-grid"></div>
+                <div id="doctorCards" class="it-card-grid it-directory-grid-fixed"></div>
+                <div id="doctorPagination" class="it-pagination"></div>
             </div>
 
             <div class="it-panel it-col-6">
@@ -381,7 +411,8 @@
                 <div class="it-actions">
                     <button class="it-button soft" type="button" onclick="loadPatients()">Load patients</button>
                 </div>
-                <div id="patientCards" class="it-card-grid"></div>
+                <div id="patientCards" class="it-card-grid it-directory-grid-fixed"></div>
+                <div id="patientPagination" class="it-pagination"></div>
             </div>
         </div>
 
@@ -622,6 +653,11 @@ const state = {
     scopeDepartments: [],
     doctors: [],
     patients: [],
+    pagination: {
+        directoryPageSize: 4,
+        doctorsPage: 1,
+        patientsPage: 1,
+    },
     admissions: [],
     beds: [],
     careUnits: [],
@@ -1380,14 +1416,84 @@ async function maybeLoadBloodBankWorkspace() {
     }
 }
 
+function isArtificialDirectoryEntry(entry) {
+    const name = String(entry?.full_name || '').trim().toLowerCase();
+    const email = String(entry?.email || '').trim().toLowerCase();
+
+    if (!name && !email) {
+        return false;
+    }
+
+    return email.endsWith('_ui@demo.com')
+        || email.endsWith('@demo.com')
+        || name.endsWith(' ui');
+}
+
+function paginateRows(rows, page, pageSize) {
+    const safeRows = Array.isArray(rows) ? rows : [];
+    const totalPages = Math.max(1, Math.ceil(safeRows.length / pageSize));
+    const safePage = Math.min(Math.max(1, Number(page) || 1), totalPages);
+    const startIndex = (safePage - 1) * pageSize;
+    const pagedRows = safeRows.slice(startIndex, startIndex + pageSize);
+
+    return {
+        pagedRows,
+        totalPages,
+        safePage,
+        totalRows: safeRows.length,
+    };
+}
+
+function renderPaginationControls(rootId, page, totalPages, totalRows, onPrev, onNext) {
+    const root = document.getElementById(rootId);
+    if (!root) return;
+
+    if (totalRows <= state.pagination.directoryPageSize) {
+        root.innerHTML = '';
+        return;
+    }
+
+    root.innerHTML = `
+        <div class="it-pagination__meta">Page ${page} of ${totalPages} (${totalRows} total)</div>
+        <div class="it-pagination__controls">
+            <button class="it-button soft" type="button" ${page <= 1 ? 'disabled' : ''} onclick="${onPrev}">Previous</button>
+            <button class="it-button soft" type="button" ${page >= totalPages ? 'disabled' : ''} onclick="${onNext}">Next</button>
+        </div>
+    `;
+}
+
+function prevDoctorsPage() {
+    state.pagination.doctorsPage = Math.max(1, state.pagination.doctorsPage - 1);
+    renderDoctors();
+}
+
+function nextDoctorsPage() {
+    state.pagination.doctorsPage += 1;
+    renderDoctors();
+}
+
+function prevPatientsPage() {
+    state.pagination.patientsPage = Math.max(1, state.pagination.patientsPage - 1);
+    renderPatientsDirectory();
+}
+
+function nextPatientsPage() {
+    state.pagination.patientsPage += 1;
+    renderPatientsDirectory();
+}
+
 function renderDoctors() {
     const root = document.getElementById('doctorCards');
     if (!state.doctors.length) {
         root.innerHTML = '<div class="it-card"><p class="it-note">No doctors loaded yet.</p></div>';
+        renderPaginationControls('doctorPagination', 1, 1, 0, 'prevDoctorsPage()', 'nextDoctorsPage()');
         return;
     }
 
-    root.innerHTML = state.doctors.map((doctor) => `
+    const pageData = paginateRows(state.doctors, state.pagination.doctorsPage, state.pagination.directoryPageSize);
+    state.pagination.doctorsPage = pageData.safePage;
+
+    root.innerHTML = pageData.pagedRows.map((doctor) => `
         <article class="it-card">
             <div class="it-card__head">
                 <div>
@@ -1404,16 +1510,29 @@ function renderDoctors() {
             </div>
         </article>
     `).join('');
+
+    renderPaginationControls(
+        'doctorPagination',
+        pageData.safePage,
+        pageData.totalPages,
+        pageData.totalRows,
+        'prevDoctorsPage()',
+        'nextDoctorsPage()'
+    );
 }
 
 function renderPatientsDirectory() {
     const root = document.getElementById('patientCards');
     if (!state.patients.length) {
         root.innerHTML = '<div class="it-card"><p class="it-note">No patients loaded yet.</p></div>';
+        renderPaginationControls('patientPagination', 1, 1, 0, 'prevPatientsPage()', 'nextPatientsPage()');
         return;
     }
 
-    root.innerHTML = state.patients.map((patient) => `
+    const pageData = paginateRows(state.patients, state.pagination.patientsPage, state.pagination.directoryPageSize);
+    state.pagination.patientsPage = pageData.safePage;
+
+    root.innerHTML = pageData.pagedRows.map((patient) => `
         <article class="it-card">
             <div class="it-card__head">
                 <div>
@@ -1430,6 +1549,15 @@ function renderPatientsDirectory() {
             </div>
         </article>
     `).join('');
+
+    renderPaginationControls(
+        'patientPagination',
+        pageData.safePage,
+        pageData.totalPages,
+        pageData.totalRows,
+        'prevPatientsPage()',
+        'nextPatientsPage()'
+    );
 }
 
 function renderAdmissions() {
@@ -1596,7 +1724,9 @@ async function loadDoctors() {
     const result = await call(`/ward/it/doctors${params.toString() ? `?${params.toString()}` : ''}`);
     write(result);
     if (result.status < 300) {
-        state.doctors = Array.isArray(result.data?.doctors) ? result.data.doctors : [];
+        const rows = Array.isArray(result.data?.doctors) ? result.data.doctors : [];
+        state.doctors = rows.filter((doctor) => !isArtificialDirectoryEntry(doctor));
+        state.pagination.doctorsPage = 1;
         renderDoctors();
     }
 }
@@ -1610,7 +1740,9 @@ async function loadPatients() {
     const result = await call(`/ward/it/patients${params.toString() ? `?${params.toString()}` : ''}`);
     write(result);
     if (result.status < 300) {
-        state.patients = Array.isArray(result.data?.patients) ? result.data.patients : [];
+        const rows = Array.isArray(result.data?.patients) ? result.data.patients : [];
+        state.patients = rows.filter((patient) => !isArtificialDirectoryEntry(patient));
+        state.pagination.patientsPage = 1;
         renderPatientsDirectory();
     }
 }

@@ -154,11 +154,11 @@
                     <div id="advanced-card" class="advanced-card">
                         <div class="field">
                             <label for="adminName">Admin full name</label>
-                            <input id="adminName" type="text" value="Admin UI">
+                            <input id="adminName" type="text" placeholder="Admin full name">
                         </div>
                         <div class="field">
                             <label for="adminEmail">Admin email</label>
-                            <input id="adminEmail" type="email" value="admin_ui@demo.com">
+                            <input id="adminEmail" type="email" placeholder="admin@example.com">
                         </div>
                         <div class="field">
                             <label for="adminPassword">Admin password</label>
@@ -174,8 +174,8 @@
                         <h2>Create a patient account</h2>
                         <p>Set up patient access for appointments, records, and blood requests.</p>
                     </div>
-                    <div class="field"><label for="patientName">Full name</label><input id="patientName" type="text" value="Patient UI"></div>
-                    <div class="field"><label for="patientEmail">Email</label><input id="patientEmail" type="email" value="patient_ui@demo.com"></div>
+                    <div class="field"><label for="patientName">Full name</label><input id="patientName" type="text" placeholder="Full name"></div>
+                    <div class="field"><label for="patientEmail">Email</label><input id="patientEmail" type="email" placeholder="patient@example.com"></div>
                     <div class="field"><label for="patientPassword">Password</label><input id="patientPassword" type="password" value="patient12345"></div>
                     <div class="field">
                         <label for="patientBloodGroup">Blood group</label>
@@ -199,8 +199,8 @@
                         <h2>Create a donor account</h2>
                         <p>Create the account first, then continue with donor profile setup.</p>
                     </div>
-                    <div class="field"><label for="donorName">Full name</label><input id="donorName" type="text" value="Donor UI"></div>
-                    <div class="field"><label for="donorEmail">Email</label><input id="donorEmail" type="email" value="donor_ui@demo.com"></div>
+                    <div class="field"><label for="donorName">Full name</label><input id="donorName" type="text" placeholder="Full name"></div>
+                    <div class="field"><label for="donorEmail">Email</label><input id="donorEmail" type="email" placeholder="donor@example.com"></div>
                     <div class="field"><label for="donorPassword">Password</label><input id="donorPassword" type="password" value="donor12345"></div>
                     <div class="field">
                         <label for="donorBloodGroup">Blood group</label>
@@ -222,8 +222,8 @@
                         <h2>Create an applicant account</h2>
                         <p>Create the account, then submit the first job application.</p>
                     </div>
-                    <div class="field"><label for="applicantName">Full name</label><input id="applicantName" type="text" value="Applicant UI"></div>
-                    <div class="field"><label for="applicantEmail">Email</label><input id="applicantEmail" type="email" value="applicant_ui@demo.com"></div>
+                    <div class="field"><label for="applicantName">Full name</label><input id="applicantName" type="text" placeholder="Full name"></div>
+                    <div class="field"><label for="applicantEmail">Email</label><input id="applicantEmail" type="email" placeholder="applicant@example.com"></div>
                     <div class="field"><label for="applicantPassword">Password</label><input id="applicantPassword" type="password" value="applicant12345"></div>
                     <div class="field">
                         <label for="applicantRole">Applied role</label>
