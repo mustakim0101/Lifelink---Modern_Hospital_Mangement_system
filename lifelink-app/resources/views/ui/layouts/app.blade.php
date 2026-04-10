@@ -15,29 +15,18 @@
                     <div class="app-shell__mark">LL</div>
                     <div class="app-shell__brand-copy">
                         <strong>LifeLink Workspace</strong>
-                        @if(trim($__env->yieldContent('workspace_label', 'Role-aware authenticated mode')) !== '')
-                            <span>@yield('workspace_label', 'Role-aware authenticated mode')</span>
-                        @else
-                            <span>Authenticated care operations</span>
-                        @endif
                     </div>
                 </a>
-
-                <div class="app-shell__session-pill" aria-live="polite">
-                    <span class="app-shell__session-label">Active session</span>
-                    <strong id="shell-topbar-user">No active session</strong>
-                    <span id="shell-topbar-role">No role detected</span>
-                </div>
             </div>
 
-            <div class="app-shell__actions">
-                <a class="app-shell__chip" href="/">Public Home</a>
+            <nav class="topnav" aria-label="Workspace top navigation">
+                <a href="/">Home</a>
                 @if(trim($__env->yieldContent('show_prototype_directory')) === '1')
-                    <a class="app-shell__chip" href="/ui">Prototype Directory</a>
+                    <a href="/ui">Prototype Directory</a>
                 @endif
                 @yield('top_actions')
-                <button class="app-shell__button" type="button" onclick="window.lifeLinkShell.logout()">Logout</button>
-            </div>
+                <a class="cta" href="#" onclick="window.lifeLinkShell.logout(); return false;">Logout</a>
+            </nav>
         </header>
 
         <section class="app-shell__hero">
@@ -74,10 +63,6 @@
 
         <section class="app-shell__body">
             <aside class="app-shell__sidebar">
-                <div class="app-shell__sidebar-head">
-                    <span class="app-shell__sidebar-eyebrow">Workspace navigation</span>
-                    <p class="app-shell__sidebar-copy">Move between role-aware sections without leaving the current authenticated flow.</p>
-                </div>
                 <nav class="app-shell__nav" aria-label="Workspace sections">
                     @yield('sidebar_nav')
                 </nav>

@@ -25,6 +25,24 @@
     <a href="#it-blood-bank" data-panel="it-blood-bank" data-mode="blood">
         <strong>Blood Bank Operations</strong>
     </a>
+    <a href="#it-bb-request-board" data-panel="it-blood-bank" data-anchor="request-board" data-hash="it-bb-request-board" data-mode="blood">
+        <strong>Request Board</strong>
+    </a>
+    <a href="#it-bb-approval-fulfillment" data-panel="it-blood-bank" data-anchor="approval-fulfillment" data-hash="it-bb-approval-fulfillment" data-mode="blood">
+        <strong>Approval + Fulfillment</strong>
+    </a>
+    <a href="#it-bb-match-timeline" data-panel="it-blood-bank" data-anchor="match-timeline" data-hash="it-bb-match-timeline" data-mode="blood">
+        <strong>Match Timeline</strong>
+    </a>
+    <a href="#it-bb-donor-suggestions" data-panel="it-blood-bank" data-anchor="donor-suggestions" data-hash="it-bb-donor-suggestions" data-mode="blood">
+        <strong>Donor Suggestions</strong>
+    </a>
+    <a href="#it-bb-donor-search" data-panel="it-blood-bank" data-anchor="donor-search" data-hash="it-bb-donor-search" data-mode="blood">
+        <strong>Donor Search</strong>
+    </a>
+    <a href="#it-bb-donation-logging" data-panel="it-blood-bank" data-anchor="donation-logging" data-hash="it-bb-donation-logging" data-mode="blood">
+        <strong>Donation Logging</strong>
+    </a>
     <a href="#it-debug" data-panel="it-debug" data-mode="all">
         <strong>Activity Log</strong>
     </a>
@@ -33,59 +51,13 @@
 @section('sidebar')
 @endsection
 
-@push('styles')
-<style>
-    .it-directory-grid-fixed {
-        height: 640px;
-        overflow: auto;
-        align-content: start;
-    }
-
-    .it-pagination {
-        margin-top: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-    }
-
-    .it-pagination__meta {
-        color: #5f718c;
-        font-size: 0.85rem;
-        font-weight: 700;
-    }
-
-    .it-pagination__controls {
-        display: flex;
-        gap: 8px;
-    }
-</style>
-@endpush
-
 @section('content')
     <div class="it-grid">
+        <input id="tokenInput" type="hidden">
         <div id="it-overview" class="it-split ll-section it-panel-switch" data-display="grid">
-            <div class="it-panel it-col-4">
-                <h3>Session access</h3>
-                <p class="it-note">Connect this workspace using the current signed-in IT session.</p>
-                <div class="it-actions">
-                    <button class="it-button soft" type="button" onclick="useUserToken()">Use USER_TOKEN</button>
-                    <button class="it-button primary" type="button" onclick="loadDepartmentsScope()">Reload my departments</button>
-                </div>
-                <details class="ll-debug u-mt-2">
-                    <summary>Manual token override</summary>
-                    <label class="it-label u-mt-2" for="tokenInput">Manual token</label>
-                    <input id="tokenInput" class="it-input" placeholder="Paste IT token only if needed">
-                </details>
-            </div>
-
-            <div class="it-panel it-col-4">
-                <h3>Detected scope</h3>
-                <p id="scopeModeSummary" class="it-note">Load your departments to open the correct IT workspace.</p>
-            </div>
-
-            <div class="it-panel it-col-4">
+            <div class="it-panel it-col-12">
                 <h3>Current totals</h3>
+                <p id="scopeModeSummary" class="it-note">Load your departments to open the correct IT workspace.</p>
                 <div class="it-summary">
                     <div class="it-stat"><small>Scoped depts</small><strong id="scopeCount">0</strong></div>
                     <div class="it-stat"><small>Care units</small><strong id="careUnitCount">0</strong></div>
@@ -211,7 +183,7 @@
                             </div>
                         </div>
 
-                        <div class="bbops-card">
+                        <div id="match-timeline" class="bbops-card">
                             <h3>Match timeline</h3>
                             <p class="it-note">Accepted donors from this table can feed both approval and donation logging.</p>
                             <div class="it-table-wrap">
@@ -234,7 +206,7 @@
                     </div>
                 </section>
 
-                <section class="bbops-section">
+                <section id="donor-suggestions" class="bbops-section">
                     <div class="bbops-card">
                         <h3>Compatible donor suggestions</h3>
                         <p class="it-note">Tick suggested donors before using Auto notify. This stays request-aware and uses the current selected request.</p>
@@ -283,6 +255,7 @@
                                 <button class="it-button primary" type="button" onclick="loadBloodBankStaffDonors()">Refresh donor search</button>
                             </div>
                             <div id="bbStaffDonorGrid" class="bbops-card-grid"></div>
+                            <div id="bbStaffDonorPagination" class="ui-list-pagination"></div>
                         </div>
 
                         <div id="donation-logging" class="bbops-card">
@@ -375,8 +348,7 @@
         <div id="standardItWorkArea">
         <div id="it-directory" class="it-split ll-section it-panel-switch" data-display="grid">
             <div class="it-panel it-col-6">
-                <h3>Doctor lookup for admission context</h3>
-                <p class="it-note">If admission should be tied to a doctor, search doctors here and use one of their ids in the admission form. The doctor must belong to the same department as the admission.</p>
+                <h3>Doctor lookup</h3>
                 <div class="it-controls">
                     <div>
                         <label class="it-label" for="doctorSearchDepartmentId">Doctor department</label>
@@ -392,13 +364,12 @@
                 <div class="it-actions">
                     <button class="it-button soft" type="button" onclick="loadDoctors()">Load doctors</button>
                 </div>
-                <div id="doctorCards" class="it-card-grid it-directory-grid-fixed"></div>
-                <div id="doctorPagination" class="it-pagination"></div>
+                <div id="doctorCards" class="it-card-grid ui-list-window"></div>
+                <div id="doctorPagination" class="ui-list-pagination"></div>
             </div>
 
             <div class="it-panel it-col-6">
                 <h3>Patient directory</h3>
-                <p class="it-note">Use this to find patient account ids before creating an admission. Patient accounts themselves are not fixed to a department; department belongs to the admission.</p>
                 <div class="it-controls">
                     <div>
                         <label class="it-label" for="patientSearchDepartmentId">Current department filter</label>
@@ -414,15 +385,14 @@
                 <div class="it-actions">
                     <button class="it-button soft" type="button" onclick="loadPatients()">Load patients</button>
                 </div>
-                <div id="patientCards" class="it-card-grid it-directory-grid-fixed"></div>
-                <div id="patientPagination" class="it-pagination"></div>
+                <div id="patientCards" class="it-card-grid ui-list-window"></div>
+                <div id="patientPagination" class="ui-list-pagination"></div>
             </div>
         </div>
 
         <div id="it-admission" class="it-split ll-section it-panel-switch" data-display="grid">
             <div class="it-panel it-col-6">
                 <h3>Ward setup</h3>
-                <p class="it-note">Create care units and beds here instead of jumping to a separate prototype page.</p>
                 <div class="it-controls">
                     <div>
                         <label class="it-label" for="wardDepartmentId">Department</label>
@@ -483,8 +453,7 @@
             </div>
 
             <div class="it-panel it-col-6">
-                <h3>Admission intake and allocation filters</h3>
-                <p class="it-note">Start here for patient movement. "Create admission" opens a hospital stay for a patient inside a department. The filter area below then lets you view department admissions and available beds before you assign a bed.</p>
+                <h3>Admission intake and allocation</h3>
                 <div class="it-controls">
                     <div>
                         <label class="it-label" for="patientUserId">Patient user ID</label>
@@ -548,12 +517,8 @@
                     <button class="it-button soft" type="button" onclick="listDepartments()">Load departments</button>
                 </div>
             </div>
-        </div>
-
-        <div class="it-split">
-            <div class="it-panel it-col-5">
+            <div class="it-panel it-col-6">
                 <h3>Bed assignment actions</h3>
-                <p class="it-note">Use this after you already created or loaded an admission and already loaded available beds. "Assign bed" links one selected bed to one selected admission. "Discharge and release bed" closes the admission and makes that bed available again.</p>
                 <div class="it-controls">
                     <div>
                         <label class="it-label" for="assignAdmissionId">Admission ID</label>
@@ -582,32 +547,16 @@
                     <button class="it-button danger" type="button" onclick="dischargeAdmission()">Discharge and release bed</button>
                 </div>
             </div>
-
-            <div class="it-panel it-col-7">
-                <h3>Latest IDs and stored context</h3>
-                <pre id="ctx" class="it-console"></pre>
-            </div>
-        </div>
-
-        <div class="it-split">
-            <div class="it-panel it-col-6">
-                <h3>Admissions queue</h3>
-                <p class="it-note">Recent admissions are shown as cards so the IT worker can pick ids visually instead of searching only in raw JSON.</p>
-                <div id="admissionCards" class="it-card-grid"></div>
-            </div>
-
             <div class="it-panel it-col-6">
                 <h3>Available beds</h3>
-                <p class="it-note">Use these bed cards to quickly copy a bed into the assignment form.</p>
                 <div id="bedCards" class="it-card-grid"></div>
             </div>
         </div>
 
         <div id="it-reference" class="it-panel ll-section it-panel-switch" data-display="block">
-            <h3>Reference tables</h3>
+            <h3>Reference Tables</h3>
             <div class="it-table-grid">
                 <div>
-                    <p class="it-note">Care units</p>
                     <div class="it-table-wrap">
                         <table class="it-table">
                             <thead>
@@ -618,7 +567,6 @@
                     </div>
                 </div>
                 <div>
-                    <p class="it-note">Beds</p>
                     <div class="it-table-wrap">
                         <table class="it-table">
                             <thead>
@@ -645,12 +593,34 @@
 <script>
 const API = '/api';
 const out = document.getElementById('out');
-const ctx = document.getElementById('ctx');
 const itPanelIds = ['it-overview', 'it-directory', 'it-admission', 'it-reference', 'it-blood-bank', 'it-debug'];
+const itBloodBankSectionHashMap = {
+    'it-bb-request-board': 'request-board',
+    'it-bb-approval-fulfillment': 'approval-fulfillment',
+    'it-bb-match-timeline': 'match-timeline',
+    'it-bb-donor-suggestions': 'donor-suggestions',
+    'it-bb-donor-search': 'donor-search',
+    'it-bb-donation-logging': 'donation-logging',
+    'request-board': 'request-board',
+    'approval-fulfillment': 'approval-fulfillment',
+    'match-timeline': 'match-timeline',
+    'donor-suggestions': 'donor-suggestions',
+    'donor-search': 'donor-search',
+    'donation-logging': 'donation-logging',
+};
+const itBloodBankSectionHashById = {
+    'request-board': 'it-bb-request-board',
+    'approval-fulfillment': 'it-bb-approval-fulfillment',
+    'match-timeline': 'it-bb-match-timeline',
+    'donor-suggestions': 'it-bb-donor-suggestions',
+    'donor-search': 'it-bb-donor-search',
+    'donation-logging': 'it-bb-donation-logging',
+};
 const itNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[data-panel]'));
 
 const state = {
     activePanel: 'it-overview',
+    activeBloodBankSection: '',
     scopeLoaded: false,
     departments: [],
     scopeDepartments: [],
@@ -660,6 +630,8 @@ const state = {
         directoryPageSize: 4,
         doctorsPage: 1,
         patientsPage: 1,
+        bloodDonorsPageSize: 6,
+        bloodDonorsPage: 1,
     },
     admissions: [],
     beds: [],
@@ -736,13 +708,14 @@ function setVisibility(elementId, visible, displayValue = 'block') {
     element.style.display = visible ? displayValue : 'none';
 }
 
-function setActivePanel(panelId) {
+function setActivePanel(panelId, sectionId = '') {
     const allowed = allowedPanels();
     if (!allowed.includes(panelId)) {
         panelId = allowed[0];
     }
 
     state.activePanel = panelId;
+    state.activeBloodBankSection = panelId === 'it-blood-bank' ? sectionId : '';
 
     itPanelIds.forEach((id) => {
         const panel = document.getElementById(id);
@@ -752,7 +725,11 @@ function setActivePanel(panelId) {
 
     itNavLinks.forEach((link) => {
         const targetId = link.dataset.panel || '';
-        link.classList.toggle('is-active', targetId === panelId);
+        const anchorId = link.dataset.anchor || '';
+        const isPanelActive = targetId === panelId;
+        const isAnchorActive = isPanelActive && !!anchorId && anchorId === state.activeBloodBankSection;
+        const isGenericPanelActive = isPanelActive && !anchorId;
+        link.classList.toggle('is-active', isAnchorActive || isGenericPanelActive);
     });
 
     renderDepartmentMode();
@@ -767,16 +744,25 @@ function setupSidebarPanelNav() {
         link.addEventListener('click', (event) => {
             event.preventDefault();
             const panelId = link.dataset.panel || '';
+            const sectionId = link.dataset.anchor || '';
+            const hashId = link.dataset.hash || sectionId || panelId;
             if (!itPanelIds.includes(panelId)) return;
-            setActivePanel(panelId);
-            history.replaceState(null, '', `#${panelId}`);
+            setActivePanel(panelId, sectionId);
+            history.replaceState(null, '', `#${hashId}`);
         });
     });
 
     updateSidebarByScope();
     const initialHash = (window.location.hash || '').replace('#', '');
-    const initialPanel = itPanelIds.includes(initialHash) ? initialHash : allowedPanels()[0];
-    setActivePanel(initialPanel);
+    const resolvedBloodSection = itBloodBankSectionHashMap[initialHash] || '';
+    const initialIsBloodBankSection = !!resolvedBloodSection;
+    const initialPanel = initialIsBloodBankSection
+        ? 'it-blood-bank'
+        : (itPanelIds.includes(initialHash) ? initialHash : allowedPanels()[0]);
+    setActivePanel(initialPanel, resolvedBloodSection);
+    if (initialIsBloodBankSection) {
+        history.replaceState(null, '', `#${itBloodBankSectionHashById[resolvedBloodSection] || initialHash}`);
+    }
 }
 
 function write(data) {
@@ -792,6 +778,9 @@ function selectedToken() {
 }
 
 function refreshCtx() {
+    const ctx = document.getElementById('ctx');
+    if (!ctx) return;
+
     ctx.textContent = JSON.stringify({
         ADMIN_TOKEN_PRESENT: !!localStorage.getItem('ADMIN_TOKEN'),
         USER_TOKEN_PRESENT: !!localStorage.getItem('USER_TOKEN'),
@@ -1069,11 +1058,19 @@ function renderBloodBankStaffDonors() {
     const grid = document.getElementById('bbStaffDonorGrid');
     if (!state.bloodBank.staffDonors.length) {
         grid.innerHTML = '<div class="bbops-empty">No donors found for this search.</div>';
+        renderPaginationControls('bbStaffDonorPagination', 1, 1, 0, 'prevBloodDonorsPage()', 'nextBloodDonorsPage()', state.pagination.bloodDonorsPageSize);
         syncBloodBankStats();
         return;
     }
 
-    grid.innerHTML = state.bloodBank.staffDonors.map((row) => `
+    const pageData = paginateRows(
+        state.bloodBank.staffDonors,
+        state.pagination.bloodDonorsPage,
+        state.pagination.bloodDonorsPageSize
+    );
+    state.pagination.bloodDonorsPage = pageData.safePage;
+
+    grid.innerHTML = pageData.pagedRows.map((row) => `
         <article class="bbops-card">
             <div class="bbops-card__head">
                 <strong>${escapeHtml(row.donor_name || `Donor #${row.donor_id}`)}</strong>
@@ -1094,6 +1091,15 @@ function renderBloodBankStaffDonors() {
             </div>
         </article>
     `).join('');
+    renderPaginationControls(
+        'bbStaffDonorPagination',
+        pageData.safePage,
+        pageData.totalPages,
+        pageData.totalRows,
+        'prevBloodDonorsPage()',
+        'nextBloodDonorsPage()',
+        state.pagination.bloodDonorsPageSize
+    );
     syncBloodBankStats();
 }
 
@@ -1215,7 +1221,7 @@ async function loadBloodBankMatches() {
 }
 
 function bloodBankDonorQuery() {
-    const query = { limit: 20 };
+    const query = { limit: 120 };
     const search = document.getElementById('bbDonorSearchQuery').value.trim();
     const requestId = document.getElementById('bbDonorSearchRequestId').value.trim();
     const bloodGroup = document.getElementById('bbDonorSearchBloodGroup').value.trim();
@@ -1233,11 +1239,13 @@ async function loadBloodBankStaffDonors() {
     write(result);
     if (result.status >= 300) {
         state.bloodBank.staffDonors = [];
+        state.pagination.bloodDonorsPage = 1;
         renderBloodBankStaffDonors();
         return;
     }
 
     state.bloodBank.staffDonors = Array.isArray(result.data?.donors) ? result.data.donors : [];
+    state.pagination.bloodDonorsPage = 1;
     renderBloodBankStaffDonors();
 }
 
@@ -1446,18 +1454,18 @@ function paginateRows(rows, page, pageSize) {
     };
 }
 
-function renderPaginationControls(rootId, page, totalPages, totalRows, onPrev, onNext) {
+function renderPaginationControls(rootId, page, totalPages, totalRows, onPrev, onNext, pageSize = state.pagination.directoryPageSize) {
     const root = document.getElementById(rootId);
     if (!root) return;
 
-    if (totalRows <= state.pagination.directoryPageSize) {
+    if (totalRows <= pageSize) {
         root.innerHTML = '';
         return;
     }
 
     root.innerHTML = `
-        <div class="it-pagination__meta">Page ${page} of ${totalPages} (${totalRows} total)</div>
-        <div class="it-pagination__controls">
+        <div class="ui-list-pagination__meta">Page ${page} of ${totalPages} (${totalRows} total)</div>
+        <div class="ui-list-pagination__controls">
             <button class="it-button soft" type="button" ${page <= 1 ? 'disabled' : ''} onclick="${onPrev}">Previous</button>
             <button class="it-button soft" type="button" ${page >= totalPages ? 'disabled' : ''} onclick="${onNext}">Next</button>
         </div>
@@ -1482,6 +1490,16 @@ function prevPatientsPage() {
 function nextPatientsPage() {
     state.pagination.patientsPage += 1;
     renderPatientsDirectory();
+}
+
+function prevBloodDonorsPage() {
+    state.pagination.bloodDonorsPage = Math.max(1, state.pagination.bloodDonorsPage - 1);
+    renderBloodBankStaffDonors();
+}
+
+function nextBloodDonorsPage() {
+    state.pagination.bloodDonorsPage += 1;
+    renderBloodBankStaffDonors();
 }
 
 function renderDoctors() {
@@ -1564,6 +1582,8 @@ function renderPatientsDirectory() {
 
 function renderAdmissions() {
     const root = document.getElementById('admissionCards');
+    if (!root) return;
+
     if (!state.admissions.length) {
         root.innerHTML = '<div class="it-card"><p class="it-note">No admissions loaded yet.</p></div>';
         return;
@@ -1594,6 +1614,8 @@ function renderAdmissions() {
 
 function renderBeds() {
     const root = document.getElementById('bedCards');
+    if (!root) return;
+
     if (!state.beds.length) {
         root.innerHTML = '<div class="it-card"><p class="it-note">No available beds loaded yet.</p></div>';
         return;
@@ -1703,9 +1725,14 @@ async function loadDepartmentsScope() {
 
     if (!allowedPanels().includes(state.activePanel) || state.activePanel === 'it-overview') {
         const initialHash = (window.location.hash || '').replace('#', '');
-        const nextPanel = allowedPanels().includes(initialHash) ? initialHash : allowedPanels()[1] || allowedPanels()[0];
-        setActivePanel(nextPanel);
-        history.replaceState(null, '', `#${nextPanel}`);
+        const resolvedBloodSection = itBloodBankSectionHashMap[initialHash] || '';
+        const hashIsBloodBankSection = !!resolvedBloodSection;
+        const requestedPanel = hashIsBloodBankSection ? 'it-blood-bank' : initialHash;
+        const nextPanel = allowedPanels().includes(requestedPanel) ? requestedPanel : (allowedPanels()[1] || allowedPanels()[0]);
+        const nextSection = nextPanel === 'it-blood-bank' && hashIsBloodBankSection ? resolvedBloodSection : '';
+        const nextHash = nextSection ? (itBloodBankSectionHashById[nextSection] || nextSection) : nextPanel;
+        setActivePanel(nextPanel, nextSection);
+        history.replaceState(null, '', `#${nextHash}`);
     }
 
     if (result.status < 300 && hasNonBloodBankScope()) {

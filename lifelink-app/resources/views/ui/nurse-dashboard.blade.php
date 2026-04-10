@@ -96,7 +96,8 @@
                 <div class="nurse-panel nurse-col-5">
                     <h3>Patient monitoring list</h3>
                     <p class="nurse-note">Select an admission to open monitoring detail, recent vitals, and linked records.</p>
-                    <div id="patientList" class="nurse-list"></div>
+                    <div id="patientList" class="nurse-list ui-list-window"></div>
+                    <div id="patientListPagination" class="ui-list-pagination"></div>
                 </div>
 
                 <div class="nurse-panel nurse-col-7">
@@ -338,6 +339,10 @@ const state = {
     patients: [],
     patientsLoaded: false,
     patientsQueryKey: null,
+    pagination: {
+        patientsPageSize: 8,
+        patientsPage: 1,
+    },
     selectedAdmissionId: null,
     selectedPatientUserId: null,
     selectedDetail: null,
@@ -534,14 +539,60 @@ function badgeForStatus(status) {
         : `<span class="nurse-pill off">${escapeHtml(status || 'Unknown')}</span>`;
 }
 
+function paginateRows(rows, page, pageSize) {
+    const safeRows = Array.isArray(rows) ? rows : [];
+    const safeSize = Math.max(1, Number(pageSize) || 1);
+    const totalPages = Math.max(1, Math.ceil(safeRows.length / safeSize));
+    const safePage = Math.min(Math.max(1, Number(page) || 1), totalPages);
+    const start = (safePage - 1) * safeSize;
+    return {
+        rows: safeRows.slice(start, start + safeSize),
+        page: safePage,
+        totalPages,
+        totalRows: safeRows.length,
+    };
+}
+
+function renderPatientListPagination(pageData) {
+    const root = document.getElementById('patientListPagination');
+    if (!root) return;
+
+    if (pageData.totalRows <= state.pagination.patientsPageSize) {
+        root.innerHTML = '';
+        return;
+    }
+
+    root.innerHTML = `
+        <div class="ui-list-pagination__meta">Page ${pageData.page} of ${pageData.totalPages} (${pageData.totalRows} total)</div>
+        <div class="ui-list-pagination__controls">
+            <button class="nurse-button soft" type="button" ${pageData.page <= 1 ? 'disabled' : ''} onclick="prevPatientPage()">Previous</button>
+            <button class="nurse-button soft" type="button" ${pageData.page >= pageData.totalPages ? 'disabled' : ''} onclick="nextPatientPage()">Next</button>
+        </div>
+    `;
+}
+
+function prevPatientPage() {
+    state.pagination.patientsPage = Math.max(1, state.pagination.patientsPage - 1);
+    renderPatients();
+}
+
+function nextPatientPage() {
+    state.pagination.patientsPage += 1;
+    renderPatients();
+}
+
 function renderPatients() {
     const holder = document.getElementById('patientList');
     if (!state.patients.length) {
         holder.innerHTML = '<div class="nurse-note">No admissions found for this filter.</div>';
+        renderPatientListPagination({ page: 1, totalPages: 1, totalRows: 0 });
         return;
     }
 
-    holder.innerHTML = state.patients.map((patient) => {
+    const pageData = paginateRows(state.patients, state.pagination.patientsPage, state.pagination.patientsPageSize);
+    state.pagination.patientsPage = pageData.page;
+
+    holder.innerHTML = pageData.rows.map((patient) => {
         const isActive = Number(state.selectedAdmissionId) === Number(patient.id) ? 'is-active' : '';
         const bed = patient.active_bed_assignment
             ? `<span class="nurse-pill bed">${escapeHtml(patient.active_bed_assignment.bed_code || 'Assigned')}</span>`
@@ -567,6 +618,8 @@ function renderPatients() {
             </article>
         `;
     }).join('');
+
+    renderPatientListPagination(pageData);
 }
 
 function renderAdmissionSummary(admission) {
@@ -829,11 +882,13 @@ async function loadPatients(options = {}) {
             state.patients = Array.isArray(result.data?.patients) ? result.data.patients : [];
             state.patientsLoaded = true;
             state.patientsQueryKey = queryKey;
+            state.pagination.patientsPage = 1;
             renderStats(result.data?.stats || null);
             renderPatients();
         } else {
             state.patients = [];
             state.patientsLoaded = false;
+            state.pagination.patientsPage = 1;
             renderStats(null);
             renderPatients();
         }

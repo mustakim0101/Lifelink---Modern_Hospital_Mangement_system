@@ -102,6 +102,10 @@
     .portal-filters { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
     .portal-filters button { background: rgba(18, 43, 66, 0.09); color: var(--portal-ink); padding: 7px 10px; font-size: 12px; border: 1px solid transparent; }
     .portal-filters button.active { background: rgba(15, 118, 110, 0.16); border-color: rgba(15, 118, 110, 0.34); color: var(--portal-primary-strong); }
+    .portal-filter-card { grid-column: 1 / -1; }
+    .portal-filter-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .portal-filter-groups > div { border: 1px solid var(--portal-line); border-radius: 10px; background: rgba(255, 255, 255, 0.94); padding: 8px; }
+    .portal-filter-groups strong { display: block; font-size: 13px; }
 
     .portal-table-wrap { overflow: auto; border: 1px solid var(--portal-line); border-radius: 10px; background: rgba(255, 255, 255, 0.94); margin-top: 8px; }
     .portal-table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -128,6 +132,7 @@
 
     @media (max-width: 860px) {
         .portal-split, .portal-row, .portal-summary { grid-template-columns: 1fr; }
+        .portal-filter-groups { grid-template-columns: 1fr; }
     }
 </style>
 @endpush
@@ -151,45 +156,6 @@
 @endsection
 
 @section('sidebar')
-    <div class="app-shell__sidebar-card">
-        <strong>Auth context</strong>
-        <p>Use the stored patient session token from <code>/ui/login</code> and refresh the portal data from here.</p>
-        <label class="portal-label" for="tokenInput">Patient token</label>
-        <input id="tokenInput" class="portal-input" placeholder="Bearer token">
-        <div class="portal-btn-row">
-            <button id="btnStored" class="portal-btn portal-btn-soft" onclick="useStoredUserToken()">Use USER_TOKEN</button>
-            <button id="btnRefresh" class="portal-btn portal-btn-main" onclick="refreshAll()">Refresh All</button>
-        </div>
-    </div>
-
-    <div class="app-shell__sidebar-card">
-        <strong>Appointment filter</strong>
-        <div id="appointmentFilters" class="portal-filters">
-            <button data-status="" class="active" onclick="setAppointmentStatus('')">All</button>
-            <button data-status="Booked" onclick="setAppointmentStatus('Booked')">Booked</button>
-            <button data-status="Cancelled" onclick="setAppointmentStatus('Cancelled')">Cancelled</button>
-            <button data-status="Completed" onclick="setAppointmentStatus('Completed')">Completed</button>
-            <button data-status="NoShow" onclick="setAppointmentStatus('NoShow')">No Show</button>
-        </div>
-    </div>
-
-    <div class="app-shell__sidebar-card">
-        <strong>Blood request filter</strong>
-        <div id="bloodFilters" class="portal-filters">
-            <button data-status="" class="active" onclick="setBloodStatus('')">All</button>
-            <button data-status="Pending" onclick="setBloodStatus('Pending')">Pending</button>
-            <button data-status="Fulfilled" onclick="setBloodStatus('Fulfilled')">Fulfilled</button>
-            <button data-status="Rejected" onclick="setBloodStatus('Rejected')">Rejected</button>
-            <button data-status="Cancelled" onclick="setBloodStatus('Cancelled')">Cancelled</button>
-        </div>
-    </div>
-
-    <div class="app-shell__sidebar-card">
-        <strong>Session clock</strong>
-        <p>The portal stays in the shared workspace shell now, but the patient tools still refresh live from the same API endpoints.</p>
-        <div class="portal-mini">Local dashboard time</div>
-        <strong id="clockNow" class="portal-clock">--:--</strong>
-    </div>
 @endsection
 
 @section('content')
@@ -197,6 +163,12 @@
         <div id="portal-snapshot" class="portal-card ll-section portal-panel" data-display="block">
             <h3>Snapshot</h3>
             <p class="portal-hint">Live summary from <code>GET /api/patient/portal</code>.</p>
+            <label class="portal-label" for="tokenInput">Patient token</label>
+            <input id="tokenInput" class="portal-input" placeholder="Bearer token">
+            <div class="portal-btn-row">
+                <button id="btnStored" class="portal-btn portal-btn-soft" onclick="useStoredUserToken()">Use USER_TOKEN</button>
+                <button id="btnRefresh" class="portal-btn portal-btn-main" onclick="refreshAll()">Refresh All</button>
+            </div>
             <div class="portal-stats">
                 <div class="portal-stat"><div class="portal-num" id="stRecords">0</div><div class="portal-lbl">Records</div></div>
                 <div class="portal-stat"><div class="portal-num" id="stUpcoming">0</div><div class="portal-lbl">Upcoming</div></div>
@@ -207,6 +179,31 @@
         </div>
 
         <div id="portal-actions" class="portal-split ll-section portal-panel" data-display="grid">
+            <div class="portal-card portal-filter-card">
+                <div class="portal-filter-groups">
+                    <div>
+                        <strong>Appointment filter</strong>
+                        <div class="portal-filters" data-filter-group="appointment">
+                            <button data-status="" class="active" onclick="setAppointmentStatus('')">All</button>
+                            <button data-status="Booked" onclick="setAppointmentStatus('Booked')">Booked</button>
+                            <button data-status="Cancelled" onclick="setAppointmentStatus('Cancelled')">Cancelled</button>
+                            <button data-status="Completed" onclick="setAppointmentStatus('Completed')">Completed</button>
+                            <button data-status="NoShow" onclick="setAppointmentStatus('NoShow')">No Show</button>
+                        </div>
+                    </div>
+                    <div>
+                        <strong>Blood request filter</strong>
+                        <div class="portal-filters" data-filter-group="blood">
+                            <button data-status="" class="active" onclick="setBloodStatus('')">All</button>
+                            <button data-status="Pending" onclick="setBloodStatus('Pending')">Pending</button>
+                            <button data-status="Fulfilled" onclick="setBloodStatus('Fulfilled')">Fulfilled</button>
+                            <button data-status="Rejected" onclick="setBloodStatus('Rejected')">Rejected</button>
+                            <button data-status="Cancelled" onclick="setBloodStatus('Cancelled')">Cancelled</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="portal-card">
                 <h3>Book appointment</h3>
                 <p class="portal-hint">Department and time are required. Doctor is optional.</p>
@@ -276,6 +273,31 @@
         </div>
 
         <div id="portal-tables" class="portal-split ll-section portal-panel" data-display="grid">
+            <div class="portal-card portal-filter-card">
+                <div class="portal-filter-groups">
+                    <div>
+                        <strong>Appointment filter</strong>
+                        <div class="portal-filters" data-filter-group="appointment">
+                            <button data-status="" class="active" onclick="setAppointmentStatus('')">All</button>
+                            <button data-status="Booked" onclick="setAppointmentStatus('Booked')">Booked</button>
+                            <button data-status="Cancelled" onclick="setAppointmentStatus('Cancelled')">Cancelled</button>
+                            <button data-status="Completed" onclick="setAppointmentStatus('Completed')">Completed</button>
+                            <button data-status="NoShow" onclick="setAppointmentStatus('NoShow')">No Show</button>
+                        </div>
+                    </div>
+                    <div>
+                        <strong>Blood request filter</strong>
+                        <div class="portal-filters" data-filter-group="blood">
+                            <button data-status="" class="active" onclick="setBloodStatus('')">All</button>
+                            <button data-status="Pending" onclick="setBloodStatus('Pending')">Pending</button>
+                            <button data-status="Fulfilled" onclick="setBloodStatus('Fulfilled')">Fulfilled</button>
+                            <button data-status="Rejected" onclick="setBloodStatus('Rejected')">Rejected</button>
+                            <button data-status="Cancelled" onclick="setBloodStatus('Cancelled')">Cancelled</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="portal-card">
                 <h3>Appointments</h3>
                 <div class="portal-table-wrap">
@@ -391,7 +413,9 @@ function showToast(message, type = 'ok') {
 }
 
 function setClock() {
-    byId('clockNow').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const clock = byId('clockNow');
+    if (!clock) return;
+    clock.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 function setButtonBusy(id, busy) {
@@ -433,9 +457,11 @@ function statusBadge(status) {
     return `<span class="portal-badge ${type}">${html(value)}</span>`;
 }
 
-function setFilterActive(containerId, status) {
-    byId(containerId).querySelectorAll('button[data-status]').forEach((b) => {
-        b.classList.toggle('active', (b.getAttribute('data-status') || '') === status);
+function setFilterActive(group, status) {
+    document.querySelectorAll(`[data-filter-group="${group}"]`).forEach((container) => {
+        container.querySelectorAll('button[data-status]').forEach((b) => {
+            b.classList.toggle('active', (b.getAttribute('data-status') || '') === status);
+        });
     });
 }
 
@@ -623,8 +649,8 @@ async function submitBloodRequest() {
     await loadPortal();
 }
 
-function setAppointmentStatus(status) { state.appointmentStatus = status; setFilterActive('appointmentFilters', status); loadAppointments(); }
-function setBloodStatus(status) { state.bloodStatus = status; setFilterActive('bloodFilters', status); loadBloodRequests(); }
+function setAppointmentStatus(status) { state.appointmentStatus = status; setFilterActive('appointment', status); loadAppointments(); }
+function setBloodStatus(status) { state.bloodStatus = status; setFilterActive('blood', status); loadBloodRequests(); }
 
 async function refreshAll() {
     setButtonBusy('btnRefresh', true);
@@ -644,6 +670,8 @@ function boot() {
     setupSidebarPanelNav();
     setClock();
     setInterval(setClock, 1000);
+    setFilterActive('appointment', state.appointmentStatus);
+    setFilterActive('blood', state.bloodStatus);
     useStoredUserToken();
     setDefaultAppointmentTime();
     byId('appointmentDepartmentId').addEventListener('change', populateDoctorOptions);
