@@ -32,57 +32,74 @@
         <main class="welcome-main">
             <section class="welcome-hero" id="overview">
                 <article class="welcome-hero__copy">
-                    <span class="badge">Healthcare SaaS</span>
-                    <h1>Coordinate hospital care, access, and blood operations from one calm system.</h1>
-                    <p>LifeLink brings together admissions, bed management, patient-facing access, staff workspaces, and Blood Bank response in a single role-aware experience.</p>
+                    <span class="badge">Healthcare SaaS Platform</span>
+                    <h1>Modern Hospital Management <span class="welcome-hero__title-accent">Made Simple</span></h1>
+                    <p>Streamline operations, improve patient care, and keep Blood Bank response connected through one role-aware LifeLink workspace.</p>
                     <div class="hero-actions">
-                        <a class="button primary" href="/ui/login">Open Login</a>
-                        <a class="button" href="#find-department">Find a Department</a>
-                        <a class="button" href="/ui/dashboard">Open Workspace Hub</a>
-                    </div>
-                    <div class="welcome-proof">
-                        <div class="welcome-proof__item">
-                            <strong>Role-aware entry</strong>
-                            <span>Launch the right workspace without changing the existing routing or session behavior.</span>
-                        </div>
-                        <div class="welcome-proof__item">
-                            <strong>Operational coverage</strong>
-                            <span>Admissions, clinical coordination, and Blood Bank workflows stay connected in one product surface.</span>
-                        </div>
+                        <a class="button primary" href="/ui/register/patient">Register as Patient</a>
+                        <a class="button" href="/ui/register/donor">Register as Donor</a>
+                        <a class="button" href="/ui/register/applicant">Join Our Team</a>
                     </div>
                 </article>
                 <aside class="welcome-hero__aside">
                     <article class="welcome-highlight">
-                        <span class="welcome-highlight__label">Deployment-ready feel</span>
-                        <strong>Built for patients, clinicians, operations, and donor-response teams.</strong>
-                        <p>Calmer hierarchy, stronger cards, and cleaner entry points make LifeLink feel intentional from the first screen.</p>
+                        <span class="welcome-highlight__label">Unified Hospital System</span>
+                        <strong>From public entry to role dashboards, every workflow stays in one trusted platform.</strong>
+                        <p>LifeLink keeps admissions, clinical coordination, donor support, and operations aligned.</p>
                     </article>
                     <div class="welcome-metrics">
                         <article class="welcome-metric">
                             <strong>7</strong>
-                            <span>Role paths</span>
-                        </article>
-                        <article class="welcome-metric">
-                            <strong>1</strong>
-                            <span>Unified workspace system</span>
+                            <span>Role workspaces</span>
                         </article>
                         <article class="welcome-metric">
                             <strong>24/7</strong>
-                            <span>Operational posture</span>
+                            <span>Operational readiness</span>
+                        </article>
+                        <article class="welcome-metric">
+                            <strong>1</strong>
+                            <span>Connected platform</span>
                         </article>
                     </div>
                 </aside>
             </section>
 
-            <section class="welcome-bands" aria-label="LifeLink strengths">
-                <article class="welcome-band">
-                    <span class="hub-label">Operational Core</span>
-                    <h2>Trusted structure for admissions, clinical work, and donor response.</h2>
-                </article>
-                <article class="welcome-band">
-                    <span class="hub-label">Session-aware Entry</span>
-                    <p>Signed-out visitors can move into login or registration, while active sessions can continue directly into the right dashboard.</p>
-                </article>
+            <section id="modules" class="welcome-solutions">
+                <div class="welcome-solutions__head">
+                    <h2>Comprehensive Healthcare Solutions</h2>
+                </div>
+                <div class="welcome-module-grid">
+                    <article class="card welcome-module-card">
+                        <span class="hub-label">Admin</span>
+                        <h3>Admin Control Center</h3>
+                        <p>Complete oversight of operations, staffing, and application reviews.</p>
+                    </article>
+                    <article class="card welcome-module-card">
+                        <span class="hub-label">Patient</span>
+                        <h3>Patient Care</h3>
+                        <p>Appointments, records, and requests are managed in one secure flow.</p>
+                    </article>
+                    <article class="card welcome-module-card">
+                        <span class="hub-label">IT</span>
+                        <h3>IT Operations</h3>
+                        <p>Admissions, bed allocation, and ward operations stay coordinated.</p>
+                    </article>
+                    <article class="card welcome-module-card">
+                        <span class="hub-label">Doctor</span>
+                        <h3>Doctor Dashboard</h3>
+                        <p>Daily appointments, active patients, and requests in one workspace.</p>
+                    </article>
+                    <article class="card welcome-module-card">
+                        <span class="hub-label">Nurse</span>
+                        <h3>Nurse Workspace</h3>
+                        <p>Patient monitoring, vitals tracking, and Blood Bank screening tasks.</p>
+                    </article>
+                    <article class="card welcome-module-card">
+                        <span class="hub-label">Blood Bank</span>
+                        <h3>Blood Operations</h3>
+                        <p>Donor matching, approval, fulfillment, and donation logging.</p>
+                    </article>
+                </div>
             </section>
 
             <section class="finder-section" id="find-department" aria-labelledby="finder-title">
@@ -177,34 +194,16 @@
                 </div>
             </section>
 
-            <section id="modules" class="welcome-module-grid">
-                <article class="card welcome-module-card">
-                    <span class="hub-label">Identity</span>
-                    <h2>Role-aware authentication</h2>
-                    <p>One entry layer for patients, staff, donors, and applicants with workspace routing that stays tied to current roles.</p>
-                </article>
-                <article class="card welcome-module-card">
-                    <span class="hub-label">Operations</span>
-                    <h2>Admissions and beds</h2>
-                    <p>Department scope, care units, patient movement, and bed allocation live inside the same operational surface.</p>
-                </article>
-                <article class="card welcome-module-card">
-                    <span class="hub-label">Blood Bank</span>
-                    <h2>Blood operations</h2>
-                    <p>Donor screening, matching, notifications, approval, fulfillment, and donation logging stay connected end to end.</p>
-                </article>
-            </section>
-
             <section id="entry" class="welcome-entry-grid">
                 <div id="logged-out-entry" class="card stack welcome-entry-card">
                     <span class="hub-label">Account Entry</span>
-                    <h2>Choose the right way into LifeLink.</h2>
-                    <p>Sign in to an existing account or create the right public entry for patients, donors, and staff applicants.</p>
+                    <h2>Choose your entry path.</h2>
+                    <p>Sign in to continue, or create the right account for patient, donor, or applicant access.</p>
                     <div class="hero-actions">
                         <a class="button primary" href="/ui/login">Login</a>
                         <a class="button" href="/ui/register/patient">Patient Register</a>
                         <a class="button" href="/ui/register/donor">Donor Register</a>
-                        <a class="button" href="/ui/register/applicant">Applicant Register</a>
+                        <a class="button" href="/ui/register/applicant">Join Our Team</a>
                     </div>
                 </div>
 
@@ -219,14 +218,39 @@
                 </div>
 
                 <div class="card stack welcome-entry-card welcome-entry-card--support">
-                    <span class="hub-label">Care Access</span>
-                    <h2>Need help choosing a route?</h2>
-                    <p>Use the department finder for symptom-based guidance, then enter through the login or registration path that fits your role.</p>
+                    <span class="hub-label">Session Access</span>
+                    <h2>Already have an account?</h2>
+                    <p>Use login for direct workspace access, or use department finder first if you need care guidance.</p>
                     <div class="hero-actions">
+                        <a class="button primary" href="/ui/login">Open Login</a>
                         <a class="button" href="#find-department">Open anatomy guide</a>
                     </div>
                 </div>
             </section>
+
+            <section class="welcome-impact" aria-label="LifeLink highlights">
+                <article class="welcome-impact__item">
+                    <strong>10K+</strong>
+                    <span>Patients Served</span>
+                </article>
+                <article class="welcome-impact__item">
+                    <strong>500+</strong>
+                    <span>Medical Staff</span>
+                </article>
+                <article class="welcome-impact__item">
+                    <strong>1,000+</strong>
+                    <span>Active Donors</span>
+                </article>
+                <article class="welcome-impact__item welcome-impact__item--danger">
+                    <strong>99.9%</strong>
+                    <span>Uptime</span>
+                </article>
+            </section>
+
+            <footer class="welcome-footer">
+                <strong>LifeLink</strong>
+                <p>&copy; 2026 LifeLink Hospital Management System. All rights reserved.</p>
+            </footer>
         </main>
     </div>
 

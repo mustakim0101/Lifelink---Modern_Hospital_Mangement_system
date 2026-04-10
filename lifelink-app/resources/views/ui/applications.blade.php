@@ -11,114 +11,209 @@
 
 @push('styles')
 <style>
-    :root {
-        --app-ink: #172436;
-        --app-muted: #5a6d7b;
-        --app-line: rgba(23, 36, 54, 0.12);
-        --app-card: rgba(255, 255, 255, 0.92);
-        --app-primary: #1d4ed8;
-        --app-primary-strong: #1e40af;
-        --app-accent: #0f766e;
-        --app-ok: #166534;
-        --app-warn: #a16207;
-        --app-danger: #b91c1c;
-        --app-shadow: 0 16px 36px rgba(18, 34, 50, 0.14);
-    }
-
-    .applicant-grid { display: grid; gap: 10px; }
+    .applicant-shell { display: grid; gap: 16px; }
     .applicant-panel { display: none; }
-    .applicant-card {
-        border: 1px solid var(--app-line);
-        border-radius: 16px;
-        background: var(--app-card);
-        box-shadow: var(--app-shadow);
-        padding: 14px;
+
+    .applicant-header {
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 250, 254, 0.94));
+        padding: 16px;
     }
 
-    .applicant-card h3 { margin: 0; }
-    .applicant-hint { margin: 5px 0 0; color: var(--app-muted); font-size: 12px; line-height: 1.7; }
-    .applicant-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .applicant-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
-    .applicant-stat {
-        border: 1px solid var(--app-line);
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.94);
-        text-align: center;
-        padding: 12px;
+    .applicant-header h2 {
+        margin: 0;
+        font-size: clamp(1.7rem, 2.6vw, 2.3rem);
+        color: #0f172a;
     }
-    .applicant-stat strong { display: block; font-size: 1.35rem; font-family: "Sora", "Trebuchet MS", sans-serif; }
-    .applicant-stat span { color: var(--app-muted); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    .applicant-header p {
+        margin: 8px 0 0;
+        color: #475569;
+    }
+
+    .applicant-status-hero {
+        border: 2px solid rgba(217, 119, 6, 0.5);
+        border-radius: 18px;
+        background: linear-gradient(180deg, #fef8d8, #fdf2ba);
+        padding: 26px 18px;
+        text-align: center;
+    }
+
+    .applicant-status-hero.pending {
+        border-color: rgba(217, 119, 6, 0.48);
+        background: linear-gradient(180deg, #fef8d8, #fdf2ba);
+    }
+
+    .applicant-status-hero.approved {
+        border-color: rgba(5, 150, 105, 0.45);
+        background: linear-gradient(180deg, #e7fbef, #d7f7e5);
+    }
+
+    .applicant-status-hero.rejected {
+        border-color: rgba(185, 28, 28, 0.54);
+        background: linear-gradient(180deg, #fee9e9, #fdd5d5);
+    }
+
+    .applicant-status-icon {
+        width: 54px;
+        height: 54px;
+        margin: 0 auto 14px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        font-weight: 900;
+        font-size: 1.35rem;
+        border: 2px solid currentColor;
+    }
+
+    .applicant-status-icon.pending { color: #b45309; }
+    .applicant-status-icon.approved { color: #047857; }
+    .applicant-status-icon.rejected { color: #b91c1c; }
+
+    .applicant-status-title {
+        margin: 0;
+        font-size: clamp(1.55rem, 2.5vw, 2rem);
+        color: #0f172a;
+    }
+
+    .applicant-status-copy {
+        margin: 10px auto 0;
+        max-width: 62ch;
+        color: #334155;
+        line-height: 1.7;
+    }
 
     .applicant-status {
+        margin-top: 14px;
         display: inline-flex;
         align-items: center;
-        border-radius: 999px;
-        padding: 6px 10px;
-        font-size: 12px;
-        font-weight: 700;
+        border-radius: 10px;
+        padding: 8px 14px;
+        font-size: 0.95rem;
+        font-weight: 800;
     }
-    .applicant-status.pending { color: var(--app-warn); background: rgba(161, 98, 7, 0.14); }
-    .applicant-status.approved { color: var(--app-ok); background: rgba(22, 101, 52, 0.14); }
-    .applicant-status.rejected { color: var(--app-danger); background: rgba(185, 28, 28, 0.14); }
+
+    .applicant-status.pending { color: #b45309; background: rgba(245, 158, 11, 0.2); }
+    .applicant-status.approved { color: #047857; background: rgba(5, 150, 105, 0.2); }
+    .applicant-status.rejected { color: #b91c1c; background: rgba(220, 38, 38, 0.22); }
+
+    .applicant-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .applicant-card {
+        border: 1px solid rgba(148, 163, 184, 0.26);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.96);
+        padding: 16px;
+    }
+
+    .applicant-card h3 {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1.5rem;
+    }
+
+    .applicant-kv {
+        margin-top: 14px;
+        display: grid;
+        gap: 12px;
+    }
+
+    .applicant-kv div {
+        display: grid;
+        gap: 4px;
+    }
+
+    .applicant-kv span {
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+
+    .applicant-kv strong {
+        color: #0f172a;
+        font-size: 1.02rem;
+    }
+
+    .applicant-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+    }
+
+    .applicant-btn {
+        border: 0;
+        border-radius: 10px;
+        min-height: 40px;
+        padding: 10px 12px;
+        font: inherit;
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .applicant-btn-main { background: #0369a1; color: #fff; }
+    .applicant-btn-main:hover { background: #075985; }
+    .applicant-btn-soft { background: rgba(15, 23, 42, 0.08); color: #0f172a; }
+
+    .applicant-history-card {
+        border: 1px solid rgba(148, 163, 184, 0.26);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.96);
+        padding: 16px;
+    }
 
     .applicant-table-wrap {
         margin-top: 10px;
-        border: 1px solid var(--app-line);
+        border: 1px solid rgba(148, 163, 184, 0.24);
         border-radius: 12px;
         overflow: auto;
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(255, 255, 255, 0.98);
     }
+
     .applicant-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 12px;
+        font-size: 0.83rem;
     }
+
     .applicant-table th,
     .applicant-table td {
         text-align: left;
         white-space: nowrap;
         padding: 10px;
-        border-bottom: 1px solid rgba(23, 36, 54, 0.08);
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
     }
+
     .applicant-table th {
         position: sticky;
         top: 0;
         background: rgba(247, 250, 255, 0.98);
-        color: var(--app-muted);
-        font-size: 11px;
+        color: #475569;
+        font-size: 0.72rem;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.06em;
     }
-
-    .applicant-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-    .applicant-btn {
-        border: 0;
-        border-radius: 10px;
-        padding: 10px 12px;
-        font: inherit;
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-    }
-    .applicant-btn-main { background: var(--app-primary); color: #fff; }
-    .applicant-btn-main:hover { background: var(--app-primary-strong); }
-    .applicant-btn-soft { background: rgba(23, 36, 54, 0.08); color: var(--app-ink); }
 
     .applicant-pre {
         margin: 0;
-        min-height: 110px;
+        min-height: 120px;
         max-height: 280px;
         overflow: auto;
-        border-radius: 11px;
-        border: 1px solid var(--app-line);
-        background: #101c33;
+        border-radius: 10px;
+        border: 1px solid rgba(15, 23, 42, 0.2);
+        background: #0f1e34;
         color: #d7e3ff;
-        padding: 11px;
+        padding: 10px;
         font-size: 12px;
     }
 
-    @media (max-width: 860px) {
-        .applicant-row, .applicant-stats { grid-template-columns: 1fr; }
+    @media (max-width: 980px) {
+        .applicant-row { grid-template-columns: 1fr; }
     }
 </style>
 @endpush
@@ -142,44 +237,49 @@
 @endsection
 
 @section('content')
-    <div class="applicant-grid">
-        <div id="app-status" class="applicant-card ll-section applicant-panel" data-display="block">
-            <h3>Latest application status</h3>
-            <p id="statusMessage" class="applicant-hint">Your application has been submitted. Please wait for admin review.</p>
-            <p id="applicantEmail" class="applicant-hint">No applicant session found.</p>
-            <div class="applicant-btns">
-                <button class="applicant-btn applicant-btn-soft" type="button" onclick="loadLatest()">Refresh latest status</button>
-                <button class="applicant-btn applicant-btn-soft" type="button" onclick="loadAll()">Load application history</button>
+    <div class="applicant-shell">
+        <section id="app-status" class="ll-section applicant-panel" data-display="block">
+            <div class="applicant-header">
+                <h2>Application Status</h2>
+                <p>Track your staff application progress.</p>
             </div>
-            <div class="applicant-stats">
-                <div class="applicant-stat">
-                    <strong id="latestStatus">-</strong>
-                    <span>Status</span>
-                </div>
-                <div class="applicant-stat">
-                    <strong id="latestRole">-</strong>
-                    <span>Applied Role</span>
-                </div>
-                <div class="applicant-stat">
-                    <strong id="latestDepartment">-</strong>
-                    <span>Department</span>
-                </div>
-            </div>
-        </div>
 
-        <div id="app-waiting" class="applicant-row ll-section applicant-panel" data-display="grid">
+            <div id="statusHero" class="applicant-status-hero pending" style="margin-top:14px;">
+                <div id="statusIcon" class="applicant-status-icon pending">!</div>
+                <h3 id="statusTitle" class="applicant-status-title">Application Under Review</h3>
+                <p id="statusMessage" class="applicant-status-copy">
+                    Your application is currently being reviewed by our team. We typically respond within 5-7 business days.
+                </p>
+                <div id="waitingBadge" class="applicant-status pending">Pending</div>
+            </div>
+
+            <div class="applicant-actions">
+                <button class="applicant-btn applicant-btn-main" type="button" onclick="loadLatest()">Refresh status</button>
+                <button class="applicant-btn applicant-btn-soft" type="button" onclick="loadAll()">Load history</button>
+            </div>
+        </section>
+
+        <section id="app-waiting" class="applicant-row ll-section applicant-panel" data-display="grid">
             <div class="applicant-card">
-                <h3>Waiting state</h3>
-                <div id="waitingBadge" class="applicant-status pending">Pending review</div>
+                <h3>Application Details</h3>
+                <div class="applicant-kv">
+                    <div><span>Applicant Email</span><strong id="applicantEmail">No applicant session found.</strong></div>
+                    <div><span>Applied Position</span><strong id="latestRole">-</strong></div>
+                    <div><span>Department</span><strong id="latestDepartment">-</strong></div>
+                    <div><span>Current Status</span><strong id="latestStatus">-</strong></div>
+                </div>
             </div>
 
             <div class="applicant-card">
-                <h3>Latest review note</h3>
-                <p class="applicant-hint" id="latestReviewNote">No review note available yet.</p>
+                <h3>Review and Next Step</h3>
+                <div class="applicant-kv">
+                    <div><span>Latest Review Note</span><strong id="latestReviewNote">No review note available yet.</strong></div>
+                    <div><span>Role Assignment</span><strong>If approved, your account is assigned to Doctor, Nurse, or IT Worker and future login routes to that dashboard.</strong></div>
+                </div>
             </div>
-        </div>
+        </section>
 
-        <div id="app-history" class="applicant-card ll-section applicant-panel" data-display="block">
+        <section id="app-history" class="applicant-history-card ll-section applicant-panel" data-display="block">
             <h3>Application history</h3>
             <div class="applicant-table-wrap">
                 <table class="applicant-table">
@@ -189,12 +289,12 @@
                     <tbody id="applicationsBody"></tbody>
                 </table>
             </div>
-        </div>
+        </section>
 
-        <div id="app-debug" class="applicant-card ll-section applicant-panel" data-display="block">
+        <section id="app-debug" class="applicant-history-card ll-section applicant-panel" data-display="block">
             <h3>API response</h3>
             <pre id="out" class="applicant-pre"></pre>
-        </div>
+        </section>
     </div>
 @endsection
 
@@ -263,13 +363,25 @@ function renderWaitingState(application) {
     badge.className = `applicant-status ${applicantStatusClass(status)}`;
     badge.textContent = status;
 
+    const hero = document.getElementById('statusHero');
+    const icon = document.getElementById('statusIcon');
+    const title = document.getElementById('statusTitle');
+    hero.className = `applicant-status-hero ${applicantStatusClass(status)}`;
+    icon.className = `applicant-status-icon ${applicantStatusClass(status)}`;
+
     const message = document.getElementById('statusMessage');
     if (status === 'Approved') {
-        message.textContent = 'Your application was approved. Your staff role should now be active, and future logins will take you into the assigned role dashboard.';
+        icon.textContent = 'OK';
+        title.textContent = 'Application Approved';
+        message.textContent = 'Your application has been approved. Your account is now role-assigned, and future logins will route you to your staff dashboard.';
     } else if (status === 'Rejected') {
-        message.textContent = 'Your application was reviewed and rejected. Please wait for further instruction or apply again when appropriate.';
+        icon.textContent = 'X';
+        title.textContent = 'Application Rejected';
+        message.textContent = 'Your application was reviewed and rejected. This state is shown in red as requested. Please wait for further instruction before reapplying.';
     } else {
-        message.textContent = 'Your application is pending. Please wait for admin review. You will be contacted soon or your status will update here.';
+        icon.textContent = '!';
+        title.textContent = 'Application Under Review';
+        message.textContent = 'Your application is currently being reviewed by our admin team. You will receive updates here once a decision is made.';
     }
 }
 

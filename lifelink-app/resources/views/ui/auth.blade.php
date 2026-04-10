@@ -88,12 +88,18 @@
             <a class="mini-link" href="/ui/dashboard">Workspace Hub</a>
         </div>
 
-        <section class="auth-layout">
+        <section class="auth-layout {{ $mode === 'login' ? 'auth-layout--login' : '' }}">
             <article class="auth-intro">
                 <div class="auth-intro__panel">
                     <span class="badge">{{ $config['badge'] }}</span>
                     <h1>{{ $config['headline'] }}</h1>
                     <p>{{ $config['copy'] }}</p>
+                    <div class="auth-mode-pills" aria-label="Available entry modes">
+                        <a class="auth-mode-pill {{ $mode === 'login' ? 'is-active' : '' }}" href="/ui/login">Login</a>
+                        <a class="auth-mode-pill {{ $mode === 'patient' ? 'is-active' : '' }}" href="/ui/register/patient">Patient</a>
+                        <a class="auth-mode-pill {{ $mode === 'donor' ? 'is-active' : '' }}" href="/ui/register/donor">Donor</a>
+                        <a class="auth-mode-pill {{ $mode === 'applicant' ? 'is-active' : '' }}" href="/ui/register/applicant">Applicant</a>
+                    </div>
                     <div class="auth-intro__trust">
                         <article class="auth-trust-card">
                             <strong>Single access layer</strong>
@@ -103,10 +109,18 @@
                             <strong>Dedicated public entry</strong>
                             <span>Patients, donors, and applicants still keep their own registration journeys.</span>
                         </article>
+                        <article class="auth-trust-card">
+                            <strong>Clinical-grade clarity</strong>
+                            <span>Calm surfaces and focused forms help users complete authentication quickly under pressure.</span>
+                        </article>
                     </div>
                 </div>
 
                 <div class="path-list auth-links">
+                    <div class="auth-links__head">
+                        <span class="hub-label">Switch Path</span>
+                        <p>Move to another entry flow without losing the current page context.</p>
+                    </div>
                     @foreach ($otherLinks as $link)
                         <a class="path-link" href="{{ $link['href'] }}">
                             <strong>{{ $link['label'] }}</strong>
@@ -120,8 +134,8 @@
                 @if ($mode === 'login')
                     <div class="auth-card__header">
                         <span class="hub-label">Secure Login</span>
-                        <h2>Sign in</h2>
-                        <p>Enter your email and password to continue.</p>
+                        <h2>Welcome Back</h2>
+                        <p>Sign in to access your LifeLink workspace.</p>
                     </div>
 
                     <div class="field">
@@ -134,40 +148,55 @@
                     </div>
 
                     <div class="button-row">
-                        <button class="button button-primary" type="button" onclick="loginUser()">Login</button>
-                        <button class="button button-secondary" type="button" onclick="useLastEmail()">Use last email</button>
+                        <button class="button button-primary auth-login-cta" type="button" onclick="loginUser()">Sign In</button>
+                    </div>
+                    <button class="auth-link-button" type="button" onclick="useLastEmail()">Use last email</button>
+                    <a class="auth-link-inline" href="#">Forgot password?</a>
+
+                    <div class="auth-divider">
+                        <span>Don't have an account?</span>
                     </div>
 
-                    <div class="session-card auth-session-card">
-                        <strong>Current session</strong>
-                        <div class="session-grid">
-                            <div><small>User</small><strong id="session-user">No active session</strong></div>
-                            <div><small>Roles</small><strong id="session-roles">None</strong></div>
-                        </div>
-                        <div class="button-row">
-                            <a class="ghost-link" href="/ui/dashboard">Open auth hub</a>
-                            <button class="button button-secondary" type="button" onclick="clearStorage()">Clear session</button>
-                        </div>
+                    <div class="auth-register-stack">
+                        <a class="button button-secondary auth-register-btn" href="/ui/register/patient">Register as Patient</a>
+                        <a class="button button-secondary auth-register-btn" href="/ui/register/donor">Register as Donor</a>
+                        <a class="button button-secondary auth-register-btn" href="/ui/register/applicant">Apply to Join Staff</a>
+                        <a class="auth-home-link" href="/">Back to Home</a>
                     </div>
 
-                    <button class="advanced-toggle" type="button" onclick="toggleAdvanced()">Need bootstrap tools?</button>
-                    <div id="advanced-card" class="advanced-card">
-                        <div class="field">
-                            <label for="adminName">Admin full name</label>
-                            <input id="adminName" type="text" placeholder="Admin full name">
+                    <details class="auth-dev-tools">
+                        <summary>Session and bootstrap tools</summary>
+                        <div class="session-card auth-session-card">
+                            <strong>Current session</strong>
+                            <div class="session-grid">
+                                <div><small>User</small><strong id="session-user">No active session</strong></div>
+                                <div><small>Roles</small><strong id="session-roles">None</strong></div>
+                            </div>
+                            <div class="button-row">
+                                <a class="ghost-link" href="/ui/dashboard">Open auth hub</a>
+                                <button class="button button-secondary" type="button" onclick="clearStorage()">Clear session</button>
+                            </div>
                         </div>
-                        <div class="field">
-                            <label for="adminEmail">Admin email</label>
-                            <input id="adminEmail" type="email" placeholder="admin@example.com">
+
+                        <button class="advanced-toggle" type="button" onclick="toggleAdvanced()">Need bootstrap tools?</button>
+                        <div id="advanced-card" class="advanced-card">
+                            <div class="field">
+                                <label for="adminName">Admin full name</label>
+                                <input id="adminName" type="text" placeholder="Admin full name">
+                            </div>
+                            <div class="field">
+                                <label for="adminEmail">Admin email</label>
+                                <input id="adminEmail" type="email" placeholder="admin@example.com">
+                            </div>
+                            <div class="field">
+                                <label for="adminPassword">Admin password</label>
+                                <input id="adminPassword" type="password" value="admin12345">
+                            </div>
+                            <div class="button-row">
+                                <button class="button button-warm" type="button" onclick="createAdmin()">Create first admin</button>
+                            </div>
                         </div>
-                        <div class="field">
-                            <label for="adminPassword">Admin password</label>
-                            <input id="adminPassword" type="password" value="admin12345">
-                        </div>
-                        <div class="button-row">
-                            <button class="button button-warm" type="button" onclick="createAdmin()">Create first admin</button>
-                        </div>
-                    </div>
+                    </details>
                 @elseif ($mode === 'patient')
                     <div class="auth-card__header">
                         <span class="hub-label">Patient Access</span>

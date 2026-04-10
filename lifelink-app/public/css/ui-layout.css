@@ -445,6 +445,13 @@ body > .shell {
     background: rgba(248, 251, 253, 0.84);
 }
 
+.auth-page {
+    background:
+        radial-gradient(circle at 12% 8%, rgba(3, 105, 161, 0.18), transparent 30rem),
+        radial-gradient(circle at 90% 16%, rgba(13, 148, 136, 0.16), transparent 26rem),
+        linear-gradient(180deg, #f7fbff 0%, #edf4f8 100%);
+}
+
 main {
     padding: 28px 0 40px;
     display: grid;
@@ -456,6 +463,9 @@ main {
 }
 
 .welcome-hero,
+.welcome-solutions,
+.welcome-impact,
+.welcome-footer,
 .welcome-bands,
 .welcome-entry-grid,
 .auth-layout,
@@ -518,6 +528,41 @@ main {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
+.welcome-solutions {
+    border: 1px solid var(--ui-border);
+    border-radius: 28px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: var(--ui-shadow-lg);
+}
+
+.welcome-solutions__head {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+.welcome-impact {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    padding: 18px;
+    border: 1px solid rgba(13, 148, 136, 0.16);
+    border-radius: 24px;
+    background:
+        radial-gradient(circle at left, rgba(59, 130, 246, 0.09), transparent 18rem),
+        radial-gradient(circle at right, rgba(13, 148, 136, 0.11), transparent 18rem),
+        rgba(238, 252, 250, 0.92);
+}
+
+.welcome-footer {
+    justify-items: center;
+    text-align: center;
+    gap: 6px;
+    border-top: 1px solid var(--ui-border-soft);
+    padding: 16px 0 8px;
+}
+
 .welcome-entry-grid {
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
@@ -525,6 +570,17 @@ main {
 .auth-layout {
     grid-template-columns: minmax(320px, 0.84fr) minmax(0, 1.16fr);
     align-items: start;
+    gap: 18px;
+}
+
+.auth-layout--login {
+    grid-template-columns: minmax(0, 520px);
+    justify-content: center;
+    padding-top: 26px;
+}
+
+.auth-layout--login .auth-intro {
+    display: none;
 }
 
 .auth-intro {
@@ -543,6 +599,22 @@ main {
     justify-content: space-between;
     gap: 18px;
     align-items: center;
+}
+
+.auth-intro__panel {
+    border: 1px solid rgba(255, 255, 255, 0.88);
+    border-radius: 24px;
+    padding: 22px;
+    background:
+        radial-gradient(circle at top right, rgba(59, 130, 246, 0.18), transparent 16rem),
+        linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(235, 249, 246, 0.9));
+    box-shadow: var(--ui-shadow-lg);
+}
+
+.auth-card {
+    border-color: rgba(148, 163, 184, 0.28);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(248, 251, 253, 0.94));
 }
 
 .app-shell__content-body {
@@ -651,6 +723,10 @@ main {
         flex-direction: column;
         align-items: flex-start;
     }
+
+    .welcome-impact {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 780px) {
@@ -695,5 +771,9 @@ main {
 
     .anatomy-stage {
         min-height: 480px;
+    }
+
+    .welcome-impact {
+        grid-template-columns: 1fr;
     }
 }

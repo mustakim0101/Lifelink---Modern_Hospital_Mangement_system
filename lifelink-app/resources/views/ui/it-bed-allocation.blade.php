@@ -26,7 +26,7 @@
         <strong>Blood Bank Operations</strong>
     </a>
     <a href="#it-debug" data-panel="it-debug" data-mode="all">
-        <strong>API Response</strong>
+        <strong>Activity Log</strong>
     </a>
 @endsection
 
@@ -66,14 +66,17 @@
     <div class="it-grid">
         <div id="it-overview" class="it-split ll-section it-panel-switch" data-display="grid">
             <div class="it-panel it-col-4">
-                <h3>IT worker session</h3>
-                <p class="it-note">Use the logged-in IT worker token here.</p>
-                <label class="it-label" for="tokenInput">IT worker token</label>
-                <input id="tokenInput" class="it-input" placeholder="IT worker token">
+                <h3>Session access</h3>
+                <p class="it-note">Connect this workspace using the current signed-in IT session.</p>
                 <div class="it-actions">
                     <button class="it-button soft" type="button" onclick="useUserToken()">Use USER_TOKEN</button>
                     <button class="it-button primary" type="button" onclick="loadDepartmentsScope()">Reload my departments</button>
                 </div>
+                <details class="ll-debug u-mt-2">
+                    <summary>Manual token override</summary>
+                    <label class="it-label u-mt-2" for="tokenInput">Manual token</label>
+                    <input id="tokenInput" class="it-input" placeholder="Paste IT token only if needed">
+                </details>
             </div>
 
             <div class="it-panel it-col-4">
@@ -630,8 +633,8 @@
         </div>
 
         <div id="it-debug" class="it-panel ll-section it-panel-switch" data-display="block">
-            <details class="ll-debug" open>
-                <summary>API response</summary>
+            <details class="ll-debug">
+                <summary>Operational activity log</summary>
                 <pre id="out" class="it-console"></pre>
             </details>
         </div>
