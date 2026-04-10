@@ -20,7 +20,7 @@
         <strong>Blood Bank Screening</strong>
     </a>
     <a href="#nurse-debug" data-panel="nurse-debug" data-mode="all">
-        <strong>API Response</strong>
+        <strong>Activity Log</strong>
     </a>
 @endsection
 
@@ -31,13 +31,16 @@
     <div class="nurse-grid">
         <div id="nurse-overview" class="nurse-split ll-section nurse-panel-switch" data-display="grid">
             <div class="nurse-panel nurse-col-4">
-                <h3>Nurse session</h3>
-                <p class="nurse-note">Use the logged-in nurse token here.</p>
-                <label class="nurse-label" for="nurseTokenInput">Nurse token</label>
-                <input id="nurseTokenInput" class="nurse-input" placeholder="Bearer token for nurse">
+                <h3>Session access</h3>
+                <p class="nurse-note">Connect this view using your current signed-in session.</p>
                 <div class="nurse-actions">
                     <button class="nurse-button soft" type="button" onclick="useStoredUserToken()">Use USER_TOKEN</button>
                 </div>
+                <details class="ll-debug u-mt-2">
+                    <summary>Manual token override</summary>
+                    <label class="nurse-label u-mt-2" for="nurseTokenInput">Manual token</label>
+                    <input id="nurseTokenInput" class="nurse-input" placeholder="Paste nurse token only if needed">
+                </details>
             </div>
 
             <div class="nurse-panel nurse-col-4">
@@ -106,12 +109,12 @@
                 <div class="nurse-section-title">Log vital signs</div>
                 <div class="nurse-control-grid">
                     <div>
-                        <label class="nurse-label" for="vAdmissionId">Admission ID</label>
-                        <input id="vAdmissionId" class="nurse-input" type="number" placeholder="Auto-filled on selection">
+                        <label class="nurse-label" for="vAdmissionId">Selected admission</label>
+                        <input id="vAdmissionId" class="nurse-input" type="number" placeholder="Selected admission" readonly>
                     </div>
                     <div>
-                        <label class="nurse-label" for="vPatientUserId">Patient user ID</label>
-                        <input id="vPatientUserId" class="nurse-input" type="number" placeholder="Auto-filled on selection">
+                        <label class="nurse-label" for="vPatientUserId">Patient</label>
+                        <input id="vPatientUserId" class="nurse-input" type="number" placeholder="Selected patient" readonly>
                     </div>
                 </div>
                 <div class="nurse-control-grid">
@@ -312,8 +315,8 @@
         </div>
 
         <div id="nurse-debug" class="nurse-panel ll-section nurse-panel-switch" data-display="block">
-            <details class="ll-debug" open>
-                <summary>API response log</summary>
+            <details class="ll-debug">
+                <summary>Operational activity log</summary>
                 <pre id="out" class="nurse-console"></pre>
             </details>
         </div>
