@@ -1425,7 +1425,6 @@ function isArtificialDirectoryEntry(entry) {
     }
 
     return email.endsWith('_ui@demo.com')
-        || email.endsWith('@demo.com')
         || name.endsWith(' ui');
 }
 
