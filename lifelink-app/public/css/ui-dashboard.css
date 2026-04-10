@@ -40,6 +40,7 @@
 .app-shell__nav a:hover,
 .app-shell__nav a.is-active,
 .topnav a:hover,
+.topnav a.is-active,
 .topnav .cta {
     color: var(--ui-primary);
     border-color: rgba(3, 105, 161, 0.16);
@@ -82,6 +83,31 @@
     color: #fff;
     background: linear-gradient(135deg, var(--ui-primary), var(--ui-secondary));
     border-color: transparent;
+}
+
+.ui-list-window {
+    max-height: 640px;
+    overflow: auto;
+    align-content: start;
+}
+
+.ui-list-pagination {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.ui-list-pagination__meta {
+    color: #5f718c;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.ui-list-pagination__controls {
+    display: flex;
+    gap: 8px;
 }
 
 .ll-section {

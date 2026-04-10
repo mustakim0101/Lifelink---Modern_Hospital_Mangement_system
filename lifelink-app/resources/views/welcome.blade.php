@@ -13,7 +13,6 @@
                 <div class="brand-mark">LL</div>
                 <div class="brand-copy">
                     <strong>LifeLink</strong>
-                    <span>Modern hospital operations, patient access, and blood response.</span>
                 </div>
             </div>
 
@@ -23,7 +22,6 @@
                 <a href="#modules">Platform</a>
                 <a href="#entry">Entry</a>
                 <a id="auth-nav-link" href="/ui/login">Login / Register</a>
-                <a id="session-nav-link" class="cta" href="/ui">Workspace</a>
             </nav>
         </div>
     </header>

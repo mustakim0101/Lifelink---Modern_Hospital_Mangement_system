@@ -3,52 +3,26 @@
     $config = [
         'login' => [
             'title' => 'Login',
-            'badge' => 'LifeLink Access',
-            'headline' => 'Sign in to your workspace.',
-            'copy' => 'Use one login for every existing account.',
+            'headline' => 'Welcome Back',
+            'copy' => 'Sign in to continue.',
         ],
         'patient' => [
             'title' => 'Patient Registration',
-            'badge' => 'Patient Registration',
-            'headline' => 'Create a patient account.',
-            'copy' => 'Patient access for appointments, records, and blood requests.',
+            'headline' => 'Create a patient account',
+            'copy' => 'Complete the form to create your patient account.',
         ],
         'donor' => [
             'title' => 'Donor Registration',
-            'badge' => 'Donor Registration',
-            'headline' => 'Create a donor account.',
-            'copy' => 'Blood donor onboarding and donor profile setup.',
+            'headline' => 'Create a donor account',
+            'copy' => 'Complete the form to create your donor account.',
         ],
         'applicant' => [
             'title' => 'Applicant Registration',
-            'badge' => 'Applicant Registration',
-            'headline' => 'Create an applicant account.',
-            'copy' => 'Hiring flow entry for doctor, nurse, and IT worker applications.',
+            'headline' => 'Create an applicant account',
+            'copy' => 'Complete the form, then submit your first application.',
         ],
     ][$mode] ?? null;
 
-    $otherLinks = [
-        'login' => [
-            ['label' => 'Patient registration', 'href' => '/ui/register/patient'],
-            ['label' => 'Donor registration', 'href' => '/ui/register/donor'],
-            ['label' => 'Applicant registration', 'href' => '/ui/register/applicant'],
-        ],
-        'patient' => [
-            ['label' => 'Login', 'href' => '/ui/login'],
-            ['label' => 'Donor registration', 'href' => '/ui/register/donor'],
-            ['label' => 'Applicant registration', 'href' => '/ui/register/applicant'],
-        ],
-        'donor' => [
-            ['label' => 'Login', 'href' => '/ui/login'],
-            ['label' => 'Patient registration', 'href' => '/ui/register/patient'],
-            ['label' => 'Applicant registration', 'href' => '/ui/register/applicant'],
-        ],
-        'applicant' => [
-            ['label' => 'Login', 'href' => '/ui/login'],
-            ['label' => 'Patient registration', 'href' => '/ui/register/patient'],
-            ['label' => 'Donor registration', 'href' => '/ui/register/donor'],
-        ],
-    ][$mode] ?? [];
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -59,85 +33,33 @@
     <link rel="stylesheet" href="/css/ui-system.css">
 </head>
 <body class="auth-page">
-    <div class="shell auth-shell">
-        <header class="topbar topbar--public">
-            <div class="topbar-inner auth-shell__topbar">
+    <header class="topbar topbar--public">
+        <div class="shell topbar-inner auth-shell__topbar">
                 <div class="brand">
                     <div class="brand-mark">LL</div>
                     <div class="brand-copy">
                         <strong>LifeLink</strong>
-                        <span>Secure access and role-based registration.</span>
                     </div>
                 </div>
                 <nav class="topnav">
-                    <a href="/">Public Home</a>
-                    <a href="/ui/login">Login</a>
-                    <a href="/ui/register/patient">Patient Register</a>
-                    <a href="/ui/register/donor">Donor Register</a>
-                    <a href="/ui/register/applicant">Applicant Register</a>
+                    <a href="/">Home</a>
+                    <a class="{{ $mode === 'login' ? 'is-active' : '' }}" href="/ui/login">Login</a>
+                    <a class="{{ $mode === 'patient' ? 'is-active' : '' }}" href="/ui/register/patient">Patient Register</a>
+                    <a class="{{ $mode === 'donor' ? 'is-active' : '' }}" href="/ui/register/donor">Donor Register</a>
+                    <a class="{{ $mode === 'applicant' ? 'is-active' : '' }}" href="/ui/register/applicant">Join Team</a>
                 </nav>
-            </div>
-        </header>
-
-        <div class="topline auth-shell__crumbs">
-            <div class="crumbs">
-                <a href="/">Public Home</a>
-                <span>/</span>
-                <span>{{ $config['title'] }}</span>
-            </div>
-            <a class="mini-link" href="/ui/dashboard">Workspace Hub</a>
         </div>
+    </header>
 
-        <section class="auth-layout {{ $mode === 'login' ? 'auth-layout--login' : '' }}">
-            <article class="auth-intro">
-                <div class="auth-intro__panel">
-                    <span class="badge">{{ $config['badge'] }}</span>
+    <div class="shell auth-shell">
+        <section class="auth-layout auth-layout--login">
+            <article class="auth-card">
+                <div class="auth-card__header">
                     <h1>{{ $config['headline'] }}</h1>
                     <p>{{ $config['copy'] }}</p>
-                    <div class="auth-mode-pills" aria-label="Available entry modes">
-                        <a class="auth-mode-pill {{ $mode === 'login' ? 'is-active' : '' }}" href="/ui/login">Login</a>
-                        <a class="auth-mode-pill {{ $mode === 'patient' ? 'is-active' : '' }}" href="/ui/register/patient">Patient</a>
-                        <a class="auth-mode-pill {{ $mode === 'donor' ? 'is-active' : '' }}" href="/ui/register/donor">Donor</a>
-                        <a class="auth-mode-pill {{ $mode === 'applicant' ? 'is-active' : '' }}" href="/ui/register/applicant">Applicant</a>
-                    </div>
-                    <div class="auth-intro__trust">
-                        <article class="auth-trust-card">
-                            <strong>Single access layer</strong>
-                            <span>One login can route into the correct workspace without changing the current auth behavior.</span>
-                        </article>
-                        <article class="auth-trust-card">
-                            <strong>Dedicated public entry</strong>
-                            <span>Patients, donors, and applicants still keep their own registration journeys.</span>
-                        </article>
-                        <article class="auth-trust-card">
-                            <strong>Clinical-grade clarity</strong>
-                            <span>Calm surfaces and focused forms help users complete authentication quickly under pressure.</span>
-                        </article>
-                    </div>
                 </div>
 
-                <div class="path-list auth-links">
-                    <div class="auth-links__head">
-                        <span class="hub-label">Switch Path</span>
-                        <p>Move to another entry flow without losing the current page context.</p>
-                    </div>
-                    @foreach ($otherLinks as $link)
-                        <a class="path-link" href="{{ $link['href'] }}">
-                            <strong>{{ $link['label'] }}</strong>
-                            <span>Switch</span>
-                        </a>
-                    @endforeach
-                </div>
-            </article>
-
-            <article class="auth-card">
                 @if ($mode === 'login')
-                    <div class="auth-card__header">
-                        <span class="hub-label">Secure Login</span>
-                        <h2>Welcome Back</h2>
-                        <p>Sign in to access your LifeLink workspace.</p>
-                    </div>
-
                     <div class="field">
                         <label for="loginEmail">Email</label>
                         <input id="loginEmail" type="email" placeholder="name@example.com">
@@ -173,7 +95,6 @@
                                 <div><small>Roles</small><strong id="session-roles">None</strong></div>
                             </div>
                             <div class="button-row">
-                                <a class="ghost-link" href="/ui/dashboard">Open auth hub</a>
                                 <button class="button button-secondary" type="button" onclick="clearStorage()">Clear session</button>
                             </div>
                         </div>
@@ -198,11 +119,6 @@
                         </div>
                     </details>
                 @elseif ($mode === 'patient')
-                    <div class="auth-card__header">
-                        <span class="hub-label">Patient Access</span>
-                        <h2>Create a patient account</h2>
-                        <p>Set up patient access for appointments, records, and blood requests.</p>
-                    </div>
                     <div class="field"><label for="patientName">Full name</label><input id="patientName" type="text" placeholder="Full name"></div>
                     <div class="field"><label for="patientEmail">Email</label><input id="patientEmail" type="email" placeholder="patient@example.com"></div>
                     <div class="field"><label for="patientPassword">Password</label><input id="patientPassword" type="password" value="patient12345"></div>
@@ -223,11 +139,6 @@
                         <a class="ghost-link" href="/ui/login">Already have an account?</a>
                     </div>
                 @elseif ($mode === 'donor')
-                    <div class="auth-card__header">
-                        <span class="hub-label">Donor Access</span>
-                        <h2>Create a donor account</h2>
-                        <p>Create the account first, then continue with donor profile setup.</p>
-                    </div>
                     <div class="field"><label for="donorName">Full name</label><input id="donorName" type="text" placeholder="Full name"></div>
                     <div class="field"><label for="donorEmail">Email</label><input id="donorEmail" type="email" placeholder="donor@example.com"></div>
                     <div class="field"><label for="donorPassword">Password</label><input id="donorPassword" type="password" value="donor12345"></div>
@@ -246,11 +157,6 @@
                         <a class="ghost-link" href="/ui/login">Already have an account?</a>
                     </div>
                 @else
-                    <div class="auth-card__header">
-                        <span class="hub-label">Applicant Access</span>
-                        <h2>Create an applicant account</h2>
-                        <p>Create the account, then submit the first job application.</p>
-                    </div>
                     <div class="field"><label for="applicantName">Full name</label><input id="applicantName" type="text" placeholder="Full name"></div>
                     <div class="field"><label for="applicantEmail">Email</label><input id="applicantEmail" type="email" placeholder="applicant@example.com"></div>
                     <div class="field"><label for="applicantPassword">Password</label><input id="applicantPassword" type="password" value="applicant12345"></div>
@@ -268,7 +174,7 @@
                             <option value="">Select department</option>
                         </select>
                     </div>
-                    <p class="ll-helper-tight">Doctor applicants can choose a preferred department here. Nurse and IT assignments are completed after admin review.</p>
+                    <p class="ll-helper-tight">Department selection is required for doctor applicants only.</p>
                     <div class="button-row">
                         <button class="button button-primary" type="button" onclick="registerApplicant()">Create applicant account</button>
                         <a class="ghost-link" href="/ui/login">Already have an account?</a>

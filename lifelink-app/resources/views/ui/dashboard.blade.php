@@ -7,21 +7,23 @@
     <link rel="stylesheet" href="/css/ui-system.css">
 </head>
 <body class="workspace-page">
-    <div class="hub-shell workspace-shell">
-        <header class="hub-topbar">
-            <div class="hub-brand">
-                <div class="hub-mark">LL</div>
-                <div>
-                    <strong>LifeLink Workspace Hub</strong>
-                    <span>Role-aware routing, session context, and operational shortcuts.</span>
+    <header class="topbar topbar--public">
+        <div class="hub-shell topbar-inner">
+            <div class="brand">
+                <div class="brand-mark">LL</div>
+                <div class="brand-copy">
+                    <strong>LifeLink</strong>
                 </div>
             </div>
-            <div class="hub-actions">
-                <a class="hub-chip" href="/">Public Home</a>
-                <button class="hub-chip" type="button" onclick="logoutSession()">Logout</button>
-            </div>
-        </header>
+            <nav class="topnav">
+                <a href="/">Home</a>
+                <a class="is-active" href="/ui/dashboard">Workspace</a>
+                <a class="cta" href="#" onclick="logoutSession(); return false;">Logout</a>
+            </nav>
+        </div>
+    </header>
 
+    <div class="hub-shell workspace-shell">
         <div class="hub-layout">
             <aside class="hub-rail">
                 <article class="hub-block">

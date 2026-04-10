@@ -328,7 +328,8 @@
                     <h3>Today's Appointments</h3>
                     <button class="doctor-chip-btn" type="button" onclick="doctorAppointments()">Refresh</button>
                 </div>
-                <div id="appointmentsList" class="doctor-list"></div>
+                <div id="appointmentsList" class="doctor-list ui-list-window"></div>
+                <div id="appointmentsPagination" class="ui-list-pagination"></div>
             </article>
 
             <article id="doctor-patients" class="doctor-card ll-section">
@@ -336,7 +337,8 @@
                     <h3>Active Patients</h3>
                     <button class="doctor-chip-btn" type="button" onclick="doctorPatients()">Refresh</button>
                 </div>
-                <div id="patientsList" class="doctor-list"></div>
+                <div id="patientsList" class="doctor-list ui-list-window"></div>
+                <div id="patientsPagination" class="ui-list-pagination"></div>
             </article>
         </section>
 
@@ -441,7 +443,12 @@ const dashboardState = {
     profile: null,
     patients: [],
     appointments: [],
-    bedRequests: []
+    bedRequests: [],
+    pagination: {
+        pageSize: 5,
+        appointmentsPage: 1,
+        patientsPage: 1,
+    }
 };
 
 function write(data) {
@@ -474,6 +481,58 @@ function getArrayPayload(result, preferredKeys) {
     return [];
 }
 
+function paginateRows(rows, page, pageSize) {
+    const safeRows = Array.isArray(rows) ? rows : [];
+    const safeSize = Math.max(1, Number(pageSize) || 1);
+    const totalPages = Math.max(1, Math.ceil(safeRows.length / safeSize));
+    const safePage = Math.min(Math.max(1, Number(page) || 1), totalPages);
+    const start = (safePage - 1) * safeSize;
+    return {
+        rows: safeRows.slice(start, start + safeSize),
+        page: safePage,
+        totalPages,
+        totalRows: safeRows.length,
+    };
+}
+
+function renderDoctorPagination(rootId, pageData, prevHandler, nextHandler) {
+    const root = document.getElementById(rootId);
+    if (!root) return;
+
+    if (pageData.totalRows <= dashboardState.pagination.pageSize) {
+        root.innerHTML = '';
+        return;
+    }
+
+    root.innerHTML = `
+        <div class="ui-list-pagination__meta">Page ${pageData.page} of ${pageData.totalPages} (${pageData.totalRows} total)</div>
+        <div class="ui-list-pagination__controls">
+            <button class="doctor-chip-btn" type="button" ${pageData.page <= 1 ? 'disabled' : ''} onclick="${prevHandler}">Previous</button>
+            <button class="doctor-chip-btn" type="button" ${pageData.page >= pageData.totalPages ? 'disabled' : ''} onclick="${nextHandler}">Next</button>
+        </div>
+    `;
+}
+
+function prevAppointmentsPage() {
+    dashboardState.pagination.appointmentsPage = Math.max(1, dashboardState.pagination.appointmentsPage - 1);
+    renderOverview();
+}
+
+function nextAppointmentsPage() {
+    dashboardState.pagination.appointmentsPage += 1;
+    renderOverview();
+}
+
+function prevPatientsPage() {
+    dashboardState.pagination.patientsPage = Math.max(1, dashboardState.pagination.patientsPage - 1);
+    renderOverview();
+}
+
+function nextPatientsPage() {
+    dashboardState.pagination.patientsPage += 1;
+    renderOverview();
+}
+
 function renderOverview() {
     const profile = dashboardState.profile || {};
     const patients = dashboardState.patients;
@@ -502,8 +561,8 @@ function renderOverview() {
     document.getElementById('doctorWelcome').textContent = `Welcome, ${name}`;
     document.getElementById('doctorMetaLine').textContent = `${dept} - ${spec}`;
 
-    renderAppointmentsList(todaysAppointments.length ? todaysAppointments : appointments.slice(0, 4));
-    renderPatientsList(activePatients.length ? activePatients : patients.slice(0, 4));
+    renderAppointmentsList(todaysAppointments.length ? todaysAppointments : appointments);
+    renderPatientsList(activePatients.length ? activePatients : patients);
     populatePatientPicker(patients);
     populateAppointmentPicker(appointments);
 }
@@ -514,10 +573,14 @@ function renderAppointmentsList(items) {
 
     if (!items.length) {
         box.innerHTML = `<p class="doctor-empty">No appointments scheduled for this selection.</p>`;
+        renderDoctorPagination('appointmentsPagination', { page: 1, totalPages: 1, totalRows: 0 }, 'prevAppointmentsPage()', 'nextAppointmentsPage()');
         return;
     }
 
-    box.innerHTML = items.map(item => {
+    const pageData = paginateRows(items, dashboardState.pagination.appointmentsPage, dashboardState.pagination.pageSize);
+    dashboardState.pagination.appointmentsPage = pageData.page;
+
+    box.innerHTML = pageData.rows.map(item => {
         const date = item?.appointment_date || item?.appointmentDate || '-';
         const status = item?.status || '-';
         const patient = item?.patient_name || item?.patientName || item?.patient_full_name || `Patient #${item?.patient_user_id || item?.patientUserId || '-'}`;
@@ -528,6 +591,8 @@ function renderAppointmentsList(items) {
             </article>
         `;
     }).join('');
+
+    renderDoctorPagination('appointmentsPagination', pageData, 'prevAppointmentsPage()', 'nextAppointmentsPage()');
 }
 
 function renderPatientsList(items) {
@@ -536,10 +601,14 @@ function renderPatientsList(items) {
 
     if (!items.length) {
         box.innerHTML = `<p class="doctor-empty">No active patients available.</p>`;
+        renderDoctorPagination('patientsPagination', { page: 1, totalPages: 1, totalRows: 0 }, 'prevPatientsPage()', 'nextPatientsPage()');
         return;
     }
 
-    box.innerHTML = items.map(item => {
+    const pageData = paginateRows(items, dashboardState.pagination.patientsPage, dashboardState.pagination.pageSize);
+    dashboardState.pagination.patientsPage = pageData.page;
+
+    box.innerHTML = pageData.rows.map(item => {
         const name = item?.full_name || item?.fullName || item?.patient_name || 'Unnamed Patient';
         const mrn = item?.mrn || item?.patient_mrn || item?.patientMrn || '-';
         const diagnosis = item?.diagnosis || item?.latest_diagnosis || 'No diagnosis available';
@@ -554,6 +623,8 @@ function renderPatientsList(items) {
             </article>
         `;
     }).join('');
+
+    renderDoctorPagination('patientsPagination', pageData, 'prevPatientsPage()', 'nextPatientsPage()');
 }
 
 function populatePatientPicker(items) {
@@ -597,6 +668,7 @@ async function doctorPatients() {
     const result = await call('/doctor/patients');
     if (result.status < 300) {
         dashboardState.patients = getArrayPayload(result, ['patients', 'data', 'items']);
+        dashboardState.pagination.patientsPage = 1;
         renderOverview();
     }
     write(result);
@@ -609,6 +681,7 @@ async function doctorAppointments() {
     const result = await call(`/doctor/appointments${qs}`);
     if (result.status < 300) {
         dashboardState.appointments = getArrayPayload(result, ['appointments', 'data', 'items']);
+        dashboardState.pagination.appointmentsPage = 1;
         renderOverview();
     }
     write(result);
