@@ -283,6 +283,8 @@
 
 @section('sidebar_nav')
     <a class="is-active" href="#doctor-overview"><strong>Dashboard</strong></a>
+    <a href="#doctor-schedule"><strong>Consultation Routine</strong></a>
+    <a href="#doctor-load-summary"><strong>Daily Load Summary</strong></a>
     <a href="#doctor-appointments"><strong>My Appointments</strong></a>
     <a href="#doctor-patients"><strong>My Patients</strong></a>
     <a href="#doctor-request"><strong>Bed Requests</strong></a>
@@ -325,7 +327,7 @@
         <section class="doctor-grid">
             <article id="doctor-appointments" class="doctor-card ll-section">
                 <div class="doctor-card-head">
-                    <h3>Today's Appointments</h3>
+                    <h3>My Appointments</h3>
                     <button class="doctor-chip-btn" type="button" onclick="doctorAppointments()">Refresh</button>
                 </div>
                 <div id="appointmentsList" class="doctor-list ui-list-window"></div>
@@ -346,9 +348,78 @@
             <h3>Quick Actions</h3>
             <div class="doctor-actions-row">
                 <a class="doctor-action-btn" href="#doctor-request">Request Bed for Patient</a>
+                <a class="doctor-action-btn" href="#doctor-schedule">Configure Routine</a>
+                <a class="doctor-action-btn" href="#doctor-load-summary">Check Daily Load</a>
                 <a class="doctor-action-btn" href="#doctor-appointments-workflow">Manage Appointments</a>
-                <a class="doctor-action-btn" href="#doctor-patients">View All Patients</a>
             </div>
+        </section>
+
+        <section id="doctor-schedule" class="doctor-card doctor-workflow ll-section">
+            <div class="doctor-card-head">
+                <h3>Consultation Routine Setup</h3>
+                <button class="doctor-chip-btn" type="button" onclick="doctorAppointmentRules()">Load rules</button>
+            </div>
+            <p class="doctor-list-meta">Set recurring weekdays, consultation window, and daily patient capacity. Patients submit date-only requests from this routine.</p>
+
+            <input type="hidden" id="ruleEditId">
+            <div class="doctor-form-grid">
+                <div class="doctor-field">
+                    <label for="ruleDayOfWeek">Weekday</label>
+                    <select id="ruleDayOfWeek">
+                        <option value="0">Sunday</option>
+                        <option value="1">Monday</option>
+                        <option value="2">Tuesday</option>
+                        <option value="3">Wednesday</option>
+                        <option value="4">Thursday</option>
+                        <option value="5">Friday</option>
+                        <option value="6">Saturday</option>
+                    </select>
+                </div>
+                <div class="doctor-field">
+                    <label for="ruleDailyCapacity">Daily capacity</label>
+                    <input id="ruleDailyCapacity" type="number" min="1" max="500" value="10">
+                </div>
+            </div>
+            <div class="doctor-form-grid">
+                <div class="doctor-field">
+                    <label for="ruleStartTime">Start time</label>
+                    <input id="ruleStartTime" type="time" value="09:00">
+                </div>
+                <div class="doctor-field">
+                    <label for="ruleEndTime">End time</label>
+                    <input id="ruleEndTime" type="time" value="13:00">
+                </div>
+            </div>
+            <div class="doctor-actions-row">
+                <button class="doctor-submit" type="button" onclick="saveAppointmentRule()">Save Routine</button>
+                <button class="doctor-action-btn" type="button" onclick="resetAppointmentRuleForm()">Clear Edit</button>
+            </div>
+
+            <div id="appointmentRulesList" class="doctor-list ui-list-window"></div>
+            <div id="appointmentRulesPagination" class="ui-list-pagination"></div>
+        </section>
+
+        <section id="doctor-load-summary" class="doctor-card doctor-workflow ll-section">
+            <div class="doctor-card-head">
+                <h3>Daily Appointment Load</h3>
+                <button class="doctor-chip-btn" type="button" onclick="doctorAppointmentSummary()">Refresh summary</button>
+            </div>
+            <p class="doctor-list-meta">Monitor pending and approved demand by date, with remaining capacity from your configured routine.</p>
+            <div class="doctor-form-grid">
+                <div class="doctor-field">
+                    <label for="summaryDateFrom">Date from</label>
+                    <input id="summaryDateFrom" type="date">
+                </div>
+                <div class="doctor-field">
+                    <label for="summaryDateTo">Date to</label>
+                    <input id="summaryDateTo" type="date">
+                </div>
+            </div>
+            <div class="doctor-actions-row">
+                <button class="doctor-action-btn" type="button" onclick="doctorAppointmentSummary()">Apply Date Range</button>
+            </div>
+            <div id="appointmentSummaryList" class="doctor-list ui-list-window"></div>
+            <div id="appointmentSummaryPagination" class="ui-list-pagination"></div>
         </section>
 
         <section id="doctor-request" class="doctor-card doctor-workflow ll-section">
@@ -399,7 +470,10 @@
                     <label for="appointmentStatusFilter">Status filter</label>
                     <select id="appointmentStatusFilter">
                         <option value="">All appointment statuses</option>
+                        <option value="PendingApproval">PendingApproval</option>
+                        <option value="Approved">Approved</option>
                         <option value="Booked">Booked</option>
+                        <option value="Rejected">Rejected</option>
                         <option value="Cancelled">Cancelled</option>
                         <option value="Completed">Completed</option>
                         <option value="NoShow">NoShow</option>
@@ -444,10 +518,14 @@ const dashboardState = {
     patients: [],
     appointments: [],
     bedRequests: [],
+    appointmentRules: [],
+    appointmentSummary: [],
     pagination: {
         pageSize: 5,
         appointmentsPage: 1,
         patientsPage: 1,
+        rulesPage: 1,
+        summaryPage: 1,
     }
 };
 
@@ -533,6 +611,26 @@ function nextPatientsPage() {
     renderOverview();
 }
 
+function prevRulesPage() {
+    dashboardState.pagination.rulesPage = Math.max(1, dashboardState.pagination.rulesPage - 1);
+    renderAppointmentRules();
+}
+
+function nextRulesPage() {
+    dashboardState.pagination.rulesPage += 1;
+    renderAppointmentRules();
+}
+
+function prevSummaryPage() {
+    dashboardState.pagination.summaryPage = Math.max(1, dashboardState.pagination.summaryPage - 1);
+    renderAppointmentSummary();
+}
+
+function nextSummaryPage() {
+    dashboardState.pagination.summaryPage += 1;
+    renderAppointmentSummary();
+}
+
 function renderOverview() {
     const profile = dashboardState.profile || {};
     const patients = dashboardState.patients;
@@ -561,10 +659,12 @@ function renderOverview() {
     document.getElementById('doctorWelcome').textContent = `Welcome, ${name}`;
     document.getElementById('doctorMetaLine').textContent = `${dept} - ${spec}`;
 
-    renderAppointmentsList(todaysAppointments.length ? todaysAppointments : appointments);
+    renderAppointmentsList(appointments);
     renderPatientsList(activePatients.length ? activePatients : patients);
     populatePatientPicker(patients);
     populateAppointmentPicker(appointments);
+    renderAppointmentRules();
+    renderAppointmentSummary();
 }
 
 function renderAppointmentsList(items) {
@@ -582,12 +682,16 @@ function renderAppointmentsList(items) {
 
     box.innerHTML = pageData.rows.map(item => {
         const date = item?.appointment_date || item?.appointmentDate || '-';
+        const dateTime = item?.appointment_datetime ? new Date(item.appointment_datetime).toLocaleString() : '-';
         const status = item?.status || '-';
         const patient = item?.patient_name || item?.patientName || item?.patient_full_name || `Patient #${item?.patient_user_id || item?.patientUserId || '-'}`;
+        const rejectionReason = item?.rejection_reason ? `<div class="doctor-list-meta">Rejection reason: ${item.rejection_reason}</div>` : '';
         return `
             <article class="doctor-list-item">
                 <strong>${patient}</strong>
-                <div class="doctor-list-meta">${date} | Status: ${status}</div>
+                <div class="doctor-list-meta">Date: ${date} | Assigned start: ${dateTime}</div>
+                <div class="doctor-list-meta">Status: ${status}</div>
+                ${rejectionReason}
             </article>
         `;
     }).join('');
@@ -654,10 +758,96 @@ function populateAppointmentPicker(items) {
     select.innerHTML = `<option value="">Select appointment</option>${options.join('')}`;
 }
 
+function getRuleEditId() {
+    return Number(document.getElementById('ruleEditId').value || 0);
+}
+
+function normalizeIsoDate(value) {
+    if (!value) return '';
+    return String(value).slice(0, 10);
+}
+
+function consultationWindowLabel(window) {
+    if (!window) return 'Not configured';
+    if (typeof window === 'string') return window;
+    return window.label || `${window.start_time || '-'} - ${window.end_time || '-'}`;
+}
+
+function renderAppointmentRules() {
+    const box = document.getElementById('appointmentRulesList');
+    if (!box) return;
+
+    if (!dashboardState.appointmentRules.length) {
+        box.innerHTML = `<p class="doctor-empty">No recurring consultation routine configured yet.</p>`;
+        renderDoctorPagination('appointmentRulesPagination', { page: 1, totalPages: 1, totalRows: 0 }, 'prevRulesPage()', 'nextRulesPage()');
+        return;
+    }
+
+    const pageData = paginateRows(dashboardState.appointmentRules, dashboardState.pagination.rulesPage, dashboardState.pagination.pageSize);
+    dashboardState.pagination.rulesPage = pageData.page;
+
+    box.innerHTML = pageData.rows.map((rule) => `
+        <article class="doctor-list-item">
+            <strong>${rule.weekday} (${rule.start_time} - ${rule.end_time})</strong>
+            <div class="doctor-list-meta">Capacity: ${rule.daily_capacity} patient(s) | Status: ${rule.is_active ? 'Active' : 'Inactive'}</div>
+            <div class="doctor-actions-row">
+                <button class="doctor-action-btn" type="button" onclick="editAppointmentRule(${rule.id})">Edit</button>
+                <button class="doctor-action-btn" type="button" onclick="deactivateAppointmentRule(${rule.id})" ${!rule.is_active ? 'disabled' : ''}>Deactivate</button>
+            </div>
+        </article>
+    `).join('');
+
+    renderDoctorPagination('appointmentRulesPagination', pageData, 'prevRulesPage()', 'nextRulesPage()');
+}
+
+function renderAppointmentSummary() {
+    const box = document.getElementById('appointmentSummaryList');
+    if (!box) return;
+
+    if (!dashboardState.appointmentSummary.length) {
+        box.innerHTML = `<p class="doctor-empty">No summary rows in this range.</p>`;
+        renderDoctorPagination('appointmentSummaryPagination', { page: 1, totalPages: 1, totalRows: 0 }, 'prevSummaryPage()', 'nextSummaryPage()');
+        return;
+    }
+
+    const pageData = paginateRows(dashboardState.appointmentSummary, dashboardState.pagination.summaryPage, dashboardState.pagination.pageSize);
+    dashboardState.pagination.summaryPage = pageData.page;
+
+    box.innerHTML = pageData.rows.map((row) => `
+        <article class="doctor-list-item">
+            <strong>${row.date} (${row.weekday})</strong>
+            <div class="doctor-list-meta">Consultation window: ${consultationWindowLabel(row.consultation_window)}</div>
+            <div class="doctor-list-meta">Pending: ${row.pending_count} | Approved: ${row.approved_count} | Total: ${row.total_count}</div>
+            <div class="doctor-list-meta">Capacity: ${row.daily_capacity} | Remaining: ${row.remaining_capacity}</div>
+        </article>
+    `).join('');
+
+    renderDoctorPagination('appointmentSummaryPagination', pageData, 'prevSummaryPage()', 'nextSummaryPage()');
+}
+
+function editAppointmentRule(ruleId) {
+    const rule = dashboardState.appointmentRules.find((item) => Number(item.id) === Number(ruleId));
+    if (!rule) return;
+
+    document.getElementById('ruleEditId').value = String(rule.id);
+    document.getElementById('ruleDayOfWeek').value = String(rule.day_of_week);
+    document.getElementById('ruleStartTime').value = String(rule.start_time || '').slice(0, 5);
+    document.getElementById('ruleEndTime').value = String(rule.end_time || '').slice(0, 5);
+    document.getElementById('ruleDailyCapacity').value = String(rule.daily_capacity || 1);
+}
+
+function resetAppointmentRuleForm() {
+    document.getElementById('ruleEditId').value = '';
+    document.getElementById('ruleDayOfWeek').value = '0';
+    document.getElementById('ruleStartTime').value = '09:00';
+    document.getElementById('ruleEndTime').value = '13:00';
+    document.getElementById('ruleDailyCapacity').value = '10';
+}
+
 async function doctorProfile() {
     const result = await call('/doctor/profile');
     if (result.status < 300 && typeof result.data === 'object' && result.data) {
-        dashboardState.profile = result.data.profile || result.data.user || result.data;
+        dashboardState.profile = result.data.doctor || result.data.profile || result.data.user || result.data;
         renderOverview();
     }
     write(result);
@@ -688,10 +878,82 @@ async function doctorAppointments() {
     return result;
 }
 
+async function doctorAppointmentRules() {
+    const result = await call('/doctor/appointment-rules?activeOnly=0');
+    if (result.status < 300) {
+        dashboardState.appointmentRules = getArrayPayload(result, ['rules', 'data', 'items']);
+        dashboardState.pagination.rulesPage = 1;
+        renderAppointmentRules();
+    }
+    write(result);
+    return result;
+}
+
+async function saveAppointmentRule() {
+    const editId = getRuleEditId();
+    const dayOfWeek = Number(document.getElementById('ruleDayOfWeek').value || 0);
+    const startTime = document.getElementById('ruleStartTime').value;
+    const endTime = document.getElementById('ruleEndTime').value;
+    const dailyCapacity = Number(document.getElementById('ruleDailyCapacity').value || 0);
+
+    if (!startTime || !endTime || dailyCapacity < 1) {
+        write({ status: 422, data: { message: 'Provide weekday, consultation start/end time, and positive daily capacity.' } });
+        return;
+    }
+
+    const body = {
+        dayOfWeek,
+        startTime,
+        endTime,
+        dailyCapacity,
+    };
+
+    const path = editId ? `/doctor/appointment-rules/${editId}` : '/doctor/appointment-rules';
+    const method = editId ? 'PUT' : 'POST';
+    const result = await call(path, method, body);
+    write(result);
+
+    if (result.status < 300) {
+        resetAppointmentRuleForm();
+        await doctorAppointmentRules();
+        await doctorAppointmentSummary();
+    }
+}
+
+async function deactivateAppointmentRule(ruleId) {
+    const result = await call(`/doctor/appointment-rules/${ruleId}/deactivate`, 'POST');
+    write(result);
+    if (result.status < 300) {
+        await doctorAppointmentRules();
+        await doctorAppointmentSummary();
+    }
+}
+
+async function doctorAppointmentSummary() {
+    const fromEl = document.getElementById('summaryDateFrom');
+    const toEl = document.getElementById('summaryDateTo');
+    const query = new URLSearchParams();
+    if (fromEl?.value) query.set('dateFrom', normalizeIsoDate(fromEl.value));
+    if (toEl?.value) query.set('dateTo', normalizeIsoDate(toEl.value));
+    const qs = query.toString() ? `?${query.toString()}` : '';
+
+    const result = await call(`/doctor/appointments/summary${qs}`);
+    if (result.status < 300) {
+        dashboardState.appointmentSummary = getArrayPayload(result, ['by_date', 'rows', 'data']);
+        dashboardState.pagination.summaryPage = 1;
+        renderAppointmentSummary();
+
+        if (fromEl && !fromEl.value && result.data?.date_from) fromEl.value = result.data.date_from;
+        if (toEl && !toEl.value && result.data?.date_to) toEl.value = result.data.date_to;
+    }
+    write(result);
+    return result;
+}
+
 async function doctorBedRequests() {
     const result = await call('/doctor/bed-requests');
     if (result.status < 300) {
-        dashboardState.bedRequests = getArrayPayload(result, ['requests', 'bedRequests', 'data', 'items']);
+        dashboardState.bedRequests = getArrayPayload(result, ['bed_requests', 'requests', 'bedRequests', 'data', 'items']);
         renderOverview();
     }
     write(result);
@@ -740,11 +1002,21 @@ async function createBedRequest() {
 }
 
 async function initDoctorDashboard() {
+    const defaultFrom = new Date();
+    const defaultTo = new Date();
+    defaultTo.setDate(defaultTo.getDate() + 14);
+    const summaryFromEl = document.getElementById('summaryDateFrom');
+    const summaryToEl = document.getElementById('summaryDateTo');
+    if (summaryFromEl && !summaryFromEl.value) summaryFromEl.value = defaultFrom.toISOString().slice(0, 10);
+    if (summaryToEl && !summaryToEl.value) summaryToEl.value = defaultTo.toISOString().slice(0, 10);
+
     const requests = await Promise.all([
         doctorProfile(),
         doctorPatients(),
         doctorAppointments(),
-        doctorBedRequests()
+        doctorBedRequests(),
+        doctorAppointmentRules(),
+        doctorAppointmentSummary()
     ]);
 
     if (requests.some(item => item.status >= 300)) {

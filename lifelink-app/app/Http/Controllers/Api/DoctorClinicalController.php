@@ -6,16 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Models\Admission;
 use App\Models\Appointment;
 use App\Models\Doctor;
-use App\Models\Role;
 use App\Models\User;
+use App\Services\AppointmentCapacityService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class DoctorClinicalController extends Controller
 {
     private const CARE_LEVELS = ['Ward', 'ICU', 'NICU', 'CCU'];
+    private const APPOINTMENT_STATUS = ['PendingApproval', 'Approved', 'Rejected', 'Cancelled', 'Completed', 'NoShow', 'Booked'];
+    private const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    public function __construct(private readonly AppointmentCapacityService $capacityService)
+    {
+    }
 
     public function upsertDoctorProfile(Request $request): JsonResponse
     {
@@ -129,16 +135,22 @@ class DoctorClinicalController extends Controller
         $this->resolveDoctorProfile();
 
         $validated = $request->validate([
-            'status' => ['nullable', 'string', Rule::in(['Booked', 'Cancelled', 'Completed', 'NoShow'])],
+            'status' => ['nullable', 'string', Rule::in(self::APPOINTMENT_STATUS)],
+            'appointmentDate' => ['nullable', 'date_format:Y-m-d'],
         ]);
 
         $query = Appointment::query()
             ->with(['patient.user:id,full_name,name,email', 'department:id,dept_name'])
             ->where('doctor_user_id', auth('api')->id())
+            ->orderByDesc('appointment_date')
             ->orderByDesc('appointment_datetime');
 
         if (! empty($validated['status'])) {
             $query->where('status', $validated['status']);
+        }
+
+        if (! empty($validated['appointmentDate'])) {
+            $query->whereDate('appointment_date', $validated['appointmentDate']);
         }
 
         return response()->json([
@@ -149,10 +161,102 @@ class DoctorClinicalController extends Controller
                 'patient_email' => $a->patient?->user?->email,
                 'department_id' => $a->department_id,
                 'department' => $a->department?->dept_name,
+                'appointment_date' => optional($a->appointment_date)->format('Y-m-d'),
                 'appointment_datetime' => optional($a->appointment_datetime)->toISOString(),
                 'status' => $a->status,
+                'approved_by_user_id' => $a->approved_by_user_id,
+                'approved_at' => optional($a->approved_at)->toISOString(),
+                'rejection_reason' => $a->rejection_reason,
                 'cancel_reason' => $a->cancel_reason,
             ]),
+        ]);
+    }
+
+    public function appointmentSummary(Request $request): JsonResponse
+    {
+        $doctor = $this->resolveDoctorProfile();
+        $doctorUserId = (int) auth('api')->id();
+
+        $validated = $request->validate([
+            'dateFrom' => ['nullable', 'date_format:Y-m-d'],
+            'dateTo' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:dateFrom'],
+        ]);
+
+        $fromDate = isset($validated['dateFrom'])
+            ? Carbon::parse($validated['dateFrom'])->startOfDay()
+            : now()->startOfDay();
+        $toDate = isset($validated['dateTo'])
+            ? Carbon::parse($validated['dateTo'])->startOfDay()
+            : now()->addDays(14)->startOfDay();
+
+        $appointments = Appointment::query()
+            ->with(['patient.user:id,full_name,name,email'])
+            ->where('doctor_user_id', $doctorUserId)
+            ->whereBetween('appointment_date', [$fromDate->toDateString(), $toDate->toDateString()])
+            ->orderBy('appointment_date')
+            ->get();
+
+        $dateRows = [];
+        $cursor = $fromDate->copy();
+        while ($cursor->lte($toDate)) {
+            $dateKey = $cursor->toDateString();
+            $dayAppointments = $appointments->filter(
+                fn (Appointment $a) => optional($a->appointment_date)->format('Y-m-d') === $dateKey
+            )->values();
+
+            $pendingPatients = $dayAppointments
+                ->filter(fn (Appointment $a) => $a->status === 'PendingApproval')
+                ->map(fn (Appointment $a) => [
+                    'appointment_id' => $a->id,
+                    'patient_id' => $a->patient_id,
+                    'patient_name' => $a->patient?->user?->full_name ?? $a->patient?->user?->name,
+                    'status' => $a->status,
+                ])->values();
+
+            $approvedPatients = $dayAppointments
+                ->filter(fn (Appointment $a) => in_array($a->status, ['Approved', 'Booked'], true))
+                ->map(fn (Appointment $a) => [
+                    'appointment_id' => $a->id,
+                    'patient_id' => $a->patient_id,
+                    'patient_name' => $a->patient?->user?->full_name ?? $a->patient?->user?->name,
+                    'status' => $a->status,
+                ])->values();
+
+            $capacity = $this->capacityService->dailyCapacityForDate(
+                $doctorUserId,
+                (int) $doctor->department_id,
+                $dateKey
+            );
+            $usedCount = (int) $pendingPatients->count() + (int) $approvedPatients->count();
+
+            $dateRows[] = [
+                'date' => $dateKey,
+                'day_of_week' => (int) $cursor->dayOfWeek,
+                'weekday' => self::WEEKDAY_NAMES[(int) $cursor->dayOfWeek] ?? 'Unknown',
+                'consultation_window' => $this->capacityService->consultationWindowForDate(
+                    $doctorUserId,
+                    (int) $doctor->department_id,
+                    $dateKey
+                ),
+                'daily_capacity' => $capacity,
+                'pending_count' => (int) $pendingPatients->count(),
+                'approved_count' => (int) $approvedPatients->count(),
+                'total_count' => $usedCount,
+                'remaining_capacity' => max(0, $capacity - $usedCount),
+                'pending_patients' => $pendingPatients,
+                'approved_patients' => $approvedPatients,
+            ];
+
+            $cursor->addDay();
+        }
+
+        return response()->json([
+            'doctor_user_id' => $doctorUserId,
+            'department_id' => $doctor->department_id,
+            'department' => $doctor->department?->dept_name,
+            'date_from' => $fromDate->toDateString(),
+            'date_to' => $toDate->toDateString(),
+            'by_date' => $dateRows,
         ]);
     }
 
@@ -166,9 +270,9 @@ class DoctorClinicalController extends Controller
             ], 403);
         }
 
-        if ($appointment->status !== 'Booked') {
+        if (! in_array($appointment->status, ['PendingApproval', 'Approved', 'Booked'], true)) {
             return response()->json([
-                'message' => 'Only booked appointments can be cancelled.',
+                'message' => 'Only pending or approved appointments can be cancelled.',
             ], 409);
         }
 
@@ -312,4 +416,3 @@ class DoctorClinicalController extends Controller
         ];
     }
 }
-

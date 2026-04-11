@@ -94,10 +94,37 @@
     .portal-num { font-family: "Sora", "Trebuchet MS", sans-serif; font-size: 21px; font-weight: 700; }
     .portal-lbl { margin-top: 2px; color: var(--portal-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
 
-    .portal-summary { margin-top: 9px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-    .portal-summary .item { border: 1px solid var(--portal-line); border-radius: 10px; background: rgba(255, 255, 255, 0.92); padding: 8px; }
-    .portal-summary small { display: block; color: var(--portal-muted); font-size: 11px; margin-bottom: 2px; }
-    .portal-summary strong { font-size: 13px; }
+    .portal-summary {
+        margin-top: 9px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 8px;
+        align-items: stretch;
+    }
+    .portal-summary .item {
+        border: 1px solid var(--portal-line);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.92);
+        padding: 10px;
+        min-height: 74px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .portal-summary small {
+        display: block;
+        color: var(--portal-muted);
+        font-size: 11px;
+        margin-bottom: 4px;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        font-weight: 700;
+    }
+    .portal-summary strong {
+        font-size: 14px;
+        line-height: 1.35;
+        word-break: break-word;
+    }
 
     .portal-filters { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
     .portal-filters button { background: rgba(18, 43, 66, 0.09); color: var(--portal-ink); padding: 7px 10px; font-size: 12px; border: 1px solid transparent; }
@@ -185,7 +212,10 @@
                         <strong>Appointment filter</strong>
                         <div class="portal-filters" data-filter-group="appointment">
                             <button data-status="" class="active" onclick="setAppointmentStatus('')">All</button>
+                            <button data-status="PendingApproval" onclick="setAppointmentStatus('PendingApproval')">Pending</button>
+                            <button data-status="Approved" onclick="setAppointmentStatus('Approved')">Approved</button>
                             <button data-status="Booked" onclick="setAppointmentStatus('Booked')">Booked</button>
+                            <button data-status="Rejected" onclick="setAppointmentStatus('Rejected')">Rejected</button>
                             <button data-status="Cancelled" onclick="setAppointmentStatus('Cancelled')">Cancelled</button>
                             <button data-status="Completed" onclick="setAppointmentStatus('Completed')">Completed</button>
                             <button data-status="NoShow" onclick="setAppointmentStatus('NoShow')">No Show</button>
@@ -206,7 +236,7 @@
 
             <div class="portal-card">
                 <h3>Book appointment</h3>
-                <p class="portal-hint">Department and time are required. Doctor is optional.</p>
+                <p class="portal-hint">Choose department, doctor, and appointment date. Exact hour/minute selection is intentionally not required.</p>
                 <div class="portal-row">
                     <div>
                         <label class="portal-label" for="appointmentDepartmentId">Department</label>
@@ -215,13 +245,14 @@
                     <div>
                         <label class="portal-label" for="appointmentDoctorUserId">Doctor</label>
                         <select id="appointmentDoctorUserId" class="portal-select"></select>
-                        <div class="portal-mini" id="doctorMeta">Doctors load from active profiles.</div>
+                        <div class="portal-mini" id="doctorMeta">Doctors load from active profiles in the selected department.</div>
                     </div>
                 </div>
-                <label class="portal-label" for="appointmentDateTime">Appointment datetime</label>
-                <input id="appointmentDateTime" class="portal-input" type="datetime-local">
+                <label class="portal-label" for="appointmentDate">Appointment date</label>
+                <input id="appointmentDate" class="portal-input" type="date">
+                <div class="portal-mini" id="doctorScheduleMeta">Select doctor and date to view consultation window guidance.</div>
                 <div class="portal-btn-row">
-                    <button id="btnBook" class="portal-btn portal-btn-main" onclick="bookAppointment()">Book Appointment</button>
+                    <button id="btnBook" class="portal-btn portal-btn-main" onclick="bookAppointment()">Submit Appointment Request</button>
                     <button class="portal-btn portal-btn-soft" onclick="loadAppointments()">Refresh Appointments</button>
                 </div>
             </div>
@@ -279,7 +310,10 @@
                         <strong>Appointment filter</strong>
                         <div class="portal-filters" data-filter-group="appointment">
                             <button data-status="" class="active" onclick="setAppointmentStatus('')">All</button>
+                            <button data-status="PendingApproval" onclick="setAppointmentStatus('PendingApproval')">Pending</button>
+                            <button data-status="Approved" onclick="setAppointmentStatus('Approved')">Approved</button>
                             <button data-status="Booked" onclick="setAppointmentStatus('Booked')">Booked</button>
+                            <button data-status="Rejected" onclick="setAppointmentStatus('Rejected')">Rejected</button>
                             <button data-status="Cancelled" onclick="setAppointmentStatus('Cancelled')">Cancelled</button>
                             <button data-status="Completed" onclick="setAppointmentStatus('Completed')">Completed</button>
                             <button data-status="NoShow" onclick="setAppointmentStatus('NoShow')">No Show</button>
@@ -303,7 +337,7 @@
                 <div class="portal-table-wrap">
                     <table class="portal-table">
                         <thead>
-                            <tr><th>ID</th><th>Department</th><th>Doctor</th><th>Datetime</th><th>Status</th><th>Action</th></tr>
+                            <tr><th>ID</th><th>Department</th><th>Doctor</th><th>Date</th><th>Consultation Window</th><th>Status</th><th>Action</th></tr>
                         </thead>
                         <tbody id="appointmentsBody"></tbody>
                     </table>
@@ -363,6 +397,7 @@ const state = {
     bloodStatus: '',
     departments: [],
     doctors: [],
+    doctorsById: {},
     records: [],
     recordSearch: ''
 };
@@ -468,7 +503,7 @@ function setFilterActive(group, status) {
 function populateDoctorOptions() {
     const departmentId = Number(byId('appointmentDepartmentId').value || 0);
     const doctors = state.doctors.filter((d) => !departmentId || Number(d.department_id) === departmentId);
-    const options = ['<option value="">Unassigned (hospital can assign later)</option>']
+    const options = ['<option value="">Select doctor</option>']
         .concat(doctors.map((d) => `<option value="${d.user_id}">${html(d.full_name || 'Doctor')} (${html(d.specialization || 'General')})</option>`))
         .join('');
     const select = byId('appointmentDoctorUserId');
@@ -477,7 +512,14 @@ function populateDoctorOptions() {
     if (prev && doctors.some((d) => String(d.user_id) === prev)) select.value = prev;
     byId('doctorMeta').textContent = doctors.length
         ? `${doctors.length} active doctor(s) in selected department.`
-        : 'No active doctors in this department. Appointment can stay unassigned.';
+        : 'No active doctors in this department.';
+    renderDoctorScheduleMeta();
+}
+
+function isBloodBankDepartment(department) {
+    const raw = String(department?.dept_name || '').trim().toLowerCase();
+    const normalized = raw.replace(/\s|_/g, '');
+    return normalized === 'bloodbank';
 }
 
 function populateDepartmentOptions() {
@@ -488,23 +530,62 @@ function populateDepartmentOptions() {
     if (!state.departments.length) {
         ap.innerHTML = '<option value="">No departments</option>';
         bl.innerHTML = '<option value="">Auto</option>';
-        byId('appointmentDoctorUserId').innerHTML = '<option value="">Unassigned</option>';
+        byId('appointmentDoctorUserId').innerHTML = '<option value="">Select doctor</option>';
         return;
     }
-    const options = state.departments.map((d) => `<option value="${d.id}">${html(d.dept_name)} (#${d.id})</option>`).join('');
-    ap.innerHTML = options;
-    bl.innerHTML = `<option value="">Auto</option>${options}`;
-    ap.value = state.departments.some((d) => String(d.id) === currentAp) ? currentAp : String(state.departments[0].id);
+
+    const appointmentDepartments = state.departments.filter((department) => !isBloodBankDepartment(department));
+    const appointmentOptions = appointmentDepartments.map((d) => `<option value="${d.id}">${html(d.dept_name)} (#${d.id})</option>`).join('');
+    const bloodOptions = state.departments.map((d) => `<option value="${d.id}">${html(d.dept_name)} (#${d.id})</option>`).join('');
+
+    ap.innerHTML = appointmentOptions || '<option value="">No appointment departments</option>';
+    bl.innerHTML = `<option value="">Auto</option>${bloodOptions}`;
+    ap.value = appointmentDepartments.some((d) => String(d.id) === currentAp)
+        ? currentAp
+        : (appointmentDepartments[0] ? String(appointmentDepartments[0].id) : '');
     bl.value = state.departments.some((d) => String(d.id) === currentBl) ? currentBl : '';
     populateDoctorOptions();
 }
 
-function setDefaultAppointmentTime() {
-    const next = new Date(Date.now() + (24 * 60 * 60 * 1000));
-    next.setHours(10, 0, 0, 0);
-    const min = new Date(Date.now() + (5 * 60 * 1000));
-    byId('appointmentDateTime').min = min.toISOString().slice(0, 16);
-    byId('appointmentDateTime').value = next.toISOString().slice(0, 16);
+function weekdayNameFromDate(dateString) {
+    if (!dateString) return '';
+    const d = new Date(`${dateString}T00:00:00`);
+    return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString(undefined, { weekday: 'long' });
+}
+
+function renderDoctorScheduleMeta() {
+    const doctorId = Number(byId('appointmentDoctorUserId').value || 0);
+    const appointmentDate = byId('appointmentDate').value;
+    const target = byId('doctorScheduleMeta');
+    if (!doctorId) {
+        target.textContent = 'Choose a doctor to view consultation routine details.';
+        return;
+    }
+
+    const doctor = state.doctorsById[doctorId];
+    if (!doctor) {
+        target.textContent = 'Doctor routine summary is not available yet.';
+        return;
+    }
+
+    const summary = doctor.schedule_summary || {};
+    const windowLabel = summary?.consultation_window?.label || 'Not configured';
+    const weekday = weekdayNameFromDate(appointmentDate);
+    const weekdayCapacity = (() => {
+        if (!appointmentDate) return null;
+        const dateObj = new Date(`${appointmentDate}T00:00:00`);
+        if (Number.isNaN(dateObj.getTime())) return null;
+        return summary?.daily_capacity_by_weekday?.[String(dateObj.getDay())] ?? null;
+    })();
+
+    const baseCapacity = Number.isFinite(Number(summary?.daily_capacity_default))
+        ? Number(summary.daily_capacity_default)
+        : 0;
+    const capacityLabel = weekdayCapacity !== null
+        ? `${weekday} capacity: ${weekdayCapacity}`
+        : `Default daily capacity: ${baseCapacity}`;
+
+    target.textContent = `Consultation window: ${windowLabel}. ${capacityLabel}. Remaining count is verified by backend when you submit the request.`;
 }
 
 async function loadBookingOptions() {
@@ -512,7 +593,9 @@ async function loadBookingOptions() {
     if (r.status >= 300) { write(r); showToast(r.data?.message || 'Could not load booking options', 'error'); return; }
     state.departments = r.data?.departments || [];
     state.doctors = r.data?.doctors || [];
+    state.doctorsById = Object.fromEntries(state.doctors.map((doctor) => [Number(doctor.user_id), doctor]));
     populateDepartmentOptions();
+    renderDoctorScheduleMeta();
 }
 
 async function loadPortal() {
@@ -571,13 +654,14 @@ async function loadAppointments() {
             <tr>
                 <td>${row.id}</td>
                 <td>${html(row.department || '-')}</td>
-                <td>${html(row.doctor_name || 'Unassigned')}</td>
-                <td>${row.appointment_datetime ? new Date(row.appointment_datetime).toLocaleString() : '-'}</td>
+                <td>${html(row.doctor_name || '-')}</td>
+                <td>${html(row.appointment_date || '-')}</td>
+                <td>${html(row.consultation_window?.label || 'Not configured')}</td>
                 <td>${statusBadge(row.status)}</td>
-                <td>${row.status === 'Booked' ? `<button class="portal-btn portal-btn-soft" onclick="cancelAppointment(${row.id})">Cancel</button>` : '-'}</td>
+                <td>${['PendingApproval', 'Approved', 'Booked'].includes(String(row.status || '')) ? `<button class="portal-btn portal-btn-soft" onclick="cancelAppointment(${row.id})">Cancel</button>` : '-'}</td>
             </tr>
         `).join('')
-        : '<tr><td colspan="6">No appointments found.</td></tr>';
+        : '<tr><td colspan="7">No appointments found.</td></tr>';
 }
 
 async function loadBloodRequests() {
@@ -602,19 +686,31 @@ async function loadBloodRequests() {
 }
 
 async function bookAppointment() {
+    const departmentId = Number(byId('appointmentDepartmentId').value || 0);
+    const doctorUserId = Number(byId('appointmentDoctorUserId').value || 0);
+    const appointmentDate = byId('appointmentDate').value;
+    if (!departmentId || !doctorUserId || !appointmentDate) {
+        showToast('Choose department, doctor, and appointment date', 'error');
+        return;
+    }
+
     const payload = {
-        departmentId: Number(byId('appointmentDepartmentId').value || 0),
-        doctorUserId: byId('appointmentDoctorUserId').value ? Number(byId('appointmentDoctorUserId').value) : null,
-        appointmentDateTime: byId('appointmentDateTime').value
+        departmentId,
+        doctorUserId,
+        appointmentDate,
     };
     setButtonBusy('btnBook', true);
     const r = await call('/patient/appointments', 'POST', payload);
     setButtonBusy('btnBook', false);
     write(r);
     if (r.status >= 300) { showToast(r.data?.message || 'Appointment booking failed', 'error'); return; }
-    showToast('Appointment booked');
+    const capacity = r.data?.capacity;
+    showToast(capacity
+        ? `Request submitted. Remaining capacity: ${capacity.remaining_count}`
+        : 'Appointment request submitted');
     await loadAppointments();
     await loadPortal();
+    renderDoctorScheduleMeta();
 }
 
 async function cancelAppointment(id) {
@@ -673,8 +769,14 @@ function boot() {
     setFilterActive('appointment', state.appointmentStatus);
     setFilterActive('blood', state.bloodStatus);
     useStoredUserToken();
-    setDefaultAppointmentTime();
+    const appointmentDateInput = byId('appointmentDate');
+    const today = new Date();
+    appointmentDateInput.min = today.toISOString().slice(0, 10);
+    const tomorrow = new Date(today.getTime() + (24 * 60 * 60 * 1000));
+    appointmentDateInput.value = tomorrow.toISOString().slice(0, 10);
     byId('appointmentDepartmentId').addEventListener('change', populateDoctorOptions);
+    byId('appointmentDoctorUserId').addEventListener('change', renderDoctorScheduleMeta);
+    byId('appointmentDate').addEventListener('change', renderDoctorScheduleMeta);
     byId('recordSearch').addEventListener('input', (event) => { state.recordSearch = event.target.value; renderMedicalRecords(); });
     refreshAll();
 }

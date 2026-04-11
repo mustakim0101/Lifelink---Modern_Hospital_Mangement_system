@@ -16,6 +16,9 @@
     <a href="#it-directory" data-panel="it-directory" data-mode="regular">
         <strong>Doctor + Patient Lookup</strong>
     </a>
+    <a href="#it-appointments" data-panel="it-appointments" data-mode="regular">
+        <strong>Appointment Queue</strong>
+    </a>
     <a href="#it-admission" data-panel="it-admission" data-mode="regular">
         <strong>Admission + Bed Flow</strong>
     </a>
@@ -390,6 +393,68 @@
             </div>
         </div>
 
+        <div id="it-appointments" class="it-panel ll-section it-panel-switch" data-display="block">
+            <h3>Appointment approval management</h3>
+            <p class="it-note">Review patient requests submitted as PendingApproval. Filter by doctor, department, date, and status, then approve, reject, or cancel as needed.</p>
+            <div class="it-controls">
+                <div>
+                    <label class="it-label" for="itAppointmentDepartmentId">Department</label>
+                    <select id="itAppointmentDepartmentId" class="it-select">
+                        <option value="">All accessible departments</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="it-label" for="itAppointmentDoctorUserId">Doctor ID</label>
+                    <input id="itAppointmentDoctorUserId" class="it-input" type="number" placeholder="Optional doctor user ID">
+                </div>
+                <div>
+                    <label class="it-label" for="itAppointmentDate">Appointment date</label>
+                    <input id="itAppointmentDate" class="it-input" type="date">
+                </div>
+                <div>
+                    <label class="it-label" for="itAppointmentStatus">Status</label>
+                    <select id="itAppointmentStatus" class="it-select">
+                        <option value="">All statuses</option>
+                        <option value="PendingApproval">PendingApproval</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="Cancelled">Cancelled</option>
+                        <option value="Booked">Booked</option>
+                        <option value="Completed">Completed</option>
+                        <option value="NoShow">NoShow</option>
+                    </select>
+                </div>
+            </div>
+            <div class="it-actions">
+                <button class="it-button primary" type="button" onclick="loadAppointmentQueue()">Refresh appointment queue</button>
+            </div>
+            <div class="it-summary">
+                <div class="it-stat"><small>Queue rows</small><strong id="itAppointmentQueueCount">0</strong></div>
+                <div class="it-stat"><small>Pending</small><strong id="itAppointmentPendingCount">0</strong></div>
+                <div class="it-stat"><small>Approved</small><strong id="itAppointmentApprovedCount">0</strong></div>
+            </div>
+            <div class="it-table-wrap">
+                <table class="it-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Department</th>
+                            <th>Doctor</th>
+                            <th>Patient</th>
+                            <th>Status</th>
+                            <th>Capacity</th>
+                            <th>Used</th>
+                            <th>Remaining</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itAppointmentQueueBody"></tbody>
+                </table>
+            </div>
+            <div id="itAppointmentQueuePagination" class="ui-list-pagination"></div>
+        </div>
+
         <div id="it-admission" class="it-split ll-section it-panel-switch" data-display="grid">
             <div class="it-panel it-col-6">
                 <h3>Ward setup</h3>
@@ -593,7 +658,7 @@
 <script>
 const API = '/api';
 const out = document.getElementById('out');
-const itPanelIds = ['it-overview', 'it-directory', 'it-admission', 'it-reference', 'it-blood-bank', 'it-debug'];
+const itPanelIds = ['it-overview', 'it-directory', 'it-appointments', 'it-admission', 'it-reference', 'it-blood-bank', 'it-debug'];
 const itBloodBankSectionHashMap = {
     'it-bb-request-board': 'request-board',
     'it-bb-approval-fulfillment': 'approval-fulfillment',
@@ -630,12 +695,16 @@ const state = {
         directoryPageSize: 4,
         doctorsPage: 1,
         patientsPage: 1,
+        appointmentQueuePageSize: 10,
+        appointmentQueuePage: 1,
         bloodDonorsPageSize: 6,
         bloodDonorsPage: 1,
     },
     admissions: [],
     beds: [],
     careUnits: [],
+    appointmentQueue: [],
+    appointmentCapacity: {},
     bloodBank: {
         requests: [],
         matches: [],
@@ -682,10 +751,10 @@ function allowedPanels() {
     }
 
     if (blood && regular) {
-        return ['it-overview', 'it-directory', 'it-admission', 'it-reference', 'it-blood-bank', 'it-debug'];
+        return ['it-overview', 'it-directory', 'it-appointments', 'it-admission', 'it-reference', 'it-blood-bank', 'it-debug'];
     }
 
-    return ['it-overview', 'it-directory', 'it-admission', 'it-reference', 'it-debug'];
+    return ['it-overview', 'it-directory', 'it-appointments', 'it-admission', 'it-reference', 'it-debug'];
 }
 
 function updateSidebarByScope() {
@@ -849,6 +918,97 @@ function statusClass(status) {
     if (normalized === 'cancelled') return 'cancelled';
     if (normalized === 'transferred') return 'transferred';
     return 'default';
+}
+
+function appointmentCapacityKey(appointment) {
+    return `${Number(appointment?.doctor_user_id || 0)}|${String(appointment?.appointment_date || '')}`;
+}
+
+function queueDerivedUsedCount(appointment) {
+    const key = appointmentCapacityKey(appointment);
+    return state.appointmentQueue.filter((row) => {
+        if (appointmentCapacityKey(row) !== key) return false;
+        return ['PendingApproval', 'Approved', 'Booked'].includes(String(row.status || ''));
+    }).length;
+}
+
+function appointmentStatusBadge(status) {
+    const value = String(status || '-');
+    if (['Approved', 'Booked', 'Completed'].includes(value)) {
+        return `<span class="it-status admitted">${escapeHtml(value)}</span>`;
+    }
+    if (['PendingApproval'].includes(value)) {
+        return `<span class="it-status default">${escapeHtml(value)}</span>`;
+    }
+    if (['Rejected', 'Cancelled', 'NoShow'].includes(value)) {
+        return `<span class="it-status cancelled">${escapeHtml(value)}</span>`;
+    }
+    return `<span class="it-status transferred">${escapeHtml(value)}</span>`;
+}
+
+function renderAppointmentQueue() {
+    const body = document.getElementById('itAppointmentQueueBody');
+    if (!body) return;
+
+    if (!state.appointmentQueue.length) {
+        body.innerHTML = '<tr><td colspan="10">No appointments found for this queue filter.</td></tr>';
+        document.getElementById('itAppointmentQueueCount').textContent = '0';
+        document.getElementById('itAppointmentPendingCount').textContent = '0';
+        document.getElementById('itAppointmentApprovedCount').textContent = '0';
+        renderPaginationControls('itAppointmentQueuePagination', 1, 1, 0, 'prevAppointmentQueuePage()', 'nextAppointmentQueuePage()', state.pagination.appointmentQueuePageSize);
+        return;
+    }
+
+    const pendingCount = state.appointmentQueue.filter((row) => String(row.status) === 'PendingApproval').length;
+    const approvedCount = state.appointmentQueue.filter((row) => ['Approved', 'Booked'].includes(String(row.status))).length;
+    document.getElementById('itAppointmentQueueCount').textContent = String(state.appointmentQueue.length);
+    document.getElementById('itAppointmentPendingCount').textContent = String(pendingCount);
+    document.getElementById('itAppointmentApprovedCount').textContent = String(approvedCount);
+
+    const pageData = paginateRows(state.appointmentQueue, state.pagination.appointmentQueuePage, state.pagination.appointmentQueuePageSize);
+    state.pagination.appointmentQueuePage = pageData.safePage;
+
+    body.innerHTML = pageData.pagedRows.map((row) => {
+        const key = appointmentCapacityKey(row);
+        const knownCapacity = state.appointmentCapacity[key] || null;
+        const usedCount = knownCapacity?.used_count ?? queueDerivedUsedCount(row);
+        const dailyCapacity = knownCapacity?.daily_capacity ?? '-';
+        const remainingCount = knownCapacity?.remaining_count ?? '-';
+        const actions = String(row.status) === 'PendingApproval'
+            ? `
+                <button class="it-button soft" type="button" onclick="approveAppointmentQueueItem(${Number(row.id)})">Approve</button>
+                <button class="it-button warm" type="button" onclick="rejectAppointmentQueueItem(${Number(row.id)})">Reject</button>
+                <button class="it-button danger" type="button" onclick="cancelAppointmentQueueItem(${Number(row.id)})">Cancel</button>
+            `
+            : `
+                <button class="it-button danger" type="button" onclick="cancelAppointmentQueueItem(${Number(row.id)})">Cancel</button>
+            `;
+
+        return `
+            <tr>
+                <td>#${Number(row.id)}</td>
+                <td>${escapeHtml(row.appointment_date || '-')}</td>
+                <td>${escapeHtml(row.department || '-')}</td>
+                <td>${escapeHtml(row.doctor_name || '-')}</td>
+                <td>${escapeHtml(row.patient_name || '-')}</td>
+                <td>${appointmentStatusBadge(row.status)}</td>
+                <td>${dailyCapacity}</td>
+                <td>${usedCount}</td>
+                <td>${remainingCount}</td>
+                <td><div class="it-actions">${actions}</div></td>
+            </tr>
+        `;
+    }).join('');
+
+    renderPaginationControls(
+        'itAppointmentQueuePagination',
+        pageData.safePage,
+        pageData.totalPages,
+        pageData.totalRows,
+        'prevAppointmentQueuePage()',
+        'nextAppointmentQueuePage()',
+        state.pagination.appointmentQueuePageSize
+    );
 }
 
 function syncCounters() {
@@ -1492,6 +1652,16 @@ function nextPatientsPage() {
     renderPatientsDirectory();
 }
 
+function prevAppointmentQueuePage() {
+    state.pagination.appointmentQueuePage = Math.max(1, state.pagination.appointmentQueuePage - 1);
+    renderAppointmentQueue();
+}
+
+function nextAppointmentQueuePage() {
+    state.pagination.appointmentQueuePage += 1;
+    renderAppointmentQueue();
+}
+
 function prevBloodDonorsPage() {
     state.pagination.bloodDonorsPage = Math.max(1, state.pagination.bloodDonorsPage - 1);
     renderBloodBankStaffDonors();
@@ -1700,6 +1870,7 @@ async function loadDepartmentSelectors() {
     setDepartmentOptions('wardDepartmentId', state.departments, 'Select department');
     setDepartmentOptions('admissionDepartmentId', state.departments, 'Select department');
     setDepartmentOptions('filterDepartmentId', state.departments, 'All accessible departments');
+    setDepartmentOptions('itAppointmentDepartmentId', state.departments, 'All accessible departments');
     setDepartmentOptions('doctorSearchDepartmentId', state.departments, 'All accessible departments');
     setDepartmentOptions('patientSearchDepartmentId', state.departments, 'All patients');
     setDepartmentOptions('bbDepartmentFilter', state.departments, 'All departments');
@@ -1736,7 +1907,7 @@ async function loadDepartmentsScope() {
     }
 
     if (result.status < 300 && hasNonBloodBankScope()) {
-        await Promise.all([loadDoctors(), loadPatients()]);
+        await Promise.all([loadDoctors(), loadPatients(), loadAppointmentQueue()]);
     }
 
     if (result.status < 300 && hasBloodBankScope()) {
@@ -1773,6 +1944,78 @@ async function loadPatients() {
         state.patients = rows.filter((patient) => !isArtificialDirectoryEntry(patient));
         state.pagination.patientsPage = 1;
         renderPatientsDirectory();
+    }
+}
+
+function appointmentQueueQuery() {
+    const query = {};
+    const doctorUserId = document.getElementById('itAppointmentDoctorUserId').value.trim();
+    const departmentId = document.getElementById('itAppointmentDepartmentId').value.trim();
+    const appointmentDate = document.getElementById('itAppointmentDate').value.trim();
+    const status = document.getElementById('itAppointmentStatus').value.trim();
+
+    if (doctorUserId) query.doctorUserId = Number(doctorUserId);
+    if (departmentId) query.departmentId = Number(departmentId);
+    if (appointmentDate) query.appointmentDate = appointmentDate;
+    if (status) query.status = status;
+    return query;
+}
+
+async function loadAppointmentQueue() {
+    const result = await call('/appointments/it/queue', 'GET', null, appointmentQueueQuery());
+    write(result);
+    if (result.status < 300) {
+        state.appointmentQueue = Array.isArray(result.data?.appointments) ? result.data.appointments : [];
+        state.pagination.appointmentQueuePage = 1;
+        renderAppointmentQueue();
+    } else {
+        state.appointmentQueue = [];
+        renderAppointmentQueue();
+    }
+}
+
+function rememberQueueCapacity(appointment, capacityPayload) {
+    if (!appointment || !capacityPayload) return;
+    const key = appointmentCapacityKey(appointment);
+    state.appointmentCapacity[key] = {
+        daily_capacity: capacityPayload.daily_capacity ?? '-',
+        used_count: capacityPayload.used_count ?? '-',
+        remaining_count: capacityPayload.remaining_count ?? '-',
+    };
+}
+
+async function approveAppointmentQueueItem(appointmentId) {
+    const note = prompt('Approval note (optional):', 'Approved by IT');
+    const payload = note ? { approvalNote: note } : {};
+    const result = await call(`/appointments/it/${appointmentId}/approve`, 'POST', payload);
+    write(result);
+    if (result.status < 300) {
+        rememberQueueCapacity(result.data?.appointment, result.data?.capacity);
+        await loadAppointmentQueue();
+    }
+}
+
+async function rejectAppointmentQueueItem(appointmentId) {
+    const reason = prompt('Rejection reason (required):', 'Capacity or clinical queue constraint');
+    if (!reason || !reason.trim()) {
+        write({ status: 422, data: { message: 'Rejection reason is required.' } });
+        return;
+    }
+
+    const result = await call(`/appointments/it/${appointmentId}/reject`, 'POST', { rejectionReason: reason.trim() });
+    write(result);
+    if (result.status < 300) {
+        await loadAppointmentQueue();
+    }
+}
+
+async function cancelAppointmentQueueItem(appointmentId) {
+    const reason = prompt('Cancel reason (optional):', 'Cancelled by IT/admin');
+    const payload = reason && reason.trim() ? { cancelReason: reason.trim() } : {};
+    const result = await call(`/appointments/it/${appointmentId}/cancel`, 'POST', payload);
+    write(result);
+    if (result.status < 300) {
+        await loadAppointmentQueue();
     }
 }
 
@@ -1917,6 +2160,7 @@ async function dischargeAdmission() {
 function initializeEmptyTables() {
     renderDoctors();
     renderPatientsDirectory();
+    renderAppointmentQueue();
     renderAdmissions();
     renderBeds();
     renderCareUnitsTable();

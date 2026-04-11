@@ -10,20 +10,25 @@ use App\Models\Department;
 use App\Models\Doctor;
 use App\Models\MedicalRecord;
 use App\Models\Patient;
+use App\Services\AppointmentCapacityService;
 use App\Services\Sql\BloodMatchingSqlService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class PatientPortalController extends Controller
 {
-    private const APPOINTMENT_STATUS = ['Booked', 'Cancelled', 'Completed', 'NoShow'];
+    private const APPOINTMENT_STATUS = ['PendingApproval', 'Approved', 'Rejected', 'Cancelled', 'Completed', 'NoShow', 'Booked'];
     private const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
     private const BLOOD_COMPONENTS = ['WholeBlood', 'Plasma', 'Platelets', 'RBC'];
     private const BLOOD_URGENCY = ['Normal', 'Urgent', 'Emergency'];
     private const BLOOD_STATUS = ['Pending', 'Matched', 'Approved', 'Fulfilled', 'Rejected', 'Cancelled'];
 
-    public function __construct(private readonly BloodMatchingSqlService $matchingService)
+    public function __construct(
+        private readonly BloodMatchingSqlService $matchingService,
+        private readonly AppointmentCapacityService $capacityService
+    )
     {
     }
 
@@ -37,8 +42,8 @@ class PatientPortalController extends Controller
 
         $upcomingAppointments = Appointment::query()
             ->where('patient_id', $patient->patient_id)
-            ->where('status', 'Booked')
-            ->where('appointment_datetime', '>=', now())
+            ->whereIn('status', ['PendingApproval', 'Approved', 'Booked'])
+            ->whereDate('appointment_date', '>=', now()->toDateString())
             ->count();
 
         $bloodRequestsCount = BloodRequest::query()
@@ -106,6 +111,7 @@ class PatientPortalController extends Controller
         $query = Appointment::query()
             ->with(['department:id,dept_name', 'doctor:id,full_name,name,email'])
             ->where('patient_id', $patient->patient_id)
+            ->orderByDesc('appointment_date')
             ->orderByDesc('appointment_datetime');
 
         if (! empty($validated['status'])) {
@@ -140,16 +146,20 @@ class PatientPortalController extends Controller
             $doctorQuery->where('department_id', $validated['departmentId']);
         }
 
-        return response()->json([
-            'departments' => $departmentQuery->get(['id', 'dept_name']),
-            'doctors' => $doctorQuery->get()->map(fn (Doctor $doctor) => [
+        $doctors = $doctorQuery->get();
+        $doctorsPayload = $doctors->map(fn (Doctor $doctor) => [
                 'user_id' => $doctor->doctor_id,
                 'full_name' => $doctor->user?->full_name ?? $doctor->user?->name,
                 'email' => $doctor->user?->email,
                 'department_id' => $doctor->department_id,
                 'department' => $doctor->department?->dept_name,
                 'specialization' => $doctor->specialization,
-            ]),
+                'schedule_summary' => $this->capacityService->doctorWeeklySummary((int) $doctor->doctor_id, (int) $doctor->department_id),
+            ]);
+
+        return response()->json([
+            'departments' => $departmentQuery->get(['id', 'dept_name']),
+            'doctors' => $doctorsPayload,
         ]);
     }
 
@@ -159,40 +169,75 @@ class PatientPortalController extends Controller
 
         $validated = $request->validate([
             'departmentId' => ['required', 'integer', 'exists:departments,id'],
-            'doctorUserId' => ['nullable', 'integer', 'exists:doctors,doctor_id'],
-            'appointmentDateTime' => ['required', 'date', 'after:now'],
+            'doctorUserId' => ['required', 'integer', 'exists:doctors,doctor_id'],
+            'appointmentDate' => ['required_without:appointmentDateTime', 'date_format:Y-m-d', 'after_or_equal:today'],
+            'appointmentDateTime' => ['nullable', 'date', 'after:now'],
         ]);
 
-        $doctorProfile = null;
-        if (! empty($validated['doctorUserId'])) {
-            $doctorProfile = Doctor::query()->find($validated['doctorUserId']);
+        $doctorProfile = Doctor::query()->find($validated['doctorUserId']);
 
-            if (! $doctorProfile || ! $doctorProfile->is_active) {
-                return response()->json([
-                    'message' => 'Selected doctor profile is not active.',
-                ], 422);
-            }
-
-            if ((int) $doctorProfile->department_id !== (int) $validated['departmentId']) {
-                return response()->json([
-                    'message' => 'Selected doctor does not belong to this department.',
-                ], 422);
-            }
+        if (! $doctorProfile || ! $doctorProfile->is_active) {
+            return response()->json([
+                'message' => 'Selected doctor profile is not active.',
+            ], 422);
         }
+
+        if ((int) $doctorProfile->department_id !== (int) $validated['departmentId']) {
+            return response()->json([
+                'message' => 'Selected doctor does not belong to this department.',
+            ], 422);
+        }
+
+        $appointmentDate = isset($validated['appointmentDate'])
+            ? Carbon::parse($validated['appointmentDate'])->toDateString()
+            : Carbon::parse($validated['appointmentDateTime'])->toDateString();
+
+        $capacity = $this->capacityService->canCreateOrApprove(
+            (int) $doctorProfile->doctor_id,
+            (int) $validated['departmentId'],
+            $appointmentDate
+        );
+
+        if (! $capacity['allowed']) {
+            return response()->json([
+                'message' => $capacity['message'],
+                'capacity' => $capacity,
+            ], 409);
+        }
+
+        $consultationWindow = $this->capacityService->consultationWindowForDate(
+            (int) $doctorProfile->doctor_id,
+            (int) $validated['departmentId'],
+            $appointmentDate
+        );
+
+        if (! $consultationWindow) {
+            return response()->json([
+                'message' => 'Doctor has no active consultation window for selected date.',
+            ], 422);
+        }
+
+        $appointmentDateTime = Carbon::parse(sprintf('%s %s', $appointmentDate, $consultationWindow['start_time']));
 
         $appointment = Appointment::query()->create([
             'patient_id' => $patient->patient_id,
             'department_id' => $validated['departmentId'],
-            'doctor_user_id' => $doctorProfile?->doctor_id,
-            'appointment_datetime' => $validated['appointmentDateTime'],
-            'status' => 'Booked',
+            'doctor_user_id' => $doctorProfile->doctor_id,
+            'appointment_date' => $appointmentDate,
+            'appointment_datetime' => $appointmentDateTime,
+            'status' => 'PendingApproval',
         ]);
 
         $appointment->load(['department:id,dept_name', 'doctor:id,full_name,name,email']);
 
         return response()->json([
-            'message' => 'Appointment booked',
+            'message' => 'Appointment request submitted for approval.',
             'appointment' => $this->appointmentPayload($appointment),
+            'capacity' => [
+                'daily_capacity' => $capacity['capacity'],
+                'used_count' => $capacity['used'] + 1,
+                'remaining_count' => max(0, $capacity['remaining'] - 1),
+            ],
         ], 201);
     }
 
@@ -206,9 +251,9 @@ class PatientPortalController extends Controller
             ], 403);
         }
 
-        if ($appointment->status !== 'Booked') {
+        if (! in_array($appointment->status, ['PendingApproval', 'Approved', 'Booked'], true)) {
             return response()->json([
-                'message' => 'Only booked appointments can be cancelled.',
+                'message' => 'Only pending or approved appointments can be cancelled.',
             ], 409);
         }
 
@@ -372,8 +417,19 @@ class PatientPortalController extends Controller
             'doctor_user_id' => $appointment->doctor_user_id,
             'doctor_name' => $appointment->doctor?->full_name ?? $appointment->doctor?->name,
             'doctor_email' => $appointment->doctor?->email,
+            'appointment_date' => optional($appointment->appointment_date)->format('Y-m-d'),
             'appointment_datetime' => optional($appointment->appointment_datetime)->toISOString(),
+            'consultation_window' => $appointment->doctor_user_id && $appointment->department_id && $appointment->appointment_date
+                ? $this->capacityService->consultationWindowForDate(
+                    (int) $appointment->doctor_user_id,
+                    (int) $appointment->department_id,
+                    $appointment->appointment_date->format('Y-m-d')
+                )
+                : null,
             'status' => $appointment->status,
+            'approved_by_user_id' => $appointment->approved_by_user_id,
+            'approved_at' => optional($appointment->approved_at)->toISOString(),
+            'rejection_reason' => $appointment->rejection_reason,
             'cancel_reason' => $appointment->cancel_reason,
             'cancelled_by_user_id' => $appointment->cancelled_by_user_id,
         ];

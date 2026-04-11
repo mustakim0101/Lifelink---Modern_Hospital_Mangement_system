@@ -7,7 +7,9 @@ use App\Http\Controllers\Api\BloodBankSchemaController;
 use App\Http\Controllers\Api\BloodMatchingController;
 use App\Http\Controllers\Api\DonorDashboardController;
 use App\Http\Controllers\Api\DonorNotificationController;
+use App\Http\Controllers\Api\DoctorAppointmentRuleController;
 use App\Http\Controllers\Api\DoctorClinicalController;
+use App\Http\Controllers\Api\ItAppointmentQueueController;
 use App\Http\Controllers\Api\JobApplicationController;
 use App\Http\Controllers\Api\NurseCareController;
 use App\Http\Controllers\Api\PatientPortalController;
@@ -90,7 +92,12 @@ Route::prefix('doctor')->middleware(['auth:api', 'active.user', 'role:Doctor'])-
     Route::get('/profile', [DoctorClinicalController::class, 'profile']);
     Route::get('/patients', [DoctorClinicalController::class, 'patients']);
     Route::get('/appointments', [DoctorClinicalController::class, 'appointments']);
+    Route::get('/appointments/summary', [DoctorClinicalController::class, 'appointmentSummary']);
     Route::post('/appointments/{appointment}/cancel', [DoctorClinicalController::class, 'cancelAppointment']);
+    Route::get('/appointment-rules', [DoctorAppointmentRuleController::class, 'index']);
+    Route::post('/appointment-rules', [DoctorAppointmentRuleController::class, 'store']);
+    Route::put('/appointment-rules/{rule}', [DoctorAppointmentRuleController::class, 'update']);
+    Route::post('/appointment-rules/{rule}/deactivate', [DoctorAppointmentRuleController::class, 'deactivate']);
     Route::post('/bed-requests', [DoctorClinicalController::class, 'createBedRequest']);
     Route::get('/bed-requests', [DoctorClinicalController::class, 'myBedRequests']);
 });
@@ -155,4 +162,11 @@ Route::prefix('blood/matching')->middleware(['auth:api', 'active.user', 'role:Ad
     Route::post('/donations', [BloodMatchingController::class, 'logDonation']);
     Route::post('/requests/{bloodRequest}/approve', [BloodMatchingController::class, 'approve']);
     Route::post('/requests/{bloodRequest}/fulfill', [BloodMatchingController::class, 'fulfill']);
+});
+
+Route::prefix('appointments/it')->middleware(['auth:api', 'active.user', 'role:Admin,ITWorker'])->group(function () {
+    Route::get('/queue', [ItAppointmentQueueController::class, 'queue']);
+    Route::post('/{appointment}/approve', [ItAppointmentQueueController::class, 'approve']);
+    Route::post('/{appointment}/reject', [ItAppointmentQueueController::class, 'reject']);
+    Route::post('/{appointment}/cancel', [ItAppointmentQueueController::class, 'cancel']);
 });

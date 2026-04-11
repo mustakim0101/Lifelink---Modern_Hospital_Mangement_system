@@ -329,9 +329,13 @@ body > .shell {
     gap: 14px;
 }
 
-.app-shell__body,
+.app-shell__body {
+    grid-template-columns: clamp(260px, 20vw, 320px) minmax(0, 1fr);
+    align-items: start;
+}
+
 .hub-layout {
-    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-columns: clamp(300px, 24vw, 360px) minmax(0, 1fr);
     align-items: start;
 }
 
@@ -346,6 +350,7 @@ body > .shell {
     border-radius: 24px;
     background: rgba(255, 255, 255, 0.84);
     box-shadow: var(--ui-shadow-lg);
+    min-width: 0;
 }
 
 .app-shell__sidebar {
@@ -391,12 +396,14 @@ body > .shell {
     top: 12px;
     display: grid;
     gap: 12px;
+    min-width: 0;
 }
 
 .hub-main {
     padding: 14px;
     display: grid;
     gap: 12px;
+    min-width: 0;
 }
 
 .app-shell__nav,
@@ -619,6 +626,7 @@ main {
 
 .app-shell__content-body {
     min-height: 100%;
+    min-width: 0;
 }
 
 .grid,
