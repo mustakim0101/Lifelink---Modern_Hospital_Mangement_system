@@ -730,3 +730,181 @@ Setup or schema/debug work that belongs on `/ui/blood-bank-schema`:
 - manually upsert inventory or donor profile data for setup/debug cases
 
 The nurse and IT dashboards should auto-load department/profile scope on page boot and keep manual buttons only as reload/fallback actions.
+
+---
+
+## Revision 4 - Doctor Appointment Workflow (Phase 1 Backend Foundation)
+
+This section introduces the new appointment flow foundation without hourly slots.  
+The focus here is schema, backend behavior, API contracts, and readable workflow narrative.  
+Blade integration can come later.
+
+### The story in plain language
+
+The doctor no longer needs to create dozens of time-slot rows.
+
+Instead, the doctor defines a recurring consultation routine:
+- which weekdays they consult
+- consultation start and end time
+- how many patients they can handle each day
+
+Then the patient books using:
+- department
+- doctor
+- date only
+
+No hour or minute picking is required on the patient side for this workflow.
+
+When a patient submits the request, the system checks:
+- doctor is active
+- doctor belongs to the chosen department
+- doctor has an active recurring rule for that weekday
+- daily capacity for that doctor/date is not full
+
+If valid, the appointment is created as `PendingApproval`.
+
+Then IT/Admin reviews the queue:
+- approve
+- reject
+- cancel (if needed)
+
+Doctors can monitor by date:
+- pending patients
+- approved patients
+- daily totals
+- remaining capacity
+
+### Why no hourly slot table was added
+
+This design intentionally avoids hourly slot complexity:
+- no 15-minute generation
+- no per-date slot table
+- no large slot management overhead
+
+The system stays simple: recurring routine + per-day capacity + approval queue.
+
+### Tables introduced or changed
+
+New table:
+- `doctor_appointment_rules`
+  - `doctor_user_id`
+  - `department_id`
+  - `day_of_week` (0=Sunday ... 6=Saturday)
+  - `start_time`
+  - `end_time`
+  - `daily_capacity`
+  - `is_active`
+  - timestamps
+
+Updated table:
+- `appointments`
+  - added `appointment_date`
+  - added `approved_by_user_id`
+  - added `approved_at`
+  - added `rejection_reason`
+  - kept existing `appointment_datetime` for backward compatibility
+
+### Status model now supported
+
+Active appointment statuses now include:
+- `PendingApproval`
+- `Approved`
+- `Rejected`
+- `Cancelled`
+- `Completed`
+- `NoShow`
+
+Compatibility note:
+- existing `Booked` records are still accepted and read safely
+- capacity checks treat `Booked` as approved-equivalent to avoid overbooking older rows
+
+### Capacity rule (doctor + date)
+
+Daily capacity is enforced by:
+- doctor
+- appointment date
+
+Counted statuses for capacity usage:
+- `PendingApproval`
+- `Approved`
+- `Booked` (compatibility-safe inclusion)
+
+New booking is blocked when used count reaches configured daily capacity.
+IT approval is also blocked by the same rule.
+
+### API shape added for this phase
+
+Doctor schedule management:
+- `GET /api/doctor/appointment-rules`
+- `POST /api/doctor/appointment-rules`
+- `PUT /api/doctor/appointment-rules/{rule}`
+- `POST /api/doctor/appointment-rules/{rule}/deactivate`
+
+Doctor date-wise monitoring:
+- `GET /api/doctor/appointments/summary`
+
+IT queue and actions:
+- `GET /api/appointments/it/queue`
+- `POST /api/appointments/it/{appointment}/approve`
+- `POST /api/appointments/it/{appointment}/reject`
+- `POST /api/appointments/it/{appointment}/cancel`
+
+Patient booking flow updates:
+- `GET /api/patient/booking-options` now includes doctor schedule summaries
+- `POST /api/patient/appointments` now supports date-first booking and creates `PendingApproval` requests
+
+### Backward compatibility behaviors
+
+- `appointment_datetime` stays in place and is still filled.
+- For new date-only requests, `appointment_datetime` is auto-filled using:
+  - `appointment_date` + doctor routine start time
+- Existing Booked/old reads are preserved in doctor/patient lists.
+- Existing bed/admission and blood workflows are untouched by this appointment pass.
+
+---
+
+## Revision 5 - Appointment Workflow UI Integration (Phase 2)
+
+This UI pass makes the Phase 1 backend workflow visible in the Blade dashboards without changing the approved business logic.
+
+### Doctor dashboard story
+
+The doctor now has a consultation routine section where they can define recurring rules by:
+- weekday
+- consultation start/end time
+- daily capacity
+
+They can also edit or deactivate existing rules. A separate daily load summary now shows date-based operational numbers:
+- pending count
+- approved count
+- total count
+- remaining capacity
+
+So the doctor experience becomes: set routine once, then monitor demand by day.
+
+### Patient portal story
+
+The patient booking UI now uses:
+- department
+- doctor
+- appointment date only
+
+The datetime-local picker is removed. When a doctor is selected, the portal shows consultation-window guidance from the configured routine and explains that minute-level slot picking is not required.
+
+The patient appointments table now emphasizes:
+- doctor
+- department
+- appointment date
+- consultation window
+- status
+
+Requests are submitted into the approval flow rather than instant fixed-time booking.
+
+### IT worker story (non-Blood-Bank)
+
+The regular IT workspace now includes an appointment queue panel with:
+- filters by doctor, department, date, and status
+- actions for approve, reject, and cancel
+- queue-level visibility for capacity context (capacity/used/remaining where available, with used counts derived from queue data)
+
+This was added only in regular IT mode and kept separate from Blood Bank operations so Blood Bank behavior remains unchanged.

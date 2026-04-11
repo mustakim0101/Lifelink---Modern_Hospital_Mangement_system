@@ -122,6 +122,16 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Appointment::class, 'cancelled_by_user_id');
     }
 
+    public function approvedAppointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'approved_by_user_id');
+    }
+
+    public function doctorAppointmentRules(): HasMany
+    {
+        return $this->hasMany(DoctorAppointmentRule::class, 'doctor_user_id');
+    }
+
     public function createdMedicalRecords(): HasMany
     {
         return $this->hasMany(MedicalRecord::class, 'created_by_user_id');

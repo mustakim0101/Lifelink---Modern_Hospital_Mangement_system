@@ -394,6 +394,10 @@
     gap: 12px;
 }
 
+.hub-stats {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
 .session-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-top: 12px;
@@ -405,6 +409,21 @@
     border-radius: 14px;
     background: rgba(15, 23, 42, 0.05);
     border: 1px solid rgba(15, 23, 42, 0.08);
+    min-width: 0;
+    display: grid;
+    gap: 6px;
+    align-content: start;
+}
+
+.hub-stat strong {
+    line-height: 1.4;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+.hub-stat span {
+    line-height: 1.5;
 }
 
 .advanced-toggle {
@@ -688,6 +707,10 @@
 
 @media (max-width: 780px) {
     .welcome-metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .hub-stats {
         grid-template-columns: 1fr;
     }
 }

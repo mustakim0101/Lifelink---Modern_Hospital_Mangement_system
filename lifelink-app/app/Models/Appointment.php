@@ -14,14 +14,20 @@ class Appointment extends Model
         'patient_id',
         'department_id',
         'doctor_user_id',
+        'appointment_date',
         'appointment_datetime',
         'status',
+        'approved_by_user_id',
+        'approved_at',
+        'rejection_reason',
         'cancelled_by_user_id',
         'cancel_reason',
     ];
 
     protected $casts = [
+        'appointment_date' => 'date',
         'appointment_datetime' => 'datetime',
+        'approved_at' => 'datetime',
     ];
 
     public function patient(): BelongsTo
@@ -43,5 +49,9 @@ class Appointment extends Model
     {
         return $this->belongsTo(User::class, 'cancelled_by_user_id');
     }
-}
 
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by_user_id');
+    }
+}

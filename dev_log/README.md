@@ -3295,3 +3295,136 @@ Recommended retest steps:
 1. hard refresh browser after Blade changes
 2. if output still looks stale, run `php artisan optimize:clear` from `lifelink-app`
 3. re-check browser console for the temporary nurse/IT Blood Bank debug logs
+
+## Appointment Workflow Phase 1 Backend Pass (2026-04-11)
+
+Scope of this run:
+- backend/schema/API/documentation foundation for doctor recurring appointment routine + date-only patient booking + IT approval queue
+- no full Blade UI integration in this pass
+
+### New files created
+- `docker/mssql/init/schema/69_doctor_appointment_rules.sql`
+- `lifelink-app/app/Models/DoctorAppointmentRule.php`
+- `lifelink-app/app/Services/AppointmentCapacityService.php`
+- `lifelink-app/app/Http/Controllers/Api/DoctorAppointmentRuleController.php`
+- `lifelink-app/app/Http/Controllers/Api/ItAppointmentQueueController.php`
+- `lifelink-app/database/migrations/2026_04_11_000950_create_doctor_appointment_rules_table.php`
+- `lifelink-app/database/migrations/2026_04_11_000960_add_approval_columns_to_appointments_table.php`
+
+### Existing files changed
+- `lifelink-app/app/Models/Appointment.php`
+- `lifelink-app/app/Models/Doctor.php`
+- `lifelink-app/app/Models/Department.php`
+- `lifelink-app/app/Models/User.php`
+- `lifelink-app/app/Http/Controllers/Api/PatientPortalController.php`
+- `lifelink-app/app/Http/Controllers/Api/DoctorClinicalController.php`
+- `lifelink-app/routes/api.php`
+- `docs/FEATURE_WORKFLOWS.md`
+- `dev_log/README.md`
+
+### What was implemented
+1. Doctor recurring schedule rules
+- doctors can create/list/update/deactivate recurring consultation rules by weekday, time window, and daily capacity
+
+2. Date-only appointment request flow
+- patient booking now supports date-first workflow and creates `PendingApproval`
+- backend validates doctor activity, doctor-department match, weekday routine existence, and daily capacity
+
+3. IT/Admin appointment queue + actions
+- queue endpoint with filters (doctor, department, date, status)
+- approve/reject/cancel actions with role and department scope checks
+- approval re-checks daily capacity before confirming
+
+4. Doctor appointment monitoring by date
+- doctor summary endpoint returns date-wise pending, approved, totals, and remaining capacity
+
+5. Backward compatibility
+- `appointments.appointment_datetime` kept
+- old `Booked` status still accepted in reads and status filters
+- capacity logic includes `Booked` with `PendingApproval` and `Approved` to avoid overbooking legacy rows
+- no blood bank or bed/admission flow changes
+
+### Schema details
+Added table:
+- `doctor_appointment_rules` with doctor, department, weekday, start/end, daily_capacity, active flag, timestamps
+
+Extended table:
+- `appointments.appointment_date`
+- `appointments.approved_by_user_id`
+- `appointments.approved_at`
+- `appointments.rejection_reason`
+
+Data compatibility:
+- migration/sql backfills `appointment_date` from existing `appointment_datetime` where possible
+
+### Endpoint additions/updates
+New doctor endpoints:
+- `GET /api/doctor/appointment-rules`
+- `POST /api/doctor/appointment-rules`
+- `PUT /api/doctor/appointment-rules/{rule}`
+- `POST /api/doctor/appointment-rules/{rule}/deactivate`
+- `GET /api/doctor/appointments/summary`
+
+New IT/Admin endpoints:
+- `GET /api/appointments/it/queue`
+- `POST /api/appointments/it/{appointment}/approve`
+- `POST /api/appointments/it/{appointment}/reject`
+- `POST /api/appointments/it/{appointment}/cancel`
+
+Updated patient endpoints:
+- `GET /api/patient/booking-options` (now includes doctor schedule summary)
+- `POST /api/patient/appointments` (date-first request + PendingApproval flow)
+
+### Validation and verification run
+- PHP syntax checks (`php -l`) passed for all changed PHP files
+- automated `php artisan test` could not run in local shell because installed PHP is `8.2.12` while project dependencies require `>=8.3.0`
+
+## Appointment Workflow Phase 2 UI Pass (2026-04-11)
+
+Scope of this run:
+- Blade UI integration for doctor, patient, and regular non-Blood-Bank IT dashboards
+- aligned to the Phase 1 appointment workflow (recurring doctor routine, date-only patient request, IT approval queue)
+- no workflow change to bed/admission flow or blood-bank flow
+
+### Doctor UI update
+Doctor dashboard now includes:
+- consultation routine management (weekday + start/end + daily capacity)
+- routine edit and deactivate support
+- date-range summary monitor with pending, approved, total, and remaining capacity by day
+- existing appointment list/cancel behavior retained with expanded status handling
+
+### Patient UI update
+Patient portal booking now uses:
+- department
+- doctor
+- appointment date only
+
+Removed from booking:
+- datetime-local exact-time picker
+
+Added patient guidance:
+- consultation window is shown from doctor schedule summary
+- workflow note explains that exact minute selection is not required
+
+Appointments table now surfaces:
+- doctor
+- department
+- appointment date
+- consultation window
+- status
+
+### IT UI update (regular mode)
+Regular IT dashboard now includes an appointment approval queue panel with:
+- filters: doctor, department, date, status
+- actions: approve, reject, cancel
+- queue summary counters
+- capacity context columns (capacity/used/remaining, using backend response where available plus queue-derived used counts)
+
+Blood Bank IT behavior and navigation mode separation were preserved.
+
+### Verification notes for this pass
+- focused Blade/JS integration pass completed for:
+  - `resources/views/ui/doctor-dashboard.blade.php`
+  - `resources/views/ui/patient-portal.blade.php`
+  - `resources/views/ui/it-bed-allocation.blade.php`
+- no backend schema/API contract change was introduced in this phase
