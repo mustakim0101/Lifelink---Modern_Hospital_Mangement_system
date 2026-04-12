@@ -9,14 +9,17 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Throwable;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthController extends Controller
 {
     private const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+    private const AUTH_SERVICE_UNAVAILABLE_MESSAGE = 'Authentication service is temporarily unavailable. Please contact admin.';
 
     public function register(Request $request): JsonResponse
     {
@@ -50,28 +53,46 @@ class AuthController extends Controller
                 ], 422);
             }
 
-            $user = User::query()->create([
-                'name' => $name,
-                'full_name' => $name,
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-            ]);
-            $this->markDuration($marks, 'created_user', $timer);
+            $token = DB::transaction(function () use ($name, $validated, &$user, &$marks, $timer) {
+                $user = User::query()->create([
+                    'name' => $name,
+                    'full_name' => $name,
+                    'email' => $validated['email'],
+                    'password' => Hash::make($validated['password']),
+                ]);
+                $this->markDuration($marks, 'created_user', $timer);
 
-            $this->assignRole($user, 'Patient');
-            $this->markDuration($marks, 'assigned_role', $timer);
+                $this->assignRole($user, 'Patient');
+                $this->markDuration($marks, 'assigned_role', $timer);
 
-            $user->loadMissing('roles:id,role_name');
-            $this->ensurePatientProfile($user, $validated, true);
-            $this->markDuration($marks, 'ensured_patient_profile', $timer);
+                $user->loadMissing('roles:id,role_name');
+                $this->ensurePatientProfile($user, $validated, true);
+                $this->markDuration($marks, 'ensured_patient_profile', $timer);
 
-            $token = auth('api')->login($user);
-            $this->markDuration($marks, 'issued_token', $timer);
+                $token = $this->issueTokenForUser($user);
+                $this->markDuration($marks, 'issued_token', $timer);
+
+                return $token;
+            });
 
             return $this->tokenResponse($token, $user, 201, 'Registered');
+        } catch (JWTException $e) {
+            $result = 'auth_service_unavailable';
+
+            return $this->authServiceUnavailableResponse('register', $e, [
+                'email' => $request->input('email'),
+            ]);
         } catch (Throwable $e) {
             $result = 'error';
-            throw $e;
+            Log::error('auth.register.failed', [
+                'email' => $request->input('email'),
+                'error' => $e->getMessage(),
+                'exception' => $e,
+            ]);
+
+            return response()->json([
+                'message' => 'Registration failed. Please try again.',
+            ], 500);
         } finally {
             $this->logTiming('auth.register', $timer, $marks, [
                 'result' => $result,
@@ -94,7 +115,8 @@ class AuthController extends Controller
             ]);
             $this->markDuration($marks, 'validated', $timer);
 
-            if (! $token = auth('api')->attempt($credentials)) {
+            $token = auth('api')->attempt($credentials);
+            if (! $token) {
                 $result = 'invalid_credentials';
 
                 return response()->json([
@@ -123,9 +145,23 @@ class AuthController extends Controller
             $this->markDuration($marks, 'ensured_patient_profile', $timer);
 
             return $this->tokenResponse($token, $user, 200, 'Logged in');
+        } catch (JWTException $e) {
+            $result = 'auth_service_unavailable';
+
+            return $this->authServiceUnavailableResponse('login', $e, [
+                'email' => $request->input('email'),
+            ]);
         } catch (Throwable $e) {
             $result = 'error';
-            throw $e;
+            Log::error('auth.login.failed', [
+                'email' => $request->input('email'),
+                'error' => $e->getMessage(),
+                'exception' => $e,
+            ]);
+
+            return response()->json([
+                'message' => 'Login failed. Please try again.',
+            ], 500);
         } finally {
             $this->logTiming('auth.login', $timer, $marks, [
                 'result' => $result,
@@ -171,17 +207,26 @@ class AuthController extends Controller
             'fullName' => ['required', 'string', 'max:255'],
         ]);
 
-        $user = User::query()->create([
-            'name' => $validated['fullName'],
-            'full_name' => $validated['fullName'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-        ]);
+        try {
+            $user = null;
+            $token = DB::transaction(function () use (&$user, $validated) {
+                $user = User::query()->create([
+                    'name' => $validated['fullName'],
+                    'full_name' => $validated['fullName'],
+                    'email' => $validated['email'],
+                    'password' => Hash::make($validated['password']),
+                ]);
 
-        $this->assignRole($user, 'Admin', $user->id);
-        $user->loadMissing('roles:id,role_name');
+                $this->assignRole($user, 'Admin', $user->id);
+                $user->loadMissing('roles:id,role_name');
 
-        $token = auth('api')->login($user);
+                return $this->issueTokenForUser($user);
+            });
+        } catch (JWTException $e) {
+            return $this->authServiceUnavailableResponse('create_admin', $e, [
+                'email' => $request->input('email'),
+            ]);
+        }
 
         return $this->tokenResponse($token, $user, 201, 'Admin bootstrap user created');
     }
@@ -243,6 +288,29 @@ class AuthController extends Controller
             'applied_role' => $latest->appliedRole?->role_name,
             'applied_department' => $latest->department?->dept_name,
         ];
+    }
+
+    private function issueTokenForUser(User $user): string
+    {
+        $token = auth('api')->login($user);
+        if (! is_string($token) || $token === '') {
+            throw new JWTException('Token issuance failed.');
+        }
+
+        return $token;
+    }
+
+    private function authServiceUnavailableResponse(string $action, Throwable $exception, array $context = []): JsonResponse
+    {
+        Log::error('auth.jwt_unavailable', array_merge($context, [
+            'action' => $action,
+            'error' => $exception->getMessage(),
+            'exception' => $exception,
+        ]));
+
+        return response()->json([
+            'message' => self::AUTH_SERVICE_UNAVAILABLE_MESSAGE,
+        ], 503);
     }
 
     private function ensurePatientProfile(User $user, array $context, ?bool $isPatient = null): void

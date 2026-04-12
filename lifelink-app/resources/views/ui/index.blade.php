@@ -154,6 +154,7 @@
     <section class="card">
         <h2>Role dashboards</h2>
         <div class="grid" style="margin-top: 10px;">
+            <a class="box" href="/ui/departments"><strong>Department Directory</strong><span>Patient-facing department pages with doctor availability and booking actions.</span></a>
             <a class="box" href="/ui/doctor-dashboard"><strong>Doctor Dashboard</strong><span>Clinical profile, appointments, and bed requests.</span></a>
             <a class="box" href="/ui/nurse-dashboard"><strong>Nurse Dashboard</strong><span>Patient monitoring and vital-sign logging.</span></a>
             <a class="box" href="/ui/patient-portal"><strong>Patient Portal</strong><span>Appointments, records, and blood requests.</span></a>

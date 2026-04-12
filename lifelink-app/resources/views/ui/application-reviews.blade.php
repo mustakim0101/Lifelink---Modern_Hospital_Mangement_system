@@ -29,7 +29,8 @@
     .review-summary,
     .review-card__meta,
     .review-actions,
-    .review-form-actions {
+    .review-form-actions,
+    .review-department-editor {
         display: grid;
         gap: 12px;
     }
@@ -68,6 +69,37 @@
         color: var(--review-muted);
         line-height: 1.7;
         font-size: 0.94rem;
+    }
+
+    .review-flash {
+        border-radius: 14px;
+        border: 1px solid transparent;
+        padding: 12px 14px;
+        font-size: 0.92rem;
+        font-weight: 600;
+        display: none;
+    }
+
+    .review-flash.show {
+        display: block;
+    }
+
+    .review-flash.info {
+        background: #eff6ff;
+        border-color: rgba(29, 78, 216, 0.25);
+        color: #1d4ed8;
+    }
+
+    .review-flash.success {
+        background: #ecfdf5;
+        border-color: rgba(15, 118, 110, 0.25);
+        color: #0f766e;
+    }
+
+    .review-flash.error {
+        background: #fef2f2;
+        border-color: rgba(185, 28, 28, 0.25);
+        color: #b91c1c;
     }
 
     .review-label {
@@ -220,15 +252,27 @@
     }
 
     .review-actions {
-        grid-template-columns: auto auto auto;
+        grid-template-columns: repeat(4, auto);
         justify-content: start;
         margin-top: 16px;
     }
 
     .review-form-actions {
-        grid-template-columns: auto auto;
+        grid-template-columns: repeat(3, auto);
         justify-content: start;
         margin-top: 12px;
+    }
+
+    .review-department-editor {
+        margin-top: 12px;
+        border-radius: 14px;
+        border: 1px solid var(--review-line);
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.86);
+    }
+
+    .review-department-editor .review-label {
+        margin-bottom: 0;
     }
 
     .review-console {
@@ -301,6 +345,8 @@
 
 @section('content')
     <div class="review-grid">
+        <div id="reviewFlash" class="review-flash" role="status" aria-live="polite"></div>
+
         <div id="review-queue-panel" class="review-panel ll-section review-panel-switch" data-display="block">
             <h3>Review queue</h3>
             <p class="review-note">Filter by status, then review from cards.</p>
@@ -351,10 +397,19 @@
             <label class="review-label" for="applicationId">Application ID</label>
             <input id="applicationId" class="review-input" placeholder="Application ID">
 
+            <div id="reviewDepartmentField" class="review-department-editor">
+                <label class="review-label" for="reviewDepartment">Department assignment</label>
+                <select id="reviewDepartment" class="review-select">
+                    <option value="">Select department</option>
+                </select>
+                <p id="reviewDepartmentHelp" class="review-help">Select an application to configure department assignment.</p>
+            </div>
+
             <label class="review-label" for="reviewNotes" style="margin-top: 12px;">Review notes</label>
             <textarea id="reviewNotes" class="review-textarea" placeholder="Optional notes for approval or rejection"></textarea>
 
             <div class="review-form-actions">
+                <button class="review-button warn" type="button" onclick="saveSelectedDepartment()">Save department</button>
                 <button class="review-button accent" type="button" onclick="approveApplication()">Approve selected</button>
                 <button class="review-button reject" type="button" onclick="rejectApplication()">Reject selected</button>
             </div>
@@ -370,10 +425,17 @@ const cards = document.getElementById('applicationCards');
 const loadedCount = document.getElementById('loadedCount');
 const pendingCount = document.getElementById('pendingCount');
 const selectedApplicationLabel = document.getElementById('selectedApplicationLabel');
+const reviewFlash = document.getElementById('reviewFlash');
+const reviewDepartmentField = document.getElementById('reviewDepartmentField');
+const reviewDepartmentInput = document.getElementById('reviewDepartment');
+const reviewDepartmentHelp = document.getElementById('reviewDepartmentHelp');
 const API = '/api';
 const reviewPanelIds = ['review-queue-panel', 'review-cards-panel', 'review-action-panel'];
+const DEPARTMENT_REQUIRED_ROLES = ['Doctor', 'Nurse', 'ITWorker'];
 let state = {
     applications: [],
+    departments: [],
+    departmentDrafts: {},
     selectedId: null,
     pagination: {
         cardsPageSize: 6,
@@ -384,6 +446,30 @@ let state = {
 function write(data) {
     if (!window.lifeLinkShell?.isDebugEnabled() || !out) return;
     out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+}
+
+function showFlash(kind, text) {
+    if (!reviewFlash) return;
+    reviewFlash.className = `review-flash show ${kind}`;
+    reviewFlash.textContent = text;
+}
+
+function clearFlash() {
+    if (!reviewFlash) return;
+    reviewFlash.className = 'review-flash';
+    reviewFlash.textContent = '';
+}
+
+function extractMessage(result, fallback) {
+    if (typeof result?.data === 'string' && result.data.trim()) return result.data.trim();
+    if (result?.data?.message) return result.data.message;
+    if (result?.data?.errors) {
+        const firstKey = Object.keys(result.data.errors)[0];
+        if (firstKey && Array.isArray(result.data.errors[firstKey]) && result.data.errors[firstKey][0]) {
+            return result.data.errors[firstKey][0];
+        }
+    }
+    return fallback;
 }
 
 function refreshContext() {
@@ -403,6 +489,25 @@ function adminToken() {
     return localStorage.getItem('ADMIN_TOKEN');
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function normalizeId(value) {
+    if (value === null || value === undefined || value === '') return null;
+    const parsed = Number(value);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function roleRequiresDepartment(roleName) {
+    return DEPARTMENT_REQUIRED_ROLES.includes(String(roleName || '').trim());
+}
+
 function statusClass(status) {
     if (status === 'Approved') return 'approved';
     if (status === 'Rejected') return 'rejected';
@@ -417,6 +522,107 @@ function formatDate(value) {
     if (!value) return 'Not set';
     const parsed = new Date(value);
     return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString();
+}
+
+function selectedApplication() {
+    return state.applications.find(item => Number(item.id) === Number(state.selectedId)) || null;
+}
+
+function departmentIdForApplication(application) {
+    const appId = normalizeId(application?.id);
+    const draftDepartmentId = appId ? normalizeId(state.departmentDrafts[String(appId)] ?? null) : null;
+
+    if (draftDepartmentId !== null) {
+        return draftDepartmentId;
+    }
+
+    return normalizeId(application?.assigned_department_id)
+        ?? normalizeId(application?.applied_department_id)
+        ?? null;
+}
+
+function setDepartmentDraft(applicationId, departmentId) {
+    const normalizedApplicationId = normalizeId(applicationId);
+    if (!normalizedApplicationId) return;
+
+    const normalizedDepartmentId = normalizeId(departmentId);
+    if (normalizedDepartmentId === null) {
+        delete state.departmentDrafts[String(normalizedApplicationId)];
+        return;
+    }
+
+    state.departmentDrafts[String(normalizedApplicationId)] = normalizedDepartmentId;
+}
+
+function onCardDepartmentChange(applicationId, rawValue) {
+    const normalizedApplicationId = normalizeId(applicationId);
+    if (!normalizedApplicationId) return;
+
+    setDepartmentDraft(normalizedApplicationId, rawValue);
+
+    if (Number(state.selectedId) === Number(normalizedApplicationId) && reviewDepartmentInput) {
+        const draft = normalizeId(state.departmentDrafts[String(normalizedApplicationId)] ?? null);
+        reviewDepartmentInput.value = draft !== null ? String(draft) : '';
+    }
+}
+
+function onActionDepartmentChange(rawValue) {
+    const selected = selectedApplication();
+    if (!selected) return;
+
+    const selectedId = normalizeId(selected.id);
+    if (!selectedId) return;
+
+    setDepartmentDraft(selectedId, rawValue);
+
+    const cardInput = document.getElementById(`cardDepartment-${selectedId}`);
+    if (cardInput) {
+        const draft = normalizeId(state.departmentDrafts[String(selectedId)] ?? null);
+        cardInput.value = draft !== null ? String(draft) : '';
+    }
+}
+
+function departmentOptionsMarkup(selectedDepartmentId = null) {
+    const selectedId = normalizeId(selectedDepartmentId);
+    const baseOption = '<option value="">Select department</option>';
+    if (!Array.isArray(state.departments) || state.departments.length === 0) {
+        return `${baseOption}<option value="" disabled>No active departments found</option>`;
+    }
+
+    return baseOption + state.departments.map(department => {
+        const departmentId = Number(department.id);
+        const selected = selectedId === departmentId ? 'selected' : '';
+        return `<option value="${departmentId}" ${selected}>${escapeHtml(department.dept_name)}</option>`;
+    }).join('');
+}
+
+function syncActionDepartmentField(application) {
+    if (!reviewDepartmentField || !reviewDepartmentInput || !reviewDepartmentHelp) return;
+
+    if (!application) {
+        reviewDepartmentInput.innerHTML = departmentOptionsMarkup(null);
+        reviewDepartmentInput.disabled = true;
+        reviewDepartmentHelp.textContent = 'Select an application to configure department assignment.';
+        return;
+    }
+
+    const requiresDepartment = roleRequiresDepartment(application.applied_role) || !!application.department_required;
+    const resolvedDepartmentId = departmentIdForApplication(application);
+
+    reviewDepartmentInput.innerHTML = departmentOptionsMarkup(resolvedDepartmentId);
+    reviewDepartmentInput.disabled = !requiresDepartment;
+
+    if (!requiresDepartment) {
+        reviewDepartmentHelp.textContent = 'Department assignment is optional for this role.';
+        return;
+    }
+
+    if (application.status === 'Approved') {
+        reviewDepartmentHelp.textContent = 'This record is approved. Save department to reassign and update the live staff profile.';
+        return;
+    }
+
+    reviewDepartmentHelp.textContent = 'Department is required before approving Doctor, Nurse, and ITWorker applications.';
 }
 
 async function call(path, method, body = null) {
@@ -486,13 +692,27 @@ function syncSummary() {
     selectedApplicationLabel.textContent = selected ? `#${selected.id}` : 'None';
 }
 
-function selectApplication(application, notesOverride = null) {
+function setSelectedApplication(application, notesOverride = null) {
+    if (!application) {
+        state.selectedId = null;
+        document.getElementById('applicationId').value = '';
+        document.getElementById('reviewNotes').value = '';
+        syncActionDepartmentField(null);
+        syncSummary();
+        return;
+    }
+
     state.selectedId = Number(application.id);
     document.getElementById('applicationId').value = String(application.id);
     document.getElementById('reviewNotes').value = notesOverride !== null
         ? notesOverride
         : (application.review_notes || '');
+    syncActionDepartmentField(application);
     syncSummary();
+}
+
+function selectApplication(application, notesOverride = null) {
+    setSelectedApplication(application, notesOverride);
     renderCards();
 }
 
@@ -511,7 +731,12 @@ function renderCards() {
     );
     state.pagination.cardsPage = pageData.page;
 
-    cards.innerHTML = pageData.rows.map(application => `
+    cards.innerHTML = pageData.rows.map(application => {
+        const roleNeedsDepartment = roleRequiresDepartment(application.applied_role) || !!application.department_required;
+        const canEditDepartment = roleNeedsDepartment && (application.status === 'Pending' || application.status === 'Approved');
+        const cardSelectId = `cardDepartment-${application.id}`;
+
+        return `
         <article class="review-card" data-id="${application.id}" style="${Number(state.selectedId) === Number(application.id) ? 'outline: 2px solid rgba(29, 78, 216, 0.22);' : ''}">
             <div class="review-card__top">
                 <div class="review-card__identity">
@@ -531,7 +756,11 @@ function renderCards() {
                     <strong>${formatValue(application.applied_role)}</strong>
                 </div>
                 <div class="review-chip">
-                    <small>Department</small>
+                    <small>Assigned Department</small>
+                    <strong>${formatValue(application.assigned_department, 'Not assigned yet')}</strong>
+                </div>
+                <div class="review-chip">
+                    <small>Application Department</small>
                     <strong>${formatValue(application.applied_department, 'Admin will assign later')}</strong>
                 </div>
                 <div class="review-chip">
@@ -540,6 +769,16 @@ function renderCards() {
                 </div>
             </div>
 
+            ${roleNeedsDepartment ? `
+                <div class="review-department-editor">
+                    <label class="review-label" for="${cardSelectId}">Department assignment</label>
+                    <select id="${cardSelectId}" class="review-select" onchange="onCardDepartmentChange(${application.id}, this.value)" ${canEditDepartment ? '' : 'disabled'}>
+                        ${departmentOptionsMarkup(departmentIdForApplication(application))}
+                    </select>
+                    <p class="review-help">${application.status === 'Approved' ? 'Save to reassign this approved staff member.' : 'Required before approval for this role.'}</p>
+                </div>
+            ` : ''}
+
             <div class="review-chip" style="margin-top: 14px;">
                 <small>Review notes</small>
                 <strong>${formatValue(application.review_notes, 'No review note yet')}</strong>
@@ -547,11 +786,13 @@ function renderCards() {
 
             <div class="review-actions">
                 <button class="review-button soft" type="button" onclick="selectCardApplication(${application.id})">Select</button>
+                ${roleNeedsDepartment ? `<button class="review-button warn" type="button" onclick="saveDepartmentFromCard(${application.id})" ${canEditDepartment ? '' : 'disabled'}>Save Department</button>` : ''}
                 <button class="review-button accent" type="button" onclick="approveFromCard(${application.id})" ${application.status !== 'Pending' ? 'disabled' : ''}>Approve</button>
                 <button class="review-button reject" type="button" onclick="rejectFromCard(${application.id})" ${application.status !== 'Pending' ? 'disabled' : ''}>Reject</button>
             </div>
         </article>
-    `).join('');
+    `;
+    }).join('');
 
     renderApplicationCardsPagination(pageData);
     syncSummary();
@@ -560,10 +801,23 @@ function renderCards() {
 function selectCardApplication(applicationId) {
     const application = state.applications.find(item => Number(item.id) === Number(applicationId));
     if (!application) return;
+
+    const roleNeedsDepartment = roleRequiresDepartment(application.applied_role) || !!application.department_required;
+    if (roleNeedsDepartment) {
+        const cardDepartmentInput = document.getElementById(`cardDepartment-${applicationId}`);
+        if (cardDepartmentInput) {
+            onCardDepartmentChange(applicationId, cardDepartmentInput.value);
+        }
+    }
+
     selectApplication(application);
 }
 
-async function loadApplications() {
+async function loadApplications(options = {}) {
+    if (options?.clearFlash) {
+        clearFlash();
+    }
+
     const status = document.getElementById('statusFilter').value.trim();
     const query = status ? `?status=${encodeURIComponent(status)}` : '';
     const result = await call(`/admin/applications${query}`, 'GET');
@@ -571,58 +825,177 @@ async function loadApplications() {
 
     if (result.status >= 200 && result.status < 300) {
         state.applications = result.data?.applications || [];
+        state.departments = Array.isArray(result.data?.departments) ? result.data.departments : state.departments;
+        const loadedIds = new Set(state.applications.map(item => Number(item.id)));
+        Object.keys(state.departmentDrafts).forEach((applicationId) => {
+            if (!loadedIds.has(Number(applicationId))) {
+                delete state.departmentDrafts[applicationId];
+            }
+        });
+
+        if (!state.departments.length) {
+            const departmentResult = await call('/ward/departments', 'GET');
+            if (departmentResult.status >= 200 && departmentResult.status < 300) {
+                state.departments = departmentResult.data?.departments || [];
+            }
+        }
+
         state.pagination.cardsPage = 1;
-        if (!state.applications.find(item => Number(item.id) === Number(state.selectedId))) {
-            state.selectedId = null;
-            document.getElementById('applicationId').value = '';
-            document.getElementById('reviewNotes').value = '';
+        const matchingSelection = state.applications.find(item => Number(item.id) === Number(state.selectedId));
+        if (!matchingSelection) {
+            setSelectedApplication(null);
+        } else {
+            setSelectedApplication(matchingSelection);
         }
         renderCards();
         return;
     }
 
+    showFlash('error', extractMessage(result, 'Unable to load applications.'));
     state.applications = [];
-    state.selectedId = null;
+    setSelectedApplication(null);
     state.pagination.cardsPage = 1;
     renderCards();
 }
 
 function loadPendingApplications() {
     document.getElementById('statusFilter').value = 'Pending';
-    loadApplications();
+    loadApplications({ clearFlash: true });
 }
 
 async function approveApplication() {
     const id = document.getElementById('applicationId').value.trim();
     const reviewNotes = document.getElementById('reviewNotes').value.trim();
     if (!id) {
-        write('applicationId is required.');
+        showFlash('error', 'Application ID is required.');
+        return;
+    }
+
+    const application = state.applications.find(item => Number(item.id) === Number(id));
+    const requiresDepartment = roleRequiresDepartment(application?.applied_role) || !!application?.department_required;
+    const selectedDepartmentId = normalizeId(reviewDepartmentInput?.value ?? null)
+        ?? departmentIdForApplication(application);
+
+    if (requiresDepartment && !selectedDepartmentId) {
+        showFlash('error', 'Department is required before approving Doctor, Nurse, and ITWorker applications.');
         return;
     }
 
     const body = reviewNotes ? { review_notes: reviewNotes } : {};
+    if (selectedDepartmentId) {
+        body.departmentId = selectedDepartmentId;
+    }
+
     const result = await call(`/admin/applications/${id}/approve`, 'POST', body);
     write(result);
-    await loadApplications();
+
+    if (result.status >= 200 && result.status < 300) {
+        setDepartmentDraft(id, selectedDepartmentId);
+        showFlash('success', extractMessage(result, 'Application approved and role assigned.'));
+        await loadApplications();
+    } else {
+        showFlash('error', extractMessage(result, 'Unable to approve application.'));
+    }
 }
 
 async function rejectApplication() {
     const id = document.getElementById('applicationId').value.trim();
     const reviewNotes = document.getElementById('reviewNotes').value.trim();
     if (!id) {
-        write('applicationId is required.');
+        showFlash('error', 'Application ID is required.');
         return;
     }
 
     const body = reviewNotes ? { review_notes: reviewNotes } : {};
     const result = await call(`/admin/applications/${id}/reject`, 'POST', body);
     write(result);
-    await loadApplications();
+
+    if (result.status >= 200 && result.status < 300) {
+        showFlash('success', extractMessage(result, 'Application rejected.'));
+        await loadApplications();
+    } else {
+        showFlash('error', extractMessage(result, 'Unable to reject application.'));
+    }
+}
+
+async function saveDepartmentAssignment(applicationId, departmentId) {
+    const reviewNotes = document.getElementById('reviewNotes').value.trim();
+    const body = { departmentId: departmentId };
+    if (reviewNotes) {
+        body.review_notes = reviewNotes;
+    }
+
+    const result = await call(`/admin/applications/${applicationId}/department`, 'PATCH', body);
+    write(result);
+
+    if (result.status >= 200 && result.status < 300) {
+        setDepartmentDraft(applicationId, departmentId);
+        showFlash('success', extractMessage(result, 'Department assignment updated.'));
+        await loadApplications();
+    } else {
+        showFlash('error', extractMessage(result, 'Unable to update department assignment.'));
+    }
+}
+
+async function saveSelectedDepartment() {
+    const id = document.getElementById('applicationId').value.trim();
+    if (!id) {
+        showFlash('error', 'Select an application first.');
+        return;
+    }
+
+    const application = state.applications.find(item => Number(item.id) === Number(id));
+    if (!application) {
+        showFlash('error', 'Selected application is not in the loaded queue.');
+        return;
+    }
+
+    if (!(roleRequiresDepartment(application.applied_role) || !!application.department_required)) {
+        showFlash('info', 'Department reassignment is only available for Doctor, Nurse, and ITWorker applications.');
+        return;
+    }
+
+    const departmentId = normalizeId(reviewDepartmentInput?.value ?? null);
+    if (!departmentId) {
+        showFlash('error', 'Please choose a valid department.');
+        return;
+    }
+
+    await saveDepartmentAssignment(Number(id), departmentId);
+}
+
+async function saveDepartmentFromCard(applicationId) {
+    const application = state.applications.find(item => Number(item.id) === Number(applicationId));
+    if (!application) {
+        showFlash('error', 'Application not found in the current view.');
+        return;
+    }
+
+    const departmentInput = document.getElementById(`cardDepartment-${applicationId}`);
+    const departmentId = normalizeId(departmentInput?.value ?? null);
+    if (!departmentId) {
+        showFlash('error', 'Please choose a valid department before saving.');
+        return;
+    }
+
+    onCardDepartmentChange(applicationId, String(departmentId));
+    selectApplication(application);
+
+    await saveDepartmentAssignment(Number(applicationId), departmentId);
 }
 
 function approveFromCard(applicationId) {
     const application = state.applications.find(item => Number(item.id) === Number(applicationId));
     if (!application) return;
+
+    const roleNeedsDepartment = roleRequiresDepartment(application.applied_role) || !!application.department_required;
+    if (roleNeedsDepartment) {
+        const cardDepartmentInput = document.getElementById(`cardDepartment-${applicationId}`);
+        if (cardDepartmentInput) {
+            onCardDepartmentChange(applicationId, cardDepartmentInput.value);
+        }
+    }
+
     selectApplication(application);
     approveApplication();
 }
@@ -632,6 +1005,12 @@ function rejectFromCard(applicationId) {
     if (!application) return;
     selectApplication(application);
     rejectApplication();
+}
+
+if (reviewDepartmentInput) {
+    reviewDepartmentInput.addEventListener('change', (event) => {
+        onActionDepartmentChange(event.target.value);
+    });
 }
 
 refreshContext();

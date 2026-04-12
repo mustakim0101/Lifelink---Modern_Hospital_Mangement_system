@@ -21,10 +21,16 @@ class ApplicationReviewController extends Controller
             ->map(
                 fn ($application) => $this->applicationPayload($application)
         );
+        $departments = collect($this->sqlService->listActiveDepartments())
+            ->map(fn ($department) => [
+                'id' => (int) $department->id,
+                'dept_name' => $department->dept_name,
+            ]);
 
         return response()->json([
             'applications' => $applications,
             'filter_status' => $status ?: null,
+            'departments' => $departments,
         ]);
     }
 
@@ -33,13 +39,47 @@ class ApplicationReviewController extends Controller
         $reviewer = auth('api')->user();
         $validated = $request->validate([
             'review_notes' => ['nullable', 'string', 'max:2000'],
+            'departmentId' => ['nullable', 'integer', 'exists:departments,id'],
         ]);
 
         try {
-            $updated = $this->sqlService->approve($application, (int) $reviewer->id, $validated['review_notes'] ?? null);
+            $updated = $this->sqlService->approve(
+                $application,
+                (int) $reviewer->id,
+                $validated['review_notes'] ?? null,
+                isset($validated['departmentId']) ? (int) $validated['departmentId'] : null
+            );
 
             return response()->json([
                 'message' => 'Application approved and role assigned.',
+                'application' => $this->applicationPayload($updated),
+            ]);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+                'application' => ($existing = $this->sqlService->getApplicationById($application))
+                    ? $this->applicationPayload($existing)
+                    : null,
+            ], $exception->getStatusCode());
+        }
+    }
+
+    public function updateDepartment(Request $request, int $application): JsonResponse
+    {
+        $validated = $request->validate([
+            'departmentId' => ['required', 'integer', 'exists:departments,id'],
+            'review_notes' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        try {
+            $updated = $this->sqlService->updateDepartment(
+                $application,
+                (int) $validated['departmentId'],
+                $validated['review_notes'] ?? null
+            );
+
+            return response()->json([
+                'message' => 'Department assignment updated.',
                 'application' => $this->applicationPayload($updated),
             ]);
         } catch (\Symfony\Component\HttpKernel\Exception\HttpException $exception) {
@@ -85,6 +125,9 @@ class ApplicationReviewController extends Controller
             'applied_role' => $application->applied_role,
             'applied_department_id' => $application->applied_department_id,
             'applied_department' => $application->applied_department,
+            'assigned_department_id' => $application->assigned_department_id ?? $application->applied_department_id,
+            'assigned_department' => $application->assigned_department ?? $application->applied_department,
+            'department_required' => (bool) ($application->department_required ?? false),
             'user' => [
                 'id' => $application->user_id ?? null,
                 'email' => $application->user_email ?? null,
