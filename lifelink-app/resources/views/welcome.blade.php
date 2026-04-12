@@ -21,7 +21,6 @@
                 <a href="#find-department">Department Finder</a>
                 <a href="#modules">Platform</a>
                 <a href="#entry">Entry</a>
-                <a id="auth-nav-link" href="/ui/login">Login / Register</a>
             </nav>
         </div>
     </header>
@@ -33,10 +32,11 @@
                     <span class="badge">Healthcare SaaS Platform</span>
                     <h1>Modern Hospital Management <span class="welcome-hero__title-accent">Made Simple</span></h1>
                     <p>Streamline operations, improve patient care, and keep Blood Bank response connected through one role-aware LifeLink workspace.</p>
-                    <div class="hero-actions">
+                    <div id="entry" class="hero-actions">
                         <a class="button primary" href="/ui/register/patient">Register as Patient</a>
                         <a class="button" href="/ui/register/donor">Register as Donor</a>
                         <a class="button" href="/ui/register/applicant">Join Our Team</a>
+                        <a class="button" href="/ui/login">Login</a>
                     </div>
                 </article>
                 <aside class="welcome-hero__aside">
@@ -192,40 +192,6 @@
                 </div>
             </section>
 
-            <section id="entry" class="welcome-entry-grid">
-                <div id="logged-out-entry" class="card stack welcome-entry-card">
-                    <span class="hub-label">Account Entry</span>
-                    <h2>Choose your entry path.</h2>
-                    <p>Sign in to continue, or create the right account for patient, donor, or applicant access.</p>
-                    <div class="hero-actions">
-                        <a class="button primary" href="/ui/login">Login</a>
-                        <a class="button" href="/ui/register/patient">Patient Register</a>
-                        <a class="button" href="/ui/register/donor">Donor Register</a>
-                        <a class="button" href="/ui/register/applicant">Join Our Team</a>
-                    </div>
-                </div>
-
-                <div id="logged-in-entry" class="card stack welcome-entry-card page-hidden">
-                    <span class="hub-label">Active Session</span>
-                    <h2>Continue into your workspace.</h2>
-                    <p>A session is already available in this browser. Move forward or sign out before switching accounts.</p>
-                    <div class="hero-actions">
-                        <a id="logged-dashboard-link" class="button primary" href="/ui/dashboard">Go to dashboard</a>
-                        <button id="logout-button" class="button" type="button">Logout</button>
-                    </div>
-                </div>
-
-                <div class="card stack welcome-entry-card welcome-entry-card--support">
-                    <span class="hub-label">Session Access</span>
-                    <h2>Already have an account?</h2>
-                    <p>Use login for direct workspace access, or use department finder first if you need care guidance.</p>
-                    <div class="hero-actions">
-                        <a class="button primary" href="/ui/login">Open Login</a>
-                        <a class="button" href="#find-department">Open anatomy guide</a>
-                    </div>
-                </div>
-            </section>
-
             <section class="welcome-impact" aria-label="LifeLink highlights">
                 <article class="welcome-impact__item">
                     <strong>10K+</strong>
@@ -253,31 +219,12 @@
     </div>
 
     <script>
-    const token = localStorage.getItem('USER_TOKEN') || '';
-    const roles = JSON.parse(localStorage.getItem('CURRENT_USER_ROLES') || '[]');
-
-    const authNavLink = document.getElementById('auth-nav-link');
-    const sessionNavLink = document.getElementById('session-nav-link');
-    const loggedDashboardLink = document.getElementById('logged-dashboard-link');
-    const loggedOutEntry = document.getElementById('logged-out-entry');
-    const loggedInEntry = document.getElementById('logged-in-entry');
-    const logoutButton = document.getElementById('logout-button');
-    const rolePriority = ['Admin', 'ITWorker', 'Doctor', 'Nurse', 'Donor', 'Applicant', 'Patient'];
     const finderHotspots = Array.from(document.querySelectorAll('.finder-hotspot'));
     const finderSupportButtons = Array.from(document.querySelectorAll('.finder-support-button'));
     const finderRegionTitle = document.getElementById('finder-region-title');
     const finderRegionDescription = document.getElementById('finder-region-description');
     const finderRegionTags = document.getElementById('finder-region-tags');
     const finderRegionNote = document.getElementById('finder-region-note');
-    const roleDestinations = {
-        Admin: '/ui/admin-users',
-        ITWorker: '/ui/it-bed-allocation',
-        Doctor: '/ui/doctor-dashboard',
-        Nurse: '/ui/nurse-dashboard',
-        Donor: '/ui/donor-dashboard',
-        Applicant: '/ui/applications',
-        Patient: '/ui/patient-portal'
-    };
     const finderRegions = {
         eyes: {
             name: 'Eyes',
@@ -399,11 +346,6 @@
         });
     }
 
-    function preferredRolePath() {
-        const preferredRole = rolePriority.find(role => roles.includes(role));
-        return preferredRole ? roleDestinations[preferredRole] : '/ui/dashboard';
-    }
-
     finderHotspots.forEach(button => {
         const activate = () => renderFinderRegion(button.dataset.region);
         button.addEventListener('mouseenter', activate);
@@ -419,46 +361,6 @@
 
     renderFinderRegion('brain');
 
-    if (token && roles.length) {
-        const dashboardPath = preferredRolePath();
-        if (authNavLink) {
-            authNavLink.textContent = 'Go to Dashboard';
-            authNavLink.href = dashboardPath;
-        }
-        if (loggedDashboardLink) loggedDashboardLink.href = dashboardPath;
-
-        if (sessionNavLink) {
-            sessionNavLink.textContent = 'Logout';
-            sessionNavLink.href = '#';
-        }
-
-        if (loggedOutEntry) loggedOutEntry.classList.add('page-hidden');
-        if (loggedInEntry) loggedInEntry.classList.remove('page-hidden');
-    }
-
-    function clearSession() {
-        [
-            'ADMIN_TOKEN', 'ADMIN_USER_ID', 'ADMIN_EMAIL',
-            'USER_TOKEN', 'PATIENT_ID', 'PATIENT_EMAIL',
-            'CURRENT_USER_ID', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES'
-        ].forEach(key => localStorage.removeItem(key));
-    }
-
-    if (logoutButton) {
-        logoutButton.addEventListener('click', () => {
-            clearSession();
-            window.location.reload();
-        });
-    }
-
-    if (sessionNavLink) {
-        sessionNavLink.addEventListener('click', event => {
-            if (!(token && roles.length)) return;
-            event.preventDefault();
-            clearSession();
-            window.location.reload();
-        });
-    }
     </script>
 </body>
 </html>

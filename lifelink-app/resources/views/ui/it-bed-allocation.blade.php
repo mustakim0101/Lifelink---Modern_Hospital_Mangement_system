@@ -1,6 +1,7 @@
 @extends('ui.layouts.app')
 
 @section('title', 'IT Worker Dashboard')
+@section('role_theme', 'it')
 @section('workspace_label', '')
 @section('hero_badge', '')
 @section('hero_title', 'IT Dashboard')
@@ -45,9 +46,6 @@
     </a>
     <a href="#it-bb-donation-logging" data-panel="it-blood-bank" data-anchor="donation-logging" data-hash="it-bb-donation-logging" data-mode="blood">
         <strong>Donation Logging</strong>
-    </a>
-    <a href="#it-debug" data-panel="it-debug" data-mode="all">
-        <strong>Activity Log</strong>
     </a>
 @endsection
 
@@ -581,6 +579,9 @@
                     <button class="it-button soft" type="button" onclick="availableBeds()">Load available beds</button>
                     <button class="it-button soft" type="button" onclick="listDepartments()">Load departments</button>
                 </div>
+                <h3 class="u-mt-4">Admissions list</h3>
+                <div id="admissionCards" class="it-card-grid ui-list-window"></div>
+                <div id="admissionPagination" class="ui-list-pagination"></div>
             </div>
             <div class="it-panel it-col-6">
                 <h3>Bed assignment actions</h3>
@@ -614,7 +615,8 @@
             </div>
             <div class="it-panel it-col-6">
                 <h3>Available beds</h3>
-                <div id="bedCards" class="it-card-grid"></div>
+                <div id="bedCards" class="it-card-grid ui-list-window"></div>
+                <div id="bedPagination" class="ui-list-pagination"></div>
             </div>
         </div>
 
@@ -645,12 +647,6 @@
         </div>
         </div>
 
-        <div id="it-debug" class="it-panel ll-section it-panel-switch" data-display="block">
-            <details class="ll-debug">
-                <summary>Operational activity log</summary>
-                <pre id="out" class="it-console"></pre>
-            </details>
-        </div>
     </div>
 @endsection
 
@@ -658,7 +654,7 @@
 <script>
 const API = '/api';
 const out = document.getElementById('out');
-const itPanelIds = ['it-overview', 'it-directory', 'it-appointments', 'it-admission', 'it-reference', 'it-blood-bank', 'it-debug'];
+const itPanelIds = ['it-overview', 'it-directory', 'it-appointments', 'it-admission', 'it-reference', 'it-blood-bank'];
 const itBloodBankSectionHashMap = {
     'it-bb-request-board': 'request-board',
     'it-bb-approval-fulfillment': 'approval-fulfillment',
@@ -682,6 +678,7 @@ const itBloodBankSectionHashById = {
     'donation-logging': 'it-bb-donation-logging',
 };
 const itNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[data-panel]'));
+const regularWorkspacePanels = new Set(['it-directory', 'it-appointments', 'it-admission']);
 
 const state = {
     activePanel: 'it-overview',
@@ -695,6 +692,10 @@ const state = {
         directoryPageSize: 4,
         doctorsPage: 1,
         patientsPage: 1,
+        admissionsPageSize: 6,
+        admissionsPage: 1,
+        bedsPageSize: 6,
+        bedsPage: 1,
         appointmentQueuePageSize: 10,
         appointmentQueuePage: 1,
         bloodDonorsPageSize: 6,
@@ -705,6 +706,8 @@ const state = {
     careUnits: [],
     appointmentQueue: [],
     appointmentCapacity: {},
+    regularWorkspaceLoaded: false,
+    regularWorkspaceLoading: null,
     bloodBank: {
         requests: [],
         matches: [],
@@ -713,6 +716,7 @@ const state = {
         selectedRequestId: null,
         selectedDonorIds: new Set(),
         workspaceLoaded: false,
+        workspaceLoading: null,
         banksLoaded: false,
     },
 };
@@ -740,21 +744,21 @@ function isBloodBankDepartment(department) {
 
 function allowedPanels() {
     if (!state.scopeLoaded) {
-        return ['it-overview', 'it-debug'];
+        return ['it-overview'];
     }
 
     const blood = hasBloodBankScope();
     const regular = hasNonBloodBankScope();
 
     if (blood && !regular) {
-        return ['it-overview', 'it-blood-bank', 'it-debug'];
+        return ['it-overview', 'it-blood-bank'];
     }
 
     if (blood && regular) {
-        return ['it-overview', 'it-directory', 'it-appointments', 'it-admission', 'it-reference', 'it-blood-bank', 'it-debug'];
+        return ['it-overview', 'it-directory', 'it-appointments', 'it-admission', 'it-reference', 'it-blood-bank'];
     }
 
-    return ['it-overview', 'it-directory', 'it-appointments', 'it-admission', 'it-reference', 'it-debug'];
+    return ['it-overview', 'it-directory', 'it-appointments', 'it-admission', 'it-reference'];
 }
 
 function updateSidebarByScope() {
@@ -806,6 +810,10 @@ function setActivePanel(panelId, sectionId = '') {
     if (panelId === 'it-blood-bank' && allowed.includes('it-blood-bank')) {
         maybeLoadBloodBankWorkspace();
     }
+
+    if (regularWorkspacePanels.has(panelId) && hasNonBloodBankScope()) {
+        maybeLoadRegularWorkspace();
+    }
 }
 
 function setupSidebarPanelNav() {
@@ -835,6 +843,7 @@ function setupSidebarPanelNav() {
 }
 
 function write(data) {
+    if (!window.lifeLinkShell?.isDebugEnabled() || !out) return;
     out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
 }
 
@@ -1058,6 +1067,17 @@ function renderDepartmentMode() {
         : bloodBankAccess
                 ? 'Blood Bank IT mode is active for this account.'
                 : 'Regular IT mode is active for this account.';
+    if (window.lifeLinkShell) {
+        const scopedDepartments = state.scopeDepartments.map((department) => department?.dept_name).filter(Boolean);
+        const departmentLabel = scopedDepartments.length > 1 ? `${scopedDepartments[0]} +${scopedDepartments.length - 1}` : (scopedDepartments[0] || null);
+        window.lifeLinkShell.updateIdentityContext({
+            name: localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'IT Worker',
+            userId: localStorage.getItem('CURRENT_USER_ID') || '-',
+            email: localStorage.getItem('CURRENT_USER_EMAIL') || '-',
+            role: 'ITWorker',
+            department: departmentLabel,
+        });
+    }
     updateSidebarByScope();
 }
 
@@ -1566,14 +1586,16 @@ async function refreshBloodBankWorkspace() {
         await loadBloodBankBanks();
     }
 
-    await loadBloodBankRequests();
+    await Promise.all([
+        loadBloodBankRequests(),
+        loadBloodBankStaffDonors(),
+    ]);
     if (state.bloodBank.selectedRequestId) {
         await Promise.all([
             loadBloodBankSuggestions(),
             loadBloodBankMatches(),
         ]);
     }
-    await loadBloodBankStaffDonors();
     state.bloodBank.workspaceLoaded = true;
 }
 
@@ -1582,8 +1604,43 @@ async function maybeLoadBloodBankWorkspace() {
         return;
     }
 
-    if (!state.bloodBank.workspaceLoaded) {
-        await refreshBloodBankWorkspace();
+    if (state.bloodBank.workspaceLoading) {
+        await state.bloodBank.workspaceLoading;
+        return;
+    }
+
+    if (state.bloodBank.workspaceLoaded) {
+        return;
+    }
+
+    state.bloodBank.workspaceLoading = refreshBloodBankWorkspace();
+    try {
+        await state.bloodBank.workspaceLoading;
+    } finally {
+        state.bloodBank.workspaceLoading = null;
+    }
+}
+
+async function maybeLoadRegularWorkspace() {
+    if (!hasNonBloodBankScope() || !selectedToken()) {
+        return;
+    }
+
+    if (state.regularWorkspaceLoading) {
+        await state.regularWorkspaceLoading;
+        return;
+    }
+
+    if (state.regularWorkspaceLoaded) {
+        return;
+    }
+
+    state.regularWorkspaceLoading = Promise.all([loadDoctors(), loadPatients(), loadAppointmentQueue()]);
+    try {
+        await state.regularWorkspaceLoading;
+        state.regularWorkspaceLoaded = true;
+    } finally {
+        state.regularWorkspaceLoading = null;
     }
 }
 
@@ -1650,6 +1707,26 @@ function prevPatientsPage() {
 function nextPatientsPage() {
     state.pagination.patientsPage += 1;
     renderPatientsDirectory();
+}
+
+function prevAdmissionsPage() {
+    state.pagination.admissionsPage = Math.max(1, state.pagination.admissionsPage - 1);
+    renderAdmissions();
+}
+
+function nextAdmissionsPage() {
+    state.pagination.admissionsPage += 1;
+    renderAdmissions();
+}
+
+function prevBedsPage() {
+    state.pagination.bedsPage = Math.max(1, state.pagination.bedsPage - 1);
+    renderBeds();
+}
+
+function nextBedsPage() {
+    state.pagination.bedsPage += 1;
+    renderBeds();
 }
 
 function prevAppointmentQueuePage() {
@@ -1756,10 +1833,14 @@ function renderAdmissions() {
 
     if (!state.admissions.length) {
         root.innerHTML = '<div class="it-card"><p class="it-note">No admissions loaded yet.</p></div>';
+        renderPaginationControls('admissionPagination', 1, 1, 0, 'prevAdmissionsPage()', 'nextAdmissionsPage()', state.pagination.admissionsPageSize);
         return;
     }
 
-    root.innerHTML = state.admissions.map((admission) => `
+    const pageData = paginateRows(state.admissions, state.pagination.admissionsPage, state.pagination.admissionsPageSize);
+    state.pagination.admissionsPage = pageData.safePage;
+
+    root.innerHTML = pageData.pagedRows.map((admission) => `
         <article class="it-card">
             <div class="it-card__head">
                 <div>
@@ -1780,6 +1861,15 @@ function renderAdmissions() {
             </div>
         </article>
     `).join('');
+    renderPaginationControls(
+        'admissionPagination',
+        pageData.safePage,
+        pageData.totalPages,
+        pageData.totalRows,
+        'prevAdmissionsPage()',
+        'nextAdmissionsPage()',
+        state.pagination.admissionsPageSize
+    );
 }
 
 function renderBeds() {
@@ -1788,10 +1878,14 @@ function renderBeds() {
 
     if (!state.beds.length) {
         root.innerHTML = '<div class="it-card"><p class="it-note">No available beds loaded yet.</p></div>';
+        renderPaginationControls('bedPagination', 1, 1, 0, 'prevBedsPage()', 'nextBedsPage()', state.pagination.bedsPageSize);
         return;
     }
 
-    root.innerHTML = state.beds.map((bed) => `
+    const pageData = paginateRows(state.beds, state.pagination.bedsPage, state.pagination.bedsPageSize);
+    state.pagination.bedsPage = pageData.safePage;
+
+    root.innerHTML = pageData.pagedRows.map((bed) => `
         <article class="it-card">
             <div class="it-card__head">
                 <div>
@@ -1810,6 +1904,15 @@ function renderBeds() {
             </div>
         </article>
     `).join('');
+    renderPaginationControls(
+        'bedPagination',
+        pageData.safePage,
+        pageData.totalPages,
+        pageData.totalRows,
+        'prevBedsPage()',
+        'nextBedsPage()',
+        state.pagination.bedsPageSize
+    );
 }
 
 function renderCareUnitsTable() {
@@ -1885,6 +1988,10 @@ async function loadDepartmentsScope() {
     const result = await call('/ward/it/departments');
     write(result);
     state.scopeLoaded = true;
+    state.regularWorkspaceLoaded = false;
+    state.regularWorkspaceLoading = null;
+    state.bloodBank.workspaceLoaded = false;
+    state.bloodBank.workspaceLoading = null;
     if (result.status < 300) {
         state.scopeDepartments = Array.isArray(result.data?.departments) ? result.data.departments : [];
         syncCounters();
@@ -1906,8 +2013,8 @@ async function loadDepartmentsScope() {
         history.replaceState(null, '', `#${nextHash}`);
     }
 
-    if (result.status < 300 && hasNonBloodBankScope()) {
-        await Promise.all([loadDoctors(), loadPatients(), loadAppointmentQueue()]);
+    if (result.status < 300 && hasNonBloodBankScope() && regularWorkspacePanels.has(state.activePanel)) {
+        await maybeLoadRegularWorkspace();
     }
 
     if (result.status < 300 && hasBloodBankScope()) {
@@ -2068,6 +2175,7 @@ async function listBeds() {
     write(result);
     if (result.status < 300) {
         state.beds = Array.isArray(result.data?.beds) ? result.data.beds : [];
+        state.pagination.bedsPage = 1;
         renderBedsTable();
         renderBeds();
         syncCounters();
@@ -2104,6 +2212,7 @@ async function listAdmissions() {
     write(result);
     if (result.status < 300) {
         state.admissions = Array.isArray(result.data?.admissions) ? result.data.admissions : [];
+        state.pagination.admissionsPage = 1;
         renderAdmissions();
         syncCounters();
     }
@@ -2120,6 +2229,7 @@ async function availableBeds() {
     write(result);
     if (result.status < 300) {
         state.beds = Array.isArray(result.data?.beds) ? result.data.beds : [];
+        state.pagination.bedsPage = 1;
         renderBeds();
         renderBedsTable();
         syncCounters();

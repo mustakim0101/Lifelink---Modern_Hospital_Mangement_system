@@ -22,11 +22,11 @@
 }
 
 .ui-card--shell {
-    padding: 22px;
-    border-radius: 28px;
+    padding: 18px;
+    border-radius: 16px;
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 253, 0.92));
-    box-shadow: var(--ui-shadow-lg);
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 253, 0.94));
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
 }
 
 .ui-section {
@@ -98,7 +98,7 @@
 .nurse-button.primary,
 .it-button.primary,
 .button.primary {
-    background: var(--ui-primary);
+    background: var(--shell-accent, var(--ui-primary));
     color: #fff;
 }
 
@@ -109,14 +109,14 @@
 .nurse-button.primary:hover,
 .it-button.primary:hover,
 .button.primary:hover {
-    background: var(--ui-primary-strong);
+    background: var(--shell-accent-strong, var(--ui-primary-strong));
 }
 
 .ui-btn--secondary,
 .it-button.accent,
 .nurse-button.warm,
 .button-warm {
-    background: var(--ui-secondary);
+    background: var(--shell-accent-secondary, var(--ui-secondary));
     color: #fff;
 }
 
@@ -142,14 +142,14 @@
 }
 
 .app-shell__button {
-    background: linear-gradient(135deg, var(--ui-primary), var(--ui-primary-strong));
+    background: linear-gradient(135deg, var(--shell-accent, var(--ui-primary)), var(--shell-accent-strong, var(--ui-primary-strong)));
     border-color: transparent;
     color: #fff;
-    box-shadow: 0 14px 26px rgba(3, 105, 161, 0.18);
+    box-shadow: 0 14px 26px var(--shell-accent-shadow, rgba(3, 105, 161, 0.18));
 }
 
 .app-shell__button:hover {
-    background: linear-gradient(135deg, var(--ui-primary-strong), var(--ui-primary));
+    background: linear-gradient(135deg, var(--shell-accent-strong, var(--ui-primary-strong)), var(--shell-accent, var(--ui-primary)));
 }
 
 .app-shell__chip:hover {
@@ -576,11 +576,6 @@
     margin: 0;
 }
 
-.welcome-entry-card--support {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(240, 249, 255, 0.88));
-}
-
 .auth-shell__topbar,
 .auth-shell__crumbs {
     width: 100%;
@@ -640,23 +635,8 @@
     width: 100%;
 }
 
-.auth-link-button {
-    margin-top: 2px;
-    border: 0;
-    background: transparent;
-    color: var(--ui-primary-strong);
-    font: inherit;
-    font-weight: 700;
-    cursor: pointer;
-    padding: 0;
-    text-align: left;
-}
-
-.auth-link-inline {
-    display: inline-flex;
-    margin-top: 4px;
-    color: var(--ui-primary-strong);
-    font-weight: 600;
+.auth-login-actions {
+    margin-top: 16px;
 }
 
 .auth-divider {
@@ -681,15 +661,48 @@
 .auth-register-stack {
     margin-top: 12px;
     display: grid;
-    gap: 8px;
+    gap: 10px;
 }
 
 .auth-home-link {
-    display: inline-flex;
-    justify-content: center;
-    margin-top: 8px;
-    color: var(--ui-text-muted);
+    width: 100%;
+    margin-top: 4px;
+}
+
+.field--password {
+    margin-bottom: 4px;
+}
+
+.password-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrap input {
+    padding-right: 78px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 8px;
+    min-height: 30px;
+    padding: 4px 10px;
+    border: 1px solid rgba(148, 163, 184, 0.38);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--ui-text-soft);
+    font: inherit;
+    font-size: 0.8rem;
     font-weight: 700;
+    cursor: pointer;
+    transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+}
+
+.password-toggle:hover {
+    border-color: rgba(3, 105, 161, 0.42);
+    color: var(--ui-primary-strong);
+    background: rgba(224, 242, 254, 0.45);
 }
 
 .auth-dev-tools {

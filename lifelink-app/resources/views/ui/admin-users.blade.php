@@ -1,6 +1,7 @@
 @extends('ui.layouts.app')
 
 @section('title', 'Admin Control Center')
+@section('role_theme', 'admin')
 @section('workspace_label', 'Admin operations workspace')
 @section('hero_badge', 'Admin Mode')
 @section('hero_title', 'Approve staff applications and finish staff setup from one place.')
@@ -33,6 +34,7 @@
         display: grid;
         gap: 12px;
     }
+    .admin-panel { display: none; }
 
     .admin-grid { gap: 14px; }
     .admin-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -189,9 +191,17 @@
 @endpush
 
 @section('sidebar_nav')
-    <a class="is-active" href="/ui/admin-users">
-        <strong>Admin Control</strong>
+    <a class="is-active" href="#admin-overview-panel" data-panel="admin-overview-panel">
+        <strong>Overview</strong>
         <span>Current area</span>
+    </a>
+    <a href="#admin-queue-panel" data-panel="admin-queue-panel">
+        <strong>Pending Queue</strong>
+        <span>Applicant cards</span>
+    </a>
+    <a href="#admin-setup-panel" data-panel="admin-setup-panel">
+        <strong>Staff Setup</strong>
+        <span>Doctor, nurse, IT</span>
     </a>
     <a href="/ui/application-reviews">
         <strong>Application Reviews</strong>
@@ -215,51 +225,47 @@
     </div>
 @endsection
 
-@section('section_nav')
-    <a href="#admin-overview" class="is-active">Overview</a>
-    <a href="#admin-queue">Pending Queue</a>
-    <a href="#admin-setup">Staff Setup</a>
-    <a href="#admin-debug">Context + API</a>
-@endsection
-
 @section('content')
     <div class="admin-grid">
-        <div id="admin-overview" class="admin-summary ll-section">
-            <div class="admin-stat"><small>Pending applicants</small><strong id="pendingCount">0</strong></div>
-            <div class="admin-stat"><small>Departments loaded</small><strong id="departmentCount">0</strong></div>
-            <div class="admin-stat"><small>Admin token</small><strong id="tokenState">Missing</strong></div>
-        </div>
-
-        <div class="admin-row">
-            <div class="admin-card">
-                <h3>Account control</h3>
-                <p class="admin-hint">Freeze, unfreeze, or inspect a user account using the stored admin token.</p>
-                <label class="admin-label" for="userId">Target user id</label>
-                <input id="userId" class="admin-input" placeholder="target user id">
-                <div class="admin-actions">
-                    <button class="admin-btn admin-btn-danger" type="button" onclick="freezeUser()">Freeze</button>
-                    <button class="admin-btn admin-btn-accent" type="button" onclick="unfreezeUser()">Unfreeze</button>
-                    <button class="admin-btn admin-btn-soft" type="button" onclick="statusUser()">Check status</button>
-                </div>
+        <div id="admin-overview-panel" class="ll-section admin-panel" data-display="block">
+            <div class="admin-summary">
+                <div class="admin-stat"><small>Pending applicants</small><strong id="pendingCount">0</strong></div>
+                <div class="admin-stat"><small>Departments loaded</small><strong id="departmentCount">0</strong></div>
+                <div class="admin-stat"><small>Admin token</small><strong id="tokenState">Missing</strong></div>
             </div>
 
-            <div class="admin-card">
-                <h3>Quick pending refresh</h3>
-                <p class="admin-hint">This pulls pending applicants directly into cards here. Use the full review page if you want a larger dedicated review workspace.</p>
-                <div class="admin-actions">
-                    <button class="admin-btn admin-btn-main" type="button" onclick="loadPendingApplications()">Load pending applicants</button>
-                    <a class="admin-btn admin-btn-soft" href="/ui/application-reviews">Open Application Reviews</a>
+            <div class="admin-row">
+                <div class="admin-card">
+                    <h3>Account control</h3>
+                    <p class="admin-hint">Freeze, unfreeze, or inspect a user account using the stored admin token.</p>
+                    <label class="admin-label" for="userId">Target user id</label>
+                    <input id="userId" class="admin-input" placeholder="target user id">
+                    <div class="admin-actions">
+                        <button class="admin-btn admin-btn-danger" type="button" onclick="freezeUser()">Freeze</button>
+                        <button class="admin-btn admin-btn-accent" type="button" onclick="unfreezeUser()">Unfreeze</button>
+                        <button class="admin-btn admin-btn-soft" type="button" onclick="statusUser()">Check status</button>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <h3>Quick pending refresh</h3>
+                    <p class="admin-hint">This pulls pending applicants directly into cards here. Use the full review page if you want a larger dedicated review workspace.</p>
+                    <div class="admin-actions">
+                        <button class="admin-btn admin-btn-main" type="button" onclick="loadPendingApplications()">Load pending applicants</button>
+                        <a class="admin-btn admin-btn-soft" href="/ui/application-reviews">Open Application Reviews</a>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div id="admin-queue" class="admin-card ll-section">
+        <div id="admin-queue-panel" class="admin-card ll-section admin-panel" data-display="block">
             <h3>Pending applicant cards</h3>
             <p class="admin-hint">Review from cards first, then push approved users into setup.</p>
-            <div id="pendingCards" class="admin-card-grid" style="margin-top: 12px;"></div>
+            <div id="pendingCards" class="admin-card-grid ui-list-window" style="margin-top: 12px;"></div>
+            <div id="pendingCardsPagination" class="ui-list-pagination"></div>
         </div>
 
-        <div id="admin-setup" class="admin-row ll-section">
+        <div id="admin-setup-panel" class="admin-row ll-section admin-panel" data-display="grid">
             <div class="admin-card">
                 <h3>Doctor department setup</h3>
                 <p class="admin-hint">Doctor profile uses the same user ID as the approved account.</p>
@@ -322,17 +328,6 @@
                 </div>
             </div>
         </div>
-
-        <div id="admin-debug" class="admin-card ll-section">
-            <details class="ll-debug">
-                <summary>Stored session context</summary>
-                <pre id="ctx" class="admin-context"></pre>
-            </details>
-            <details class="ll-debug" style="margin-top: 10px;" open>
-                <summary>API response</summary>
-                <pre id="out" class="admin-context"></pre>
-            </details>
-        </div>
     </div>
 @endsection
 
@@ -341,9 +336,18 @@
 const out = document.getElementById('out');
 const ctx = document.getElementById('ctx');
 const API = '/api';
-const state = { pendingApplications: [], departments: [] };
+const adminPanelIds = ['admin-overview-panel', 'admin-queue-panel', 'admin-setup-panel'];
+const state = {
+    pendingApplications: [],
+    departments: [],
+    pagination: {
+        pendingCardsPageSize: 6,
+        pendingCardsPage: 1,
+    },
+};
 
 function write(data) {
+    if (!window.lifeLinkShell?.isDebugEnabled() || !out) return;
     out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
 }
 
@@ -359,7 +363,9 @@ function refreshContext() {
         PATIENT_EMAIL: localStorage.getItem('PATIENT_EMAIL'),
     };
     document.getElementById('tokenState').textContent = tokenPresent ? 'Ready' : 'Missing';
-    ctx.textContent = JSON.stringify(data, null, 2);
+    if (ctx) {
+        ctx.textContent = JSON.stringify(data, null, 2);
+    }
 }
 
 function adminToken() {
@@ -394,6 +400,46 @@ function escapeHtml(value) {
         .replaceAll("'", '&#39;');
 }
 
+function paginateRows(rows, page, pageSize) {
+    const safeRows = Array.isArray(rows) ? rows : [];
+    const safeSize = Math.max(1, Number(pageSize) || 1);
+    const totalPages = Math.max(1, Math.ceil(safeRows.length / safeSize));
+    const safePage = Math.min(Math.max(1, Number(page) || 1), totalPages);
+    const start = (safePage - 1) * safeSize;
+    return {
+        rows: safeRows.slice(start, start + safeSize),
+        page: safePage,
+        totalPages,
+        totalRows: safeRows.length,
+    };
+}
+
+function renderPendingCardsPagination(pageData) {
+    const root = document.getElementById('pendingCardsPagination');
+    if (!root) return;
+    if (pageData.totalRows <= state.pagination.pendingCardsPageSize) {
+        root.innerHTML = '';
+        return;
+    }
+    root.innerHTML = `
+        <div class="ui-list-pagination__meta">Page ${pageData.page} of ${pageData.totalPages} (${pageData.totalRows} total)</div>
+        <div class="ui-list-pagination__controls">
+            <button class="admin-btn admin-btn-soft" type="button" ${pageData.page <= 1 ? 'disabled' : ''} onclick="prevPendingCardsPage()">Previous</button>
+            <button class="admin-btn admin-btn-soft" type="button" ${pageData.page >= pageData.totalPages ? 'disabled' : ''} onclick="nextPendingCardsPage()">Next</button>
+        </div>
+    `;
+}
+
+function prevPendingCardsPage() {
+    state.pagination.pendingCardsPage = Math.max(1, state.pagination.pendingCardsPage - 1);
+    renderPendingCards();
+}
+
+function nextPendingCardsPage() {
+    state.pagination.pendingCardsPage += 1;
+    renderPendingCards();
+}
+
 async function loadDepartments() {
     const response = await fetch('/api/public/departments', { headers: { Accept: 'application/json' } });
     const text = await response.text();
@@ -415,10 +461,18 @@ function renderPendingCards() {
 
     if (!state.pendingApplications.length) {
         root.innerHTML = '<div class="admin-card"><p class="admin-hint">No pending applicants right now.</p></div>';
+        renderPendingCardsPagination({ page: 1, totalPages: 1, totalRows: 0 });
         return;
     }
 
-    root.innerHTML = state.pendingApplications.map((application) => `
+    const pageData = paginateRows(
+        state.pendingApplications,
+        state.pagination.pendingCardsPage,
+        state.pagination.pendingCardsPageSize
+    );
+    state.pagination.pendingCardsPage = pageData.page;
+
+    root.innerHTML = pageData.rows.map((application) => `
         <article class="admin-pending-card">
             <div class="admin-pending-head">
                 <div>
@@ -442,6 +496,7 @@ function renderPendingCards() {
             </div>
         </article>
     `).join('');
+    renderPendingCardsPagination(pageData);
 }
 
 async function loadPendingApplications() {
@@ -449,6 +504,7 @@ async function loadPendingApplications() {
     write(result);
     if (result.status < 300) {
         state.pendingApplications = Array.isArray(result.data?.applications) ? result.data.applications : [];
+        state.pagination.pendingCardsPage = 1;
         renderPendingCards();
     }
 }
@@ -544,11 +600,21 @@ async function statusUser() {
 }
 
 refreshContext();
+if (window.lifeLinkShell) {
+    window.lifeLinkShell.updateIdentityContext({
+        name: localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Admin',
+        userId: localStorage.getItem('CURRENT_USER_ID') || '-',
+        email: localStorage.getItem('CURRENT_USER_EMAIL') || '-',
+        role: 'Admin',
+        hideDepartment: true,
+    });
+    window.lifeLinkShell.initPanelNavigation({
+        panelIds: adminPanelIds,
+        defaultPanel: 'admin-overview-panel',
+    });
+}
 loadPatientId();
 loadDepartments();
 loadPendingApplications();
 </script>
 @endpush
- /*
- This is done to ensure the last commit went through
-*/

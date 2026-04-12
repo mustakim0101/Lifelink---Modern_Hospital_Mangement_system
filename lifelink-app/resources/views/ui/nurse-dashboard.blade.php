@@ -1,6 +1,7 @@
 @extends('ui.layouts.app')
 
 @section('title', 'Nurse Dashboard')
+@section('role_theme', 'nurse')
 @section('workspace_label', '')
 @section('hero_badge', '')
 @section('hero_title', 'Nurse Dashboard')
@@ -19,9 +20,6 @@
     <a href="#nurse-blood-bank" data-panel="nurse-blood-bank" data-mode="blood">
         <strong>Blood Bank Screening</strong>
     </a>
-    <a href="#nurse-debug" data-panel="nurse-debug" data-mode="all">
-        <strong>Activity Log</strong>
-    </a>
 @endsection
 
 @section('sidebar')
@@ -30,19 +28,6 @@
 @section('content')
     <div class="nurse-grid">
         <div id="nurse-overview" class="nurse-split ll-section nurse-panel-switch" data-display="grid">
-            <div class="nurse-panel nurse-col-4">
-                <h3>Session access</h3>
-                <p class="nurse-note">Connect this view using your current signed-in session.</p>
-                <div class="nurse-actions">
-                    <button class="nurse-button soft" type="button" onclick="useStoredUserToken()">Use USER_TOKEN</button>
-                </div>
-                <details class="ll-debug u-mt-2">
-                    <summary>Manual token override</summary>
-                    <label class="nurse-label u-mt-2" for="nurseTokenInput">Manual token</label>
-                    <input id="nurseTokenInput" class="nurse-input" placeholder="Paste nurse token only if needed">
-                </details>
-            </div>
-
             <div class="nurse-panel nurse-col-4">
                 <h3>Current mode</h3>
                 <p id="nurseModeSummary" class="nurse-note">Load your profile to unlock the correct nurse workspace.</p>
@@ -73,6 +58,49 @@
                 <div class="nurse-actions">
                     <button class="nurse-button primary" type="button" onclick="loadPatients()">Refresh patients</button>
                 </div>
+            </div>
+
+            <div class="nurse-panel nurse-col-4">
+                <h3>Shift quick actions</h3>
+                <p id="overviewModeHint" class="nurse-note">Load profile and patient data to see live nurse priorities for this shift.</p>
+                <div class="nurse-actions">
+                    <button class="nurse-button soft" type="button" onclick="goToNursePanel('nurse-monitoring')">Open monitoring</button>
+                    <button class="nurse-button soft" type="button" onclick="goToNursePanel('nurse-blood-bank')">Open blood bank</button>
+                    <button class="nurse-button primary" type="button" onclick="applyQuickPatientFilter('Admitted')">Show admitted only</button>
+                    <button class="nurse-button soft" type="button" onclick="clearDepartmentFilters()">Clear filters</button>
+                </div>
+            </div>
+
+            <div class="nurse-panel nurse-col-12">
+                <h3>Workload snapshot</h3>
+                <div class="nurse-overview-stat-grid">
+                    <div class="nurse-stat"><strong id="ovTotal">-</strong><span>Total admissions</span></div>
+                    <div class="nurse-stat"><strong id="ovAdmitted">-</strong><span>Admitted now</span></div>
+                    <div class="nurse-stat"><strong id="ovNoBed">-</strong><span>Without bed</span></div>
+                    <div class="nurse-stat"><strong id="ovVitalsDue">-</strong><span>Vitals due (6h)</span></div>
+                    <div class="nurse-stat"><strong id="ovAlerts">-</strong><span>Alert vitals</span></div>
+                    <div class="nurse-stat"><strong id="ovTransfers">-</strong><span>Transfers</span></div>
+                </div>
+            </div>
+
+            <div class="nurse-panel nurse-col-6">
+                <h3>Attention queue</h3>
+                <p class="nurse-note">Top admissions that likely need nurse follow-up first.</p>
+                <div id="overviewAttentionQueue" class="nurse-overview-list">
+                    <div class="nurse-note">Load profile and admissions to generate the queue.</div>
+                </div>
+            </div>
+
+            <div class="nurse-panel nurse-col-6">
+                <h3>Shift checklist</h3>
+                <p class="nurse-note">A quick non-access checklist to keep handoff and bedside tasks on track.</p>
+                <ul class="nurse-overview-checklist">
+                    <li>Review new admissions and verify first-vitals coverage.</li>
+                    <li>Prioritize admissions with no bed assignment.</li>
+                    <li>Flag abnormal temperature, pulse, and SpO2 readings.</li>
+                    <li>Confirm transfer/discharge candidates with records review.</li>
+                    <li>Complete shift handoff notes for unresolved cases.</li>
+                </ul>
             </div>
         </div>
 
@@ -315,12 +343,6 @@
             </div>
         </div>
 
-        <div id="nurse-debug" class="nurse-panel ll-section nurse-panel-switch" data-display="block">
-            <details class="ll-debug">
-                <summary>Operational activity log</summary>
-                <pre id="out" class="nurse-console"></pre>
-            </details>
-        </div>
     </div>
 @endsection
 
@@ -328,7 +350,7 @@
 <script>
 const API = '/api';
 const out = document.getElementById('out');
-const nursePanelIds = ['nurse-overview', 'nurse-monitoring', 'nurse-blood-bank', 'nurse-debug'];
+const nursePanelIds = ['nurse-overview', 'nurse-monitoring', 'nurse-blood-bank'];
 const nurseNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[data-panel]'));
 
 const state = {
@@ -387,19 +409,19 @@ function isBloodBankNurse() {
 
 function allowedNursePanels() {
     if (!state.nurseProfileLoaded || !state.nurse) {
-        return ['nurse-overview', 'nurse-debug'];
+        return ['nurse-overview'];
     }
 
     if (isBloodBankNurse()) {
-        return ['nurse-overview', 'nurse-blood-bank', 'nurse-debug'];
+        return ['nurse-overview', 'nurse-blood-bank'];
     }
 
-    return ['nurse-overview', 'nurse-monitoring', 'nurse-debug'];
+    return ['nurse-overview', 'nurse-monitoring'];
 }
 
 function preferredNursePanel() {
     const allowed = allowedNursePanels();
-    return allowed.find((panelId) => panelId !== 'nurse-overview' && panelId !== 'nurse-debug') || allowed[0];
+    return allowed.find((panelId) => panelId !== 'nurse-overview') || allowed[0];
 }
 
 function updateNurseSidebarByMode() {
@@ -411,6 +433,7 @@ function updateNurseSidebarByMode() {
 }
 
 function write(data) {
+    if (!window.lifeLinkShell?.isDebugEnabled() || !out) return;
     out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
 }
 
@@ -468,6 +491,15 @@ async function maybeLoadPanelData(panelId) {
     }
 
     await loadNurseProfile({ force: false });
+
+    if (panelId === 'nurse-overview') {
+        if (isBloodBankNurse()) {
+            await loadBloodBankDonors({ force: false });
+            return;
+        }
+        await loadPatients({ force: false });
+        return;
+    }
 
     if (panelId === 'nurse-monitoring' && !isBloodBankNurse()) {
         await loadPatients({ force: false });
@@ -533,6 +565,151 @@ function renderStats(stats = null) {
     document.getElementById('stMonitored').textContent = stats?.monitored_last_24h ?? 0;
 }
 
+function setTextById(id, value) {
+    const element = document.getElementById(id);
+    if (!element) return;
+    element.textContent = String(value);
+}
+
+function hoursSinceTimestamp(value) {
+    if (!value) return null;
+    const timestamp = new Date(value).getTime();
+    if (!Number.isFinite(timestamp)) return null;
+    return (Date.now() - timestamp) / 3600000;
+}
+
+function getAlertReason(patient) {
+    const latest = patient.latest_vital_sign || null;
+    if (!latest) return null;
+    if (latest.temperature_c !== null && Number(latest.temperature_c) >= 38) return 'High temperature detected';
+    if (latest.spo2_percent !== null && Number(latest.spo2_percent) <= 93) return 'Low SpO2 detected';
+    if (latest.pulse_bpm !== null && Number(latest.pulse_bpm) >= 120) return 'Pulse above threshold';
+    return null;
+}
+
+function renderOverviewInsights() {
+    const hint = document.getElementById('overviewModeHint');
+    const queueRoot = document.getElementById('overviewAttentionQueue');
+    if (!hint || !queueRoot) return;
+
+    if (!state.nurseProfileLoaded || !state.nurse) {
+        setTextById('ovTotal', '-');
+        setTextById('ovAdmitted', '-');
+        setTextById('ovNoBed', '-');
+        setTextById('ovVitalsDue', '-');
+        setTextById('ovAlerts', '-');
+        setTextById('ovTransfers', '-');
+        hint.textContent = 'Load profile and patient data to see live nurse priorities for this shift.';
+        queueRoot.innerHTML = '<div class="nurse-note">Load profile and admissions to generate the queue.</div>';
+        return;
+    }
+
+    if (isBloodBankNurse()) {
+        setTextById('ovTotal', state.bloodBankDonors.length || 0);
+        setTextById('ovAdmitted', '-');
+        setTextById('ovNoBed', '-');
+        setTextById('ovVitalsDue', '-');
+        setTextById('ovAlerts', '-');
+        setTextById('ovTransfers', '-');
+        hint.textContent = 'Blood Bank mode is active. Use donor screening from the Blood Bank panel.';
+        queueRoot.innerHTML = '<div class="nurse-note">This account is in Blood Bank mode, so inpatient attention queue is not active.</div>';
+        return;
+    }
+
+    const admissions = Array.isArray(state.patients) ? state.patients : [];
+    const admitted = admissions.filter((entry) => String(entry.status || '').toLowerCase() === 'admitted');
+    const noBed = admitted.filter((entry) => !entry.active_bed_assignment);
+    const vitalsDue = admitted.filter((entry) => {
+        const hours = hoursSinceTimestamp(entry.latest_vital_sign?.measured_at);
+        return hours === null || hours >= 6;
+    });
+    const alertVitals = admitted.filter((entry) => !!getAlertReason(entry));
+    const transfers = admissions.filter((entry) => String(entry.status || '').toLowerCase() === 'transferred');
+
+    setTextById('ovTotal', admissions.length);
+    setTextById('ovAdmitted', admitted.length);
+    setTextById('ovNoBed', noBed.length);
+    setTextById('ovVitalsDue', vitalsDue.length);
+    setTextById('ovAlerts', alertVitals.length);
+    setTextById('ovTransfers', transfers.length);
+
+    hint.textContent = admissions.length
+        ? `Live priorities generated from ${admissions.length} admissions in the current filter.`
+        : 'No admissions in this filter yet. Update filter or refresh patient data.';
+
+    const queue = [];
+    alertVitals.slice(0, 2).forEach((entry) => {
+        queue.push({ entry, reason: getAlertReason(entry) || 'Vital signs outside preferred range' });
+    });
+    noBed.slice(0, 2).forEach((entry) => {
+        queue.push({ entry, reason: 'Bed assignment missing' });
+    });
+    vitalsDue.slice(0, 2).forEach((entry) => {
+        const hours = hoursSinceTimestamp(entry.latest_vital_sign?.measured_at);
+        const reason = hours === null
+            ? 'No vitals logged yet'
+            : `Vitals overdue by ${Math.floor(hours)}h`;
+        queue.push({ entry, reason });
+    });
+
+    const uniqueQueue = [];
+    const seenAdmissionIds = new Set();
+    queue.forEach((item) => {
+        const admissionId = Number(item.entry?.id || 0);
+        if (!admissionId || seenAdmissionIds.has(admissionId)) return;
+        seenAdmissionIds.add(admissionId);
+        uniqueQueue.push(item);
+    });
+
+    if (!uniqueQueue.length) {
+        queueRoot.innerHTML = '<div class="nurse-note">No urgent admissions detected from the current filter.</div>';
+        return;
+    }
+
+    queueRoot.innerHTML = uniqueQueue.slice(0, 5).map((item) => {
+        const admissionId = Number(item.entry.id || 0);
+        const patientUserId = Number(item.entry.patient_user_id || 0);
+        const openAction = admissionId && patientUserId
+            ? `<button class="nurse-button soft" type="button" onclick="focusAdmissionFromOverview(${admissionId}, ${patientUserId})">Open</button>`
+            : '';
+
+        return `
+            <article class="nurse-overview-item">
+                <div>
+                    <strong>${escapeHtml(item.entry.patient_name || 'Unknown patient')}</strong>
+                    <p class="nurse-note">${escapeHtml(item.reason)}</p>
+                </div>
+                ${openAction}
+            </article>
+        `;
+    }).join('');
+}
+
+function goToNursePanel(panelId) {
+    setActivePanel(panelId);
+    history.replaceState(null, '', `#${state.activePanel}`);
+}
+
+async function focusAdmissionFromOverview(admissionId, patientUserId) {
+    goToNursePanel('nurse-monitoring');
+    await loadPatients({ force: false });
+    await selectAdmission(admissionId, patientUserId);
+}
+
+async function applyQuickPatientFilter(statusValue) {
+    const statusFilter = document.getElementById('statusFilter');
+    if (statusFilter) statusFilter.value = statusValue;
+    await loadPatients({ force: true });
+}
+
+async function clearDepartmentFilters() {
+    const statusFilter = document.getElementById('statusFilter');
+    const queryFilter = document.getElementById('queryFilter');
+    if (statusFilter) statusFilter.value = '';
+    if (queryFilter) queryFilter.value = '';
+    await loadPatients({ force: true });
+}
+
 function badgeForStatus(status) {
     return status === 'Admitted'
         ? '<span class="nurse-pill live">Admitted</span>'
@@ -586,6 +763,7 @@ function renderPatients() {
     if (!state.patients.length) {
         holder.innerHTML = '<div class="nurse-note">No admissions found for this filter.</div>';
         renderPatientListPagination({ page: 1, totalPages: 1, totalRows: 0 });
+        renderOverviewInsights();
         return;
     }
 
@@ -620,6 +798,7 @@ function renderPatients() {
     }).join('');
 
     renderPatientListPagination(pageData);
+    renderOverviewInsights();
 }
 
 function renderAdmissionSummary(admission) {
@@ -705,7 +884,17 @@ function renderBloodBankAccess() {
         : isBloodBank
             ? 'Blood Bank nurse mode is active for this account.'
             : `Regular nurse mode is active for ${state.nurse?.department || 'this department'}.`;
+    if (window.lifeLinkShell) {
+        window.lifeLinkShell.updateIdentityContext({
+            name: localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Nurse',
+            userId: localStorage.getItem('CURRENT_USER_ID') || '-',
+            email: localStorage.getItem('CURRENT_USER_EMAIL') || '-',
+            role: 'Nurse',
+            department: state.nurse?.department || state.nurse?.department_name || state.nurse?.dept_name || null,
+        });
+    }
     updateNurseSidebarByMode();
+    renderOverviewInsights();
 }
 
 function renderBloodBankDonors() {
@@ -1017,7 +1206,11 @@ async function loadBloodBankDonors(options = {}) {
             } else if (selectedDonor) {
                 renderSelectedBloodBankDonor(selectedDonor);
             }
+        } else {
+            state.bloodBankDonors = [];
+            state.bloodBankDonorsLoaded = false;
         }
+        renderOverviewInsights();
         write(result);
     })();
 
@@ -1131,6 +1324,7 @@ async function logBloodBankHealthCheck() {
 async function bootNurseDashboard() {
     setupSidebarPanelNav();
     renderStats(null);
+    renderOverviewInsights();
     renderPatients();
     renderAdmissionSummary(null);
     renderVitals([]);
@@ -1153,6 +1347,13 @@ async function bootNurseDashboard() {
 document.getElementById('bbWeightKg').addEventListener('input', previewEligibility);
 document.getElementById('bbTemperatureC').addEventListener('input', previewEligibility);
 document.getElementById('bbHemoglobin').addEventListener('input', previewEligibility);
+document.getElementById('statusFilter').addEventListener('change', () => loadPatients({ force: true }));
+document.getElementById('queryFilter').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        loadPatients({ force: true });
+    }
+});
 bootNurseDashboard();
 </script>
 @endpush

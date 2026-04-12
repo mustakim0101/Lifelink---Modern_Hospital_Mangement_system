@@ -42,10 +42,10 @@
 .topnav a:hover,
 .topnav a.is-active,
 .topnav .cta {
-    color: var(--ui-primary);
-    border-color: rgba(3, 105, 161, 0.16);
-    background: linear-gradient(135deg, rgba(224, 242, 254, 0.94), rgba(236, 253, 245, 0.82));
-    box-shadow: 0 12px 22px rgba(3, 105, 161, 0.12);
+    color: var(--shell-accent);
+    border-color: color-mix(in srgb, var(--shell-accent) 30%, #cbd5e1);
+    background: linear-gradient(135deg, var(--shell-accent-soft), var(--shell-accent-soft-2));
+    box-shadow: 0 12px 22px var(--shell-accent-shadow);
     transform: translateY(-1px);
 }
 
@@ -75,13 +75,13 @@
 
 .app-shell__nav a.is-active::after,
 .app-shell__nav a:hover::after {
-    background: linear-gradient(135deg, var(--ui-primary), var(--ui-secondary));
+    background: linear-gradient(135deg, var(--shell-accent), var(--shell-accent-secondary));
     box-shadow: none;
 }
 
 .topnav .cta {
     color: #fff;
-    background: linear-gradient(135deg, var(--ui-primary), var(--ui-secondary));
+    background: linear-gradient(135deg, var(--shell-accent), var(--shell-accent-secondary));
     border-color: transparent;
 }
 
@@ -344,6 +344,45 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.nurse-overview-stat-grid {
+    margin-top: 12px;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.nurse-overview-list {
+    margin-top: 12px;
+    display: grid;
+    gap: 10px;
+}
+
+.nurse-overview-item {
+    padding: 12px;
+    border: 1px solid var(--ui-border);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.94);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nurse-overview-item strong {
+    display: block;
+    font-size: 0.95rem;
+}
+
+.nurse-overview-checklist {
+    margin: 12px 0 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 8px;
+    color: var(--ui-text-muted);
+    font-size: 0.92rem;
+    line-height: 1.55;
+}
+
 .it-card-grid {
     margin-top: 12px;
 }
@@ -429,6 +468,26 @@
 
 .bbops-shortcuts {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+#it-blood-bank .bbops-card,
+#it-blood-bank .it-stat,
+#nurse-blood-bank .nurse-summary,
+#nurse-blood-bank .nurse-list-item {
+    border-color: var(--shell-blood-accent-border);
+}
+
+#it-blood-bank .bbops-card,
+#nurse-blood-bank .nurse-summary {
+    background: linear-gradient(180deg, #ffffff, var(--shell-blood-accent-soft));
+}
+
+#it-blood-bank .it-button.primary,
+#it-blood-bank .it-button.accent,
+#nurse-blood-bank .nurse-button.primary,
+#nurse-blood-bank .nurse-button.warm {
+    background: var(--shell-blood-accent);
+    color: #fff;
 }
 
 .bbops-shortcut {
@@ -592,6 +651,10 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
+    .nurse-overview-stat-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
     .bbops-summary,
     .bbops-filter-grid,
     .bbops-toolbar,
@@ -626,9 +689,15 @@
     .nurse-control-grid,
     .nurse-summary-grid,
     .nurse-stat-grid,
+    .nurse-overview-stat-grid,
     .nurse-actions,
     .session-grid {
         grid-template-columns: 1fr;
+    }
+
+    .nurse-overview-item {
+        align-items: flex-start;
+        flex-direction: column;
     }
 
     .ll-section-nav {

@@ -1,6 +1,7 @@
 @extends('ui.layouts.app')
 
 @section('title', 'Doctor Dashboard')
+@section('role_theme', 'doctor')
 @section('workspace_label', 'Doctor workspace')
 @section('hero_badge', 'Doctor')
 @section('hero_title', 'Doctor Dashboard')
@@ -12,6 +13,7 @@
 @push('styles')
 <style>
     .doctor-shell { display: grid; gap: 16px; }
+    .doctor-panel { display: none; }
     .doctor-head {
         border: 1px solid rgba(148, 163, 184, 0.25);
         border-radius: 20px;
@@ -147,17 +149,6 @@
         line-height: 1.5;
     }
 
-    .doctor-quick-actions {
-        border: 1px solid rgba(148, 163, 184, 0.25);
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.96);
-        padding: 16px;
-    }
-
-    .doctor-quick-actions h3 {
-        margin: 0 0 12px;
-    }
-
     .doctor-actions-row {
         display: grid;
         gap: 10px;
@@ -282,13 +273,11 @@
 @endpush
 
 @section('sidebar_nav')
-    <a class="is-active" href="#doctor-overview"><strong>Dashboard</strong></a>
-    <a href="#doctor-schedule"><strong>Consultation Routine</strong></a>
-    <a href="#doctor-load-summary"><strong>Daily Load Summary</strong></a>
-    <a href="#doctor-appointments"><strong>My Appointments</strong></a>
-    <a href="#doctor-patients"><strong>My Patients</strong></a>
-    <a href="#doctor-request"><strong>Bed Requests</strong></a>
-    <a href="#doctor-diagnostics"><strong>Diagnostics</strong></a>
+    <a class="is-active" href="#doctor-overview" data-panel="doctor-overview"><strong>Dashboard</strong></a>
+    <a href="#doctor-schedule" data-panel="doctor-schedule"><strong>Consultation Routine</strong></a>
+    <a href="#doctor-load-summary" data-panel="doctor-load-summary"><strong>Daily Load Summary</strong></a>
+    <a href="#doctor-appointments-workflow" data-panel="doctor-appointments-workflow"><strong>Appointment Controls</strong></a>
+    <a href="#doctor-request" data-panel="doctor-request"><strong>Bed Requests</strong></a>
 @endsection
 
 @section('sidebar')
@@ -296,65 +285,58 @@
 
 @section('content')
     <div class="doctor-shell">
-        <section id="doctor-overview" class="doctor-head ll-section">
-            <h2 id="doctorWelcome">Welcome, Doctor</h2>
-            <p id="doctorMetaLine">Loading doctor profile...</p>
-        </section>
+        <div id="doctor-overview" class="doctor-panel ll-section" data-display="block">
+            <section class="doctor-head">
+                <h2 id="doctorWelcome">Welcome, Doctor</h2>
+                <p id="doctorMetaLine">Loading doctor profile...</p>
+            </section>
 
-        <section class="doctor-stats ll-section">
-            <article class="doctor-stat doctor-stat--appointments">
-                <span class="doctor-stat__label">Today's Appointments</span>
-                <strong id="statAppointments">0</strong>
-                <small>Scheduled for today</small>
-            </article>
-            <article class="doctor-stat doctor-stat--active">
-                <span class="doctor-stat__label">Active Patients</span>
-                <strong id="statActivePatients">0</strong>
-                <small>Currently admitted</small>
-            </article>
-            <article class="doctor-stat doctor-stat--pending">
-                <span class="doctor-stat__label">Pending Bed Requests</span>
-                <strong id="statPendingRequests">0</strong>
-                <small>Awaiting assignment</small>
-            </article>
-            <article class="doctor-stat">
-                <span class="doctor-stat__label">Total Patients</span>
-                <strong id="statTotalPatients">0</strong>
-                <small>Under your care</small>
-            </article>
-        </section>
+            <section class="doctor-stats">
+                <article class="doctor-stat doctor-stat--appointments">
+                    <span class="doctor-stat__label">Today's Appointments</span>
+                    <strong id="statAppointments">0</strong>
+                    <small>Scheduled for today</small>
+                </article>
+                <article class="doctor-stat doctor-stat--active">
+                    <span class="doctor-stat__label">Active Patients</span>
+                    <strong id="statActivePatients">0</strong>
+                    <small>Currently admitted</small>
+                </article>
+                <article class="doctor-stat doctor-stat--pending">
+                    <span class="doctor-stat__label">Pending Bed Requests</span>
+                    <strong id="statPendingRequests">0</strong>
+                    <small>Awaiting assignment</small>
+                </article>
+                <article class="doctor-stat">
+                    <span class="doctor-stat__label">Total Patients</span>
+                    <strong id="statTotalPatients">0</strong>
+                    <small>Under your care</small>
+                </article>
+            </section>
 
-        <section class="doctor-grid">
-            <article id="doctor-appointments" class="doctor-card ll-section">
-                <div class="doctor-card-head">
-                    <h3>My Appointments</h3>
-                    <button class="doctor-chip-btn" type="button" onclick="doctorAppointments()">Refresh</button>
-                </div>
-                <div id="appointmentsList" class="doctor-list ui-list-window"></div>
-                <div id="appointmentsPagination" class="ui-list-pagination"></div>
-            </article>
+            <section class="doctor-grid">
+                <article class="doctor-card">
+                    <div class="doctor-card-head">
+                        <h3>My Appointments</h3>
+                        <button class="doctor-chip-btn" type="button" onclick="doctorAppointments()">Refresh</button>
+                    </div>
+                    <div id="appointmentsList" class="doctor-list ui-list-window"></div>
+                    <div id="appointmentsPagination" class="ui-list-pagination"></div>
+                </article>
 
-            <article id="doctor-patients" class="doctor-card ll-section">
-                <div class="doctor-card-head">
-                    <h3>Active Patients</h3>
-                    <button class="doctor-chip-btn" type="button" onclick="doctorPatients()">Refresh</button>
-                </div>
-                <div id="patientsList" class="doctor-list ui-list-window"></div>
-                <div id="patientsPagination" class="ui-list-pagination"></div>
-            </article>
-        </section>
+                <article class="doctor-card">
+                    <div class="doctor-card-head">
+                        <h3>Active Patients</h3>
+                        <button class="doctor-chip-btn" type="button" onclick="doctorPatients()">Refresh</button>
+                    </div>
+                    <div id="patientsList" class="doctor-list ui-list-window"></div>
+                    <div id="patientsPagination" class="ui-list-pagination"></div>
+                </article>
+            </section>
 
-        <section class="doctor-quick-actions ll-section">
-            <h3>Quick Actions</h3>
-            <div class="doctor-actions-row">
-                <a class="doctor-action-btn" href="#doctor-request">Request Bed for Patient</a>
-                <a class="doctor-action-btn" href="#doctor-schedule">Configure Routine</a>
-                <a class="doctor-action-btn" href="#doctor-load-summary">Check Daily Load</a>
-                <a class="doctor-action-btn" href="#doctor-appointments-workflow">Manage Appointments</a>
-            </div>
-        </section>
+        </div>
 
-        <section id="doctor-schedule" class="doctor-card doctor-workflow ll-section">
+        <section id="doctor-schedule" class="doctor-card doctor-workflow ll-section doctor-panel" data-display="block">
             <div class="doctor-card-head">
                 <h3>Consultation Routine Setup</h3>
                 <button class="doctor-chip-btn" type="button" onclick="doctorAppointmentRules()">Load rules</button>
@@ -399,7 +381,7 @@
             <div id="appointmentRulesPagination" class="ui-list-pagination"></div>
         </section>
 
-        <section id="doctor-load-summary" class="doctor-card doctor-workflow ll-section">
+        <section id="doctor-load-summary" class="doctor-card doctor-workflow ll-section doctor-panel" data-display="block">
             <div class="doctor-card-head">
                 <h3>Daily Appointment Load</h3>
                 <button class="doctor-chip-btn" type="button" onclick="doctorAppointmentSummary()">Refresh summary</button>
@@ -422,7 +404,7 @@
             <div id="appointmentSummaryPagination" class="ui-list-pagination"></div>
         </section>
 
-        <section id="doctor-request" class="doctor-card doctor-workflow ll-section">
+        <section id="doctor-request" class="doctor-card doctor-workflow ll-section doctor-panel" data-display="block">
             <div class="doctor-card-head">
                 <h3>Create Bed Request</h3>
                 <button class="doctor-chip-btn" type="button" onclick="doctorBedRequests()">Load Requests</button>
@@ -459,7 +441,7 @@
             <button class="doctor-submit" type="button" onclick="createBedRequest()">Create Bed Request</button>
         </section>
 
-        <section id="doctor-appointments-workflow" class="doctor-card doctor-workflow ll-section">
+        <section id="doctor-appointments-workflow" class="doctor-card doctor-workflow ll-section doctor-panel" data-display="block">
             <div class="doctor-card-head">
                 <h3>Appointment Controls</h3>
                 <button class="doctor-chip-btn" type="button" onclick="doctorAppointments()">Reload appointments</button>
@@ -498,20 +480,16 @@
             </div>
         </section>
 
-        <section id="doctor-diagnostics" class="doctor-card ll-section">
-            <details class="ll-debug">
-                <summary>API response diagnostics</summary>
-                <pre id="out" class="doctor-debug"></pre>
-            </details>
-        </section>
     </div>
 @endsection
 
 @push('scripts')
 <script>
 const API = '/api';
+const doctorPanelIds = ['doctor-overview', 'doctor-schedule', 'doctor-load-summary', 'doctor-appointments-workflow', 'doctor-request'];
 const out = document.getElementById('out');
 const token = localStorage.getItem('USER_TOKEN') || '';
+let doctorPanelControl = null;
 
 const dashboardState = {
     profile: null,
@@ -658,6 +636,15 @@ function renderOverview() {
     const spec = profile.specialization || profile.speciality || 'Clinical Operations';
     document.getElementById('doctorWelcome').textContent = `Welcome, ${name}`;
     document.getElementById('doctorMetaLine').textContent = `${dept} - ${spec}`;
+    if (window.lifeLinkShell) {
+        window.lifeLinkShell.updateIdentityContext({
+            name,
+            userId: localStorage.getItem('CURRENT_USER_ID') || '-',
+            email: localStorage.getItem('CURRENT_USER_EMAIL') || '-',
+            role: 'Doctor',
+            department: dept,
+        });
+    }
 
     renderAppointmentsList(appointments);
     renderPatientsList(activePatients.length ? activePatients : patients);
@@ -1002,6 +989,13 @@ async function createBedRequest() {
 }
 
 async function initDoctorDashboard() {
+    if (window.lifeLinkShell) {
+        doctorPanelControl = window.lifeLinkShell.initPanelNavigation({
+            panelIds: doctorPanelIds,
+            defaultPanel: 'doctor-overview',
+        });
+    }
+
     const defaultFrom = new Date();
     const defaultTo = new Date();
     defaultTo.setDate(defaultTo.getDate() + 14);
@@ -1026,6 +1020,12 @@ async function initDoctorDashboard() {
                 message: 'Some doctor endpoints returned non-success responses. Check token or role scope.'
             }
         });
+    }
+}
+
+function openDoctorPanel(panelId) {
+    if (doctorPanelControl?.setActivePanel) {
+        doctorPanelControl.setActivePanel(panelId, true);
     }
 }
 

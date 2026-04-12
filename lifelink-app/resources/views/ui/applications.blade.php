@@ -1,6 +1,7 @@
 @extends('ui.layouts.app')
 
 @section('title', 'Applicant Workspace')
+@section('role_theme', 'applicant')
 @section('workspace_label', '')
 @section('hero_badge', '')
 @section('hero_title', 'Applicant Dashboard')
@@ -228,9 +229,6 @@
     <a href="#app-history">
         <strong>History</strong>
     </a>
-    <a href="#app-debug">
-        <strong>API Response</strong>
-    </a>
 @endsection
 
 @section('sidebar')
@@ -248,7 +246,7 @@
                 <div id="statusIcon" class="applicant-status-icon pending">!</div>
                 <h3 id="statusTitle" class="applicant-status-title">Application Under Review</h3>
                 <p id="statusMessage" class="applicant-status-copy">
-                    Your application is currently being reviewed by our team. We typically respond within 5-7 business days.
+                    Your application is currently being reviewed by our team.
                 </p>
                 <div id="waitingBadge" class="applicant-status pending">Pending</div>
             </div>
@@ -289,12 +287,9 @@
                     <tbody id="applicationsBody"></tbody>
                 </table>
             </div>
+            <div id="applicationsPagination" class="ui-list-pagination"></div>
         </section>
 
-        <section id="app-debug" class="applicant-history-card ll-section applicant-panel" data-display="block">
-            <h3>API response</h3>
-            <pre id="out" class="applicant-pre"></pre>
-        </section>
     </div>
 @endsection
 
@@ -302,10 +297,18 @@
 <script>
 const out = document.getElementById('out');
 const API = '/api';
-const applicantPanelIds = ['app-status', 'app-waiting', 'app-history', 'app-debug'];
+const applicantPanelIds = ['app-status', 'app-waiting', 'app-history'];
 const applicantNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[href^="#app-"]'));
+const applicantState = {
+    applications: [],
+    pagination: {
+        historyPageSize: 10,
+        historyPage: 1,
+    },
+};
 
 function write(data) {
+    if (!window.lifeLinkShell?.isDebugEnabled() || !out) return;
     out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
 }
 
@@ -348,6 +351,70 @@ function applicantStatusClass(status) {
     return 'pending';
 }
 
+function paginateRows(rows, page, pageSize) {
+    const safeRows = Array.isArray(rows) ? rows : [];
+    const safeSize = Math.max(1, Number(pageSize) || 1);
+    const totalPages = Math.max(1, Math.ceil(safeRows.length / safeSize));
+    const safePage = Math.min(Math.max(1, Number(page) || 1), totalPages);
+    const start = (safePage - 1) * safeSize;
+    return {
+        rows: safeRows.slice(start, start + safeSize),
+        page: safePage,
+        totalPages,
+        totalRows: safeRows.length,
+    };
+}
+
+function renderHistoryPagination(pageData) {
+    const root = document.getElementById('applicationsPagination');
+    if (!root) return;
+    if (pageData.totalRows <= applicantState.pagination.historyPageSize) {
+        root.innerHTML = '';
+        return;
+    }
+    root.innerHTML = `
+        <div class="ui-list-pagination__meta">Page ${pageData.page} of ${pageData.totalPages} (${pageData.totalRows} total)</div>
+        <div class="ui-list-pagination__controls">
+            <button class="applicant-btn applicant-btn-soft" type="button" ${pageData.page <= 1 ? 'disabled' : ''} onclick="prevApplicationsHistoryPage()">Previous</button>
+            <button class="applicant-btn applicant-btn-soft" type="button" ${pageData.page >= pageData.totalPages ? 'disabled' : ''} onclick="nextApplicationsHistoryPage()">Next</button>
+        </div>
+    `;
+}
+
+function prevApplicationsHistoryPage() {
+    applicantState.pagination.historyPage = Math.max(1, applicantState.pagination.historyPage - 1);
+    renderApplicationHistory();
+}
+
+function nextApplicationsHistoryPage() {
+    applicantState.pagination.historyPage += 1;
+    renderApplicationHistory();
+}
+
+function renderApplicationHistory() {
+    const body = document.getElementById('applicationsBody');
+    const pageData = paginateRows(
+        applicantState.applications,
+        applicantState.pagination.historyPage,
+        applicantState.pagination.historyPageSize
+    );
+    applicantState.pagination.historyPage = pageData.page;
+
+    body.innerHTML = pageData.totalRows
+        ? pageData.rows.map((row) => `
+            <tr>
+                <td>${row.id}</td>
+                <td><span class="applicant-status ${applicantStatusClass(row.status)}">${row.status || '-'}</span></td>
+                <td>${row.applied_role || '-'}</td>
+                <td>${row.applied_department || '-'}</td>
+                <td>${row.applied_at ? new Date(row.applied_at).toLocaleString() : '-'}</td>
+                <td>${row.review_notes || '-'}</td>
+            </tr>
+        `).join('')
+        : '<tr><td colspan="6">No applications found.</td></tr>';
+    renderHistoryPagination(pageData);
+}
+
 function renderWaitingState(application) {
     const status = application?.status || 'No application';
     const role = application?.applied_role || '-';
@@ -377,7 +444,7 @@ function renderWaitingState(application) {
     } else if (status === 'Rejected') {
         icon.textContent = 'X';
         title.textContent = 'Application Rejected';
-        message.textContent = 'Your application was reviewed and rejected. This state is shown in red as requested. Please wait for further instruction before reapplying.';
+        message.textContent = 'Your application was reviewed and rejected. Please wait for further instruction before reapplying.';
     } else {
         icon.textContent = '!';
         title.textContent = 'Application Under Review';
@@ -405,19 +472,9 @@ async function loadLatest() {
 async function loadAll() {
     const r = await call('/applications/my', 'GET');
     write(r);
-    const rows = r.data?.applications || [];
-    document.getElementById('applicationsBody').innerHTML = rows.length
-        ? rows.map((row) => `
-            <tr>
-                <td>${row.id}</td>
-                <td><span class="applicant-status ${applicantStatusClass(row.status)}">${row.status || '-'}</span></td>
-                <td>${row.applied_role || '-'}</td>
-                <td>${row.applied_department || '-'}</td>
-                <td>${row.applied_at ? new Date(row.applied_at).toLocaleString() : '-'}</td>
-                <td>${row.review_notes || '-'}</td>
-            </tr>
-        `).join('')
-        : '<tr><td colspan="6">No applications found.</td></tr>';
+    applicantState.applications = r.data?.applications || [];
+    applicantState.pagination.historyPage = 1;
+    renderApplicationHistory();
 }
 
 function hydrateApplicantIdentity() {
@@ -425,6 +482,15 @@ function hydrateApplicantIdentity() {
 }
 
 hydrateApplicantIdentity();
+if (window.lifeLinkShell) {
+    window.lifeLinkShell.updateIdentityContext({
+        name: localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Applicant',
+        userId: localStorage.getItem('CURRENT_USER_ID') || '-',
+        email: localStorage.getItem('CURRENT_USER_EMAIL') || '-',
+        role: 'Applicant',
+        hideDepartment: true,
+    });
+}
 setupSidebarPanelNav();
 loadLatest();
 loadAll();

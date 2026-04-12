@@ -8,7 +8,7 @@
     @stack('styles')
 </head>
 <body>
-    <div class="app-shell">
+    <div class="app-shell" data-role-theme="@yield('role_theme', 'default')">
         <header class="app-shell__topbar">
             <div class="app-shell__topbar-main">
                 <a class="app-shell__brand" href="/">
@@ -17,6 +17,11 @@
                         <strong>LifeLink Workspace</strong>
                     </div>
                 </a>
+                <div class="app-shell__session-pill app-shell__session-pill--topbar">
+                    <small id="shell-role-label" class="app-shell__session-label">Welcome back,</small>
+                    <strong id="shell-user-name">No active session</strong>
+                    <span id="shell-user-meta">ID: - | Email: -</span>
+                </div>
             </div>
 
             <nav class="topnav" aria-label="Workspace top navigation">
@@ -29,40 +34,8 @@
             </nav>
         </header>
 
-        <section class="app-shell__hero">
-            <div class="app-shell__hero-copy">
-                @if(trim($__env->yieldContent('hero_badge', 'Authenticated Mode')) !== '')
-                    <span class="app-shell__eyebrow">@yield('hero_badge', 'Authenticated Mode')</span>
-                @endif
-                <h1>@yield('hero_title', 'Workspace')</h1>
-                @if(trim($__env->yieldContent('hero_description', 'This area is part of the authenticated product flow.')) !== '')
-                    <p>@yield('hero_description', 'This area is part of the authenticated product flow.')</p>
-                @endif
-                @hasSection('hero_extra')
-                    <div class="app-shell__hero-extra">
-                        @yield('hero_extra')
-                    </div>
-                @endif
-            </div>
-
-            <div class="app-shell__hero-meta">
-                <div class="app-shell__meta-card app-shell__meta-card--identity">
-                    <small>Signed in as</small>
-                    <strong id="shell-user-name">No active session</strong>
-                    <span id="shell-user-meta">No role detected</span>
-                </div>
-                @if(trim($__env->yieldContent('hide_meta_card')) !== '1')
-                    <div class="app-shell__meta-card">
-                        <small>Current area</small>
-                        <strong>@yield('meta_title', 'Workspace')</strong>
-                        <span>@yield('meta_copy', 'Primary task area')</span>
-                    </div>
-                @endif
-            </div>
-        </section>
-
         <section class="app-shell__body">
-            <aside class="app-shell__sidebar">
+            <aside class="app-shell__sidebar" id="shell-sidebar">
                 <nav class="app-shell__nav" aria-label="Workspace sections">
                     @yield('sidebar_nav')
                 </nav>
@@ -84,7 +57,18 @@
 
     <script>
     window.lifeLinkShell = {
+        debugStorageKey: 'LL_DASHBOARD_DEBUG',
         rolePriority: ['Admin', 'ITWorker', 'Doctor', 'Nurse', 'Donor', 'Applicant', 'Patient'],
+        roleLabels: {
+            Admin: 'Admin',
+            ITWorker: 'IT Worker',
+            Doctor: 'Doctor',
+            Nurse: 'Nurse',
+            Donor: 'Donor',
+            Applicant: 'Applicant',
+            Patient: 'Patient',
+        },
+        roleNeedsDepartment: new Set(['ITWorker', 'Doctor', 'Nurse']),
         roleDestinations: {
             Admin: '/ui/admin-users',
             ITWorker: '/ui/it-bed-allocation',
@@ -105,6 +89,69 @@
         },
         getPreferredRole(roles) {
             return this.rolePriority.find(role => roles.includes(role)) || null;
+        },
+        isDebugEnabled() {
+            if (new URLSearchParams(window.location.search).get('debug') === '1') return true;
+            return localStorage.getItem(this.debugStorageKey) === '1';
+        },
+        initPanelNavigation(config) {
+            const panelIds = Array.isArray(config?.panelIds) ? config.panelIds : [];
+            if (!panelIds.length) return { setActivePanel: () => {} };
+            const navSelector = config.navSelector || '.app-shell__nav a[data-panel]';
+            const navLinks = Array.from(document.querySelectorAll(navSelector));
+            const defaultPanel = config.defaultPanel || panelIds[0];
+            const onPanelChange = typeof config.onPanelChange === 'function' ? config.onPanelChange : null;
+
+            const setActivePanel = (panelId, updateHistory = true) => {
+                const nextPanel = panelIds.includes(panelId) ? panelId : defaultPanel;
+                panelIds.forEach((id) => {
+                    const panel = document.getElementById(id);
+                    if (!panel) return;
+                    panel.style.display = id === nextPanel ? (panel.dataset.display || 'block') : 'none';
+                });
+                navLinks.forEach((link) => {
+                    const target = link.dataset.panel || (link.getAttribute('href') || '').replace('#', '');
+                    link.classList.toggle('is-active', target === nextPanel);
+                });
+                if (updateHistory) history.replaceState(null, '', `#${nextPanel}`);
+                if (onPanelChange) onPanelChange(nextPanel);
+            };
+
+            navLinks.forEach((link) => {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    const panelId = link.dataset.panel || (link.getAttribute('href') || '').replace('#', '');
+                    if (!panelIds.includes(panelId)) return;
+                    setActivePanel(panelId, true);
+                });
+            });
+
+            const initialHash = (window.location.hash || '').replace('#', '');
+            setActivePanel(panelIds.includes(initialHash) ? initialHash : defaultPanel, false);
+            return { setActivePanel };
+        },
+        updateIdentityContext(context = {}) {
+            const roleLabel = document.getElementById('shell-role-label');
+            const userName = document.getElementById('shell-user-name');
+            const userMeta = document.getElementById('shell-user-meta');
+            if (!roleLabel || !userMeta) return;
+
+            const userId = context.userId || localStorage.getItem('CURRENT_USER_ID') || '';
+            const email = context.email || localStorage.getItem('CURRENT_USER_EMAIL') || '-';
+            const role = context.role || this.getPreferredRole(JSON.parse(localStorage.getItem('CURRENT_USER_ROLES') || '[]'));
+            const roleText = this.roleLabels[role] || role || 'No role detected';
+            const resolvedName = context.name || localStorage.getItem('CURRENT_USER_FULL_NAME') || email;
+            roleLabel.textContent = 'Welcome back,';
+            if (userName) userName.textContent = resolvedName;
+
+            const metaParts = [];
+            metaParts.push(`ID: ${userId || '-'}`);
+            metaParts.push(`Email: ${email || '-'}`);
+            metaParts.push(`Role: ${roleText}`);
+            if (!context.hideDepartment && this.roleNeedsDepartment.has(role) && context.department) {
+                metaParts.push(`Department: ${context.department}`);
+            }
+            userMeta.textContent = metaParts.join(' | ');
         }
     };
 
@@ -113,24 +160,18 @@
         const userId = localStorage.getItem('CURRENT_USER_ID') || '';
         const email = localStorage.getItem('CURRENT_USER_EMAIL') || 'No active session';
         const roles = JSON.parse(localStorage.getItem('CURRENT_USER_ROLES') || '[]');
-        const userName = document.getElementById('shell-user-name');
-        const userMeta = document.getElementById('shell-user-meta');
-        const topbarUser = document.getElementById('shell-topbar-user');
-        const topbarRole = document.getElementById('shell-topbar-role');
         const preferredRole = window.lifeLinkShell.getPreferredRole(roles);
         const identity = fullName || email;
-        const metaParts = [];
-
-        if (userId) metaParts.push(`ID #${userId}`);
-        if (email) metaParts.push(email);
-        metaParts.push(preferredRole ? `${preferredRole} workflow` : 'No role detected');
-
-        if (userName) userName.textContent = identity;
-        if (userMeta) userMeta.textContent = metaParts.join(' | ');
-        if (topbarUser) topbarUser.textContent = identity;
-        if (topbarRole) topbarRole.textContent = preferredRole ? `${preferredRole} workflow` : 'No role detected';
+        window.lifeLinkShell.updateIdentityContext({
+            name: identity,
+            userId: userId || '-',
+            email,
+            role: preferredRole || null,
+            department: null,
+        });
     })();
     </script>
     @stack('scripts')
 </body>
 </html>
+
