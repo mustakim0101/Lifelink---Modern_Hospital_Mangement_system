@@ -41,8 +41,11 @@ p {
 .app-shell,
 .shell,
 .hub-shell {
-    width: min(var(--ui-shell-max), calc(100% - 32px));
     margin: 0 auto;
+}
+
+.app-shell {
+    width: min(100%, var(--ui-shell-max));
 }
 
 .shell {
@@ -59,9 +62,81 @@ body > .shell {
 }
 
 .app-shell {
-    padding: 20px 0 32px;
+    padding: 8px 10px 16px;
     display: grid;
-    gap: 18px;
+    gap: 10px;
+    --shell-accent: var(--ui-primary);
+    --shell-accent-strong: var(--ui-primary-strong);
+    --shell-accent-secondary: var(--ui-secondary);
+    --shell-accent-soft: rgba(224, 242, 254, 0.92);
+    --shell-accent-soft-2: rgba(236, 253, 245, 0.82);
+    --shell-accent-shadow: rgba(3, 105, 161, 0.12);
+    --shell-blood-accent: #b91c1c;
+    --shell-blood-accent-soft: rgba(254, 226, 226, 0.85);
+    --shell-blood-accent-border: rgba(185, 28, 28, 0.26);
+}
+
+.app-shell[data-role-theme="doctor"] {
+    --shell-accent: #1d4ed8;
+    --shell-accent-strong: #1e3a8a;
+    --shell-accent-secondary: #0891b2;
+    --shell-accent-soft: rgba(219, 234, 254, 0.92);
+    --shell-accent-soft-2: rgba(236, 253, 245, 0.72);
+    --shell-accent-shadow: rgba(30, 64, 175, 0.18);
+}
+
+.app-shell[data-role-theme="it"] {
+    --shell-accent: #166534;
+    --shell-accent-strong: #14532d;
+    --shell-accent-secondary: #22c55e;
+    --shell-accent-soft: rgba(220, 252, 231, 0.92);
+    --shell-accent-soft-2: rgba(240, 253, 244, 0.85);
+    --shell-accent-shadow: rgba(22, 101, 52, 0.16);
+}
+
+.app-shell[data-role-theme="nurse"] {
+    --shell-accent: #be185d;
+    --shell-accent-strong: #9d174d;
+    --shell-accent-secondary: #8b5cf6;
+    --shell-accent-soft: rgba(251, 207, 232, 0.84);
+    --shell-accent-soft-2: rgba(243, 232, 255, 0.76);
+    --shell-accent-shadow: rgba(157, 23, 77, 0.18);
+}
+
+.app-shell[data-role-theme="patient"] {
+    --shell-accent: #111827;
+    --shell-accent-strong: #000000;
+    --shell-accent-secondary: #57534e;
+    --shell-accent-soft: rgba(245, 245, 244, 0.96);
+    --shell-accent-soft-2: rgba(254, 252, 232, 0.72);
+    --shell-accent-shadow: rgba(17, 24, 39, 0.15);
+}
+
+.app-shell[data-role-theme="admin"] {
+    --shell-accent: #92400e;
+    --shell-accent-strong: #78350f;
+    --shell-accent-secondary: #b45309;
+    --shell-accent-soft: rgba(254, 243, 199, 0.86);
+    --shell-accent-soft-2: rgba(254, 249, 195, 0.74);
+    --shell-accent-shadow: rgba(146, 64, 14, 0.17);
+}
+
+.app-shell[data-role-theme="donor"] {
+    --shell-accent: #b91c1c;
+    --shell-accent-strong: #991b1b;
+    --shell-accent-secondary: #ef4444;
+    --shell-accent-soft: rgba(254, 226, 226, 0.9);
+    --shell-accent-soft-2: rgba(254, 242, 242, 0.82);
+    --shell-accent-shadow: rgba(185, 28, 28, 0.2);
+}
+
+.app-shell[data-role-theme="applicant"] {
+    --shell-accent: #475569;
+    --shell-accent-strong: #334155;
+    --shell-accent-secondary: #64748b;
+    --shell-accent-soft: rgba(241, 245, 249, 0.95);
+    --shell-accent-soft-2: rgba(248, 250, 252, 0.9);
+    --shell-accent-shadow: rgba(51, 65, 85, 0.15);
 }
 
 .app-shell__topbar,
@@ -75,21 +150,26 @@ body > .shell {
 }
 
 .app-shell__topbar {
-    padding: 16px 18px;
-    border: 1px solid rgba(255, 255, 255, 0.78);
-    border-radius: 24px;
+    position: sticky;
+    top: 8px;
+    z-index: 20;
+    align-items: flex-start;
+    padding: 12px 16px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 16px;
     background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(244, 250, 252, 0.88)),
-        rgba(255, 255, 255, 0.92);
-    box-shadow: var(--ui-shadow-md);
-    backdrop-filter: blur(18px);
+        linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(244, 250, 252, 0.94)),
+        rgba(255, 255, 255, 0.96);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+    backdrop-filter: blur(14px);
 }
 
 .app-shell__topbar-main {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+    display: grid;
+    gap: 8px;
+    align-content: start;
     min-width: 0;
+    max-width: min(100%, 860px);
 }
 
 .topbar-inner {
@@ -124,8 +204,8 @@ body > .shell {
     font-weight: 800;
     background:
         radial-gradient(circle at 28% 24%, rgba(255, 255, 255, 0.28), transparent 42%),
-        linear-gradient(135deg, var(--ui-primary), var(--ui-secondary));
-    box-shadow: 0 18px 28px rgba(3, 105, 161, 0.22);
+        linear-gradient(135deg, var(--shell-accent), var(--shell-accent-secondary));
+    box-shadow: 0 18px 28px var(--shell-accent-shadow);
 }
 
 .brand-mark,
@@ -156,31 +236,41 @@ body > .shell {
 }
 
 .app-shell__session-pill {
-    margin-left: auto;
-    min-width: min(100%, 280px);
-    padding: 12px 14px;
+    margin-left: 0;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    padding: 10px 12px;
     border: 1px solid var(--ui-border-soft);
-    border-radius: 18px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(240, 249, 255, 0.86));
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(240, 249, 255, 0.9));
     display: grid;
-    gap: 3px;
+    gap: 2px;
+}
+
+.app-shell__session-pill--topbar {
+    margin-left: 0;
+    border-color: color-mix(in srgb, var(--shell-accent) 24%, #e2e8f0);
+    background: linear-gradient(145deg, #ffffff, var(--shell-accent-soft));
 }
 
 .app-shell__session-label {
-    font-size: 0.72rem;
+    font-size: 0.82rem;
     font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ui-text-faint);
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: color-mix(in srgb, var(--shell-accent-strong) 58%, #334155);
 }
 
 .app-shell__session-pill strong {
-    font-size: 0.96rem;
+    font-size: 1.08rem;
+    line-height: 1.25;
 }
 
 .app-shell__session-pill span:last-child {
     color: var(--ui-text-muted);
-    font-size: 0.86rem;
+    font-size: 0.84rem;
+    line-height: 1.45;
 }
 
 .crumbs {
@@ -330,8 +420,15 @@ body > .shell {
 }
 
 .app-shell__body {
-    grid-template-columns: clamp(260px, 20vw, 320px) minmax(0, 1fr);
-    align-items: start;
+    grid-template-columns: clamp(250px, 18vw, 296px) minmax(0, 1fr);
+    align-items: stretch;
+    gap: 0;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.76);
+    box-shadow: 0 18px 32px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    min-height: calc(100vh - 94px);
 }
 
 .hub-layout {
@@ -346,27 +443,31 @@ body > .shell {
 
 .app-shell__sidebar,
 .app-shell__content {
-    border: 1px solid var(--ui-border);
-    border-radius: 24px;
-    background: rgba(255, 255, 255, 0.84);
-    box-shadow: var(--ui-shadow-lg);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
     min-width: 0;
 }
 
 .app-shell__sidebar {
-    padding: 18px 16px;
-    align-self: start;
+    padding: 12px 10px 14px;
+    align-self: stretch;
     position: sticky;
-    top: 16px;
+    top: 74px;
+    max-height: calc(100vh - 82px);
+    border-right: 1px solid rgba(226, 232, 240, 0.9);
+    display: flex;
+    flex-direction: column;
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 252, 0.92));
+        linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(246, 250, 252, 0.95));
 }
 
 .app-shell__content {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
+    padding: 14px 16px 16px;
+    align-self: stretch;
+    background:
+        linear-gradient(180deg, rgba(250, 252, 253, 0.72), rgba(246, 250, 252, 0.92));
 }
 
 .app-shell__sidebar-head {
@@ -430,6 +531,11 @@ body > .shell {
     display: grid;
     gap: 8px;
     margin-bottom: 16px;
+    align-content: start;
+    overflow: auto;
+    flex: 1;
+    min-height: 0;
+    padding-right: 2px;
 }
 
 .app-shell__nav a {
@@ -437,6 +543,11 @@ body > .shell {
     justify-content: space-between;
     align-items: center;
     gap: 12px;
+}
+
+.app-shell__topbar .topnav {
+    justify-content: flex-end;
+    align-self: center;
 }
 
 .topbar {
@@ -474,7 +585,6 @@ main {
 .welcome-impact,
 .welcome-footer,
 .welcome-bands,
-.welcome-entry-grid,
 .auth-layout,
 .workspace-hero {
     display: grid;
@@ -489,7 +599,6 @@ main {
 .welcome-hero__copy,
 .welcome-hero__aside,
 .welcome-band,
-.welcome-entry-card,
 .auth-intro,
 .auth-card,
 .workspace-primary {
@@ -501,7 +610,6 @@ main {
 
 .welcome-hero__copy,
 .welcome-hero__aside,
-.welcome-entry-card,
 .auth-card,
 .workspace-primary {
     padding: 24px;
@@ -568,10 +676,6 @@ main {
     gap: 6px;
     border-top: 1px solid var(--ui-border-soft);
     padding: 16px 0 8px;
-}
-
-.welcome-entry-grid {
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
 .auth-layout {
@@ -699,11 +803,18 @@ main {
     .layout,
     .hub-layout {
         grid-template-columns: 1fr;
+        min-height: 0;
     }
 
     .app-shell__sidebar,
     .hub-rail {
         position: static;
+        max-height: none;
+    }
+
+    .app-shell__sidebar {
+        border-right: 0;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.9);
     }
 
     .app-shell__hero {
@@ -741,7 +852,7 @@ main {
     .app-shell,
     .shell,
     .hub-shell {
-        width: min(100% - 16px, 1500px);
+        width: 100%;
     }
 
     .app-shell__topbar,
@@ -761,8 +872,16 @@ main {
     .app-shell__topbar,
     .app-shell__topbar-main,
     .app-shell__actions {
-        flex-direction: column;
         align-items: stretch;
+    }
+
+    .app-shell__topbar {
+        gap: 12px;
+    }
+
+    .app-shell__topbar .topnav {
+        justify-content: flex-start;
+        align-self: stretch;
     }
 
     .app-shell__session-pill {

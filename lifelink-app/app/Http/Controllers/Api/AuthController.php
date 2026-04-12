@@ -280,11 +280,19 @@ class AuthController extends Controller
 
     private function markDuration(array &$marks, string $step, float $startedAt): void
     {
+        if (! config('app.debug')) {
+            return;
+        }
+
         $marks[$step] = (int) round((microtime(true) - $startedAt) * 1000);
     }
 
     private function logTiming(string $label, float $startedAt, array $marks, array $context = []): void
     {
+        if (! config('app.debug')) {
+            return;
+        }
+
         Log::info('perf.'.$label, array_merge($context, [
             'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
             'steps_ms' => $marks,

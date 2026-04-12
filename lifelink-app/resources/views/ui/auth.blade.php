@@ -8,18 +8,18 @@
         ],
         'patient' => [
             'title' => 'Patient Registration',
-            'headline' => 'Create a patient account',
-            'copy' => 'Complete the form to create your patient account.',
+            'headline' => 'Patient Registration',
+            'copy' => 'Create your account to continue.',
         ],
         'donor' => [
             'title' => 'Donor Registration',
-            'headline' => 'Create a donor account',
-            'copy' => 'Complete the form to create your donor account.',
+            'headline' => 'Donor Registration',
+            'copy' => 'Create your account to continue.',
         ],
         'applicant' => [
             'title' => 'Applicant Registration',
-            'headline' => 'Create an applicant account',
-            'copy' => 'Complete the form, then submit your first application.',
+            'headline' => 'Applicant Registration',
+            'copy' => 'Create your account, then submit your application.',
         ],
     ][$mode] ?? null;
 
@@ -62,18 +62,19 @@
                 @if ($mode === 'login')
                     <div class="field">
                         <label for="loginEmail">Email</label>
-                        <input id="loginEmail" type="email" placeholder="name@example.com">
+                        <input id="loginEmail" type="email" placeholder="">
                     </div>
-                    <div class="field">
+                    <div class="field field--password">
                         <label for="loginPassword">Password</label>
-                        <input id="loginPassword" type="password" placeholder="Enter your password">
+                        <div class="password-input-wrap">
+                            <input id="loginPassword" type="password" placeholder="Enter your password">
+                            <button class="password-toggle" type="button" data-password-target="loginPassword" aria-label="Show password" aria-pressed="false">Show</button>
+                        </div>
                     </div>
 
-                    <div class="button-row">
+                    <div class="button-row auth-login-actions">
                         <button class="button button-primary auth-login-cta" type="button" onclick="loginUser()">Sign In</button>
                     </div>
-                    <button class="auth-link-button" type="button" onclick="useLastEmail()">Use last email</button>
-                    <a class="auth-link-inline" href="#">Forgot password?</a>
 
                     <div class="auth-divider">
                         <span>Don't have an account?</span>
@@ -83,7 +84,7 @@
                         <a class="button button-secondary auth-register-btn" href="/ui/register/patient">Register as Patient</a>
                         <a class="button button-secondary auth-register-btn" href="/ui/register/donor">Register as Donor</a>
                         <a class="button button-secondary auth-register-btn" href="/ui/register/applicant">Apply to Join Staff</a>
-                        <a class="auth-home-link" href="/">Back to Home</a>
+                        <a class="button button-secondary auth-home-link" href="/">Back to Home</a>
                     </div>
 
                     <details class="auth-dev-tools">
@@ -121,7 +122,13 @@
                 @elseif ($mode === 'patient')
                     <div class="field"><label for="patientName">Full name</label><input id="patientName" type="text" placeholder="Full name"></div>
                     <div class="field"><label for="patientEmail">Email</label><input id="patientEmail" type="email" placeholder="patient@example.com"></div>
-                    <div class="field"><label for="patientPassword">Password</label><input id="patientPassword" type="password" value="patient12345"></div>
+                    <div class="field field--password">
+                        <label for="patientPassword">Password</label>
+                        <div class="password-input-wrap">
+                            <input id="patientPassword" type="password" value="patient12345">
+                            <button class="password-toggle" type="button" data-password-target="patientPassword" aria-label="Show password" aria-pressed="false">Show</button>
+                        </div>
+                    </div>
                     <div class="field">
                         <label for="patientBloodGroup">Blood group</label>
                         <select id="patientBloodGroup">
@@ -141,7 +148,13 @@
                 @elseif ($mode === 'donor')
                     <div class="field"><label for="donorName">Full name</label><input id="donorName" type="text" placeholder="Full name"></div>
                     <div class="field"><label for="donorEmail">Email</label><input id="donorEmail" type="email" placeholder="donor@example.com"></div>
-                    <div class="field"><label for="donorPassword">Password</label><input id="donorPassword" type="password" value="donor12345"></div>
+                    <div class="field field--password">
+                        <label for="donorPassword">Password</label>
+                        <div class="password-input-wrap">
+                            <input id="donorPassword" type="password" value="donor12345">
+                            <button class="password-toggle" type="button" data-password-target="donorPassword" aria-label="Show password" aria-pressed="false">Show</button>
+                        </div>
+                    </div>
                     <div class="field">
                         <label for="donorBloodGroup">Blood group</label>
                         <select id="donorBloodGroup">
@@ -159,7 +172,13 @@
                 @else
                     <div class="field"><label for="applicantName">Full name</label><input id="applicantName" type="text" placeholder="Full name"></div>
                     <div class="field"><label for="applicantEmail">Email</label><input id="applicantEmail" type="email" placeholder="applicant@example.com"></div>
-                    <div class="field"><label for="applicantPassword">Password</label><input id="applicantPassword" type="password" value="applicant12345"></div>
+                    <div class="field field--password">
+                        <label for="applicantPassword">Password</label>
+                        <div class="password-input-wrap">
+                            <input id="applicantPassword" type="password" value="applicant12345">
+                            <button class="password-toggle" type="button" data-password-target="applicantPassword" aria-label="Show password" aria-pressed="false">Show</button>
+                        </div>
+                    </div>
                     <div class="field">
                         <label for="applicantRole">Applied role</label>
                         <select id="applicantRole">
@@ -174,7 +193,6 @@
                             <option value="">Select department</option>
                         </select>
                     </div>
-                    <p class="ll-helper-tight">Department selection is required for doctor applicants only.</p>
                     <div class="button-row">
                         <button class="button button-primary" type="button" onclick="registerApplicant()">Create applicant account</button>
                         <a class="ghost-link" href="/ui/login">Already have an account?</a>
@@ -263,11 +281,6 @@
 
     function rememberLastEmail(email) {
         if (email) localStorage.setItem('LAST_USED_EMAIL', email);
-    }
-
-    function useLastEmail() {
-        const input = document.getElementById('loginEmail');
-        if (input) input.value = localStorage.getItem('LAST_USED_EMAIL') || '';
     }
 
     function clearTransientSession() {
@@ -452,9 +465,26 @@
         if (source && notes[source]) showMessage('info', notes[source]);
     }
 
+    function setupPasswordToggles() {
+        document.querySelectorAll('.password-toggle').forEach(toggle => {
+            const targetId = toggle.dataset.passwordTarget;
+            const targetInput = targetId ? document.getElementById(targetId) : null;
+            if (!targetInput) return;
+
+            toggle.addEventListener('click', () => {
+                const showPassword = targetInput.type === 'password';
+                targetInput.type = showPassword ? 'text' : 'password';
+                toggle.textContent = showPassword ? 'Hide' : 'Show';
+                toggle.setAttribute('aria-label', showPassword ? 'Hide password' : 'Show password');
+                toggle.setAttribute('aria-pressed', String(showPassword));
+            });
+        });
+    }
+
     refreshSessionCard();
     applyTestModePasswords();
     hydrateLoginPage();
+    setupPasswordToggles();
     loadApplicantDepartments();
     toggleApplicantDepartmentField();
     const applicantRoleSelect = document.getElementById('applicantRole');

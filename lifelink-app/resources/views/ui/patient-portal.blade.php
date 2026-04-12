@@ -1,6 +1,7 @@
 @extends('ui.layouts.app')
 
 @section('title', 'Patient Portal')
+@section('role_theme', 'patient')
 @section('workspace_label', '')
 @section('hero_badge', '')
 @section('hero_title', 'Patient Dashboard')
@@ -12,17 +13,17 @@
 @push('styles')
 <style>
     :root {
-        --portal-ink: #122b42;
-        --portal-muted: #607189;
-        --portal-line: rgba(18, 43, 66, 0.14);
+        --portal-ink: #111111;
+        --portal-muted: #57534e;
+        --portal-line: rgba(17, 17, 17, 0.14);
         --portal-card: rgba(255, 255, 255, 0.9);
-        --portal-primary: #0f766e;
-        --portal-primary-strong: #0d615a;
-        --portal-accent: #ea580c;
+        --portal-primary: #1f2937;
+        --portal-primary-strong: #000000;
+        --portal-accent: #a16207;
         --portal-ok: #166534;
-        --portal-warn: #a16207;
+        --portal-warn: #92400e;
         --portal-danger: #b91c1c;
-        --portal-shadow: 0 16px 36px rgba(18, 43, 66, 0.15);
+        --portal-shadow: 0 16px 36px rgba(17, 17, 17, 0.15);
     }
 
     .portal-grid { display: grid; gap: 10px; }
@@ -176,9 +177,6 @@
     </a>
     <a href="#portal-records">
         <strong>Records</strong>
-    </a>
-    <a href="#portal-debug">
-        <strong>API Response</strong>
     </a>
 @endsection
 
@@ -377,12 +375,6 @@
             </div>
         </div>
 
-        <div id="portal-debug" class="portal-card ll-section portal-panel" data-display="block">
-            <details class="ll-debug" open>
-                <summary>API response</summary>
-                <pre id="out" class="portal-pre"></pre>
-            </details>
-        </div>
     </div>
 
     <div id="toastStack" class="portal-toast-stack"></div>
@@ -401,11 +393,14 @@ const state = {
     records: [],
     recordSearch: ''
 };
-const portalPanelIds = ['portal-snapshot', 'portal-actions', 'portal-tables', 'portal-records', 'portal-debug'];
+const portalPanelIds = ['portal-snapshot', 'portal-actions', 'portal-tables', 'portal-records'];
 const portalNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[href^="#portal-"]'));
 
 function byId(id) { return document.getElementById(id); }
-function write(data) { out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2); }
+function write(data) {
+    if (!window.lifeLinkShell?.isDebugEnabled() || !out) return;
+    out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+}
 function setActivePanel(panelId) {
     portalPanelIds.forEach((id) => {
         const panel = byId(id);
@@ -708,8 +703,7 @@ async function bookAppointment() {
     showToast(capacity
         ? `Request submitted. Remaining capacity: ${capacity.remaining_count}`
         : 'Appointment request submitted');
-    await loadAppointments();
-    await loadPortal();
+    await Promise.all([loadAppointments(), loadPortal()]);
     renderDoctorScheduleMeta();
 }
 
@@ -720,8 +714,7 @@ async function cancelAppointment(id) {
     write(r);
     if (r.status >= 300) { showToast(r.data?.message || 'Could not cancel appointment', 'error'); return; }
     showToast('Appointment cancelled');
-    await loadAppointments();
-    await loadPortal();
+    await Promise.all([loadAppointments(), loadPortal()]);
 }
 
 async function submitBloodRequest() {
@@ -741,8 +734,7 @@ async function submitBloodRequest() {
     if (r.status >= 300) { showToast(r.data?.message || 'Blood request failed', 'error'); return; }
     showToast('Blood request submitted');
     byId('bloodNotes').value = '';
-    await loadBloodRequests();
-    await loadPortal();
+    await Promise.all([loadBloodRequests(), loadPortal()]);
 }
 
 function setAppointmentStatus(status) { state.appointmentStatus = status; setFilterActive('appointment', status); loadAppointments(); }
@@ -751,11 +743,13 @@ function setBloodStatus(status) { state.bloodStatus = status; setFilterActive('b
 async function refreshAll() {
     setButtonBusy('btnRefresh', true);
     try {
-        await loadBookingOptions();
-        await loadPortal();
-        await loadMedicalRecords();
-        await loadAppointments();
-        await loadBloodRequests();
+        await Promise.all([
+            loadBookingOptions(),
+            loadPortal(),
+            loadMedicalRecords(),
+            loadAppointments(),
+            loadBloodRequests(),
+        ]);
         showToast('Dashboard refreshed');
     } finally {
         setButtonBusy('btnRefresh', false);
@@ -764,6 +758,15 @@ async function refreshAll() {
 
 function boot() {
     setupSidebarPanelNav();
+    if (window.lifeLinkShell) {
+        window.lifeLinkShell.updateIdentityContext({
+            name: localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Patient',
+            userId: localStorage.getItem('CURRENT_USER_ID') || '-',
+            email: localStorage.getItem('CURRENT_USER_EMAIL') || '-',
+            role: 'Patient',
+            hideDepartment: true,
+        });
+    }
     setClock();
     setInterval(setClock, 1000);
     setFilterActive('appointment', state.appointmentStatus);

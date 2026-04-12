@@ -1,10 +1,11 @@
 @extends('ui.layouts.app')
 
 @section('title', 'Application Reviews')
+@section('role_theme', 'admin')
 @section('workspace_label', 'Admin approval workspace')
 @section('hero_badge', 'Hiring Review')
 @section('hero_title', 'Review pending applications without hunting through raw JSON.')
-@section('hero_description', 'Run reviews from cards first and keep raw output available in a contained debug area.')
+@section('hero_description', 'Run reviews from cards first, then complete approval actions in one place.')
 @section('meta_title', 'Application Queue')
 @section('meta_copy', 'Approve or reject applicant role requests')
 
@@ -36,6 +37,7 @@
     .review-grid {
         gap: 14px;
     }
+    .review-panel-switch { display: none; }
 
     .review-toolbar {
         grid-template-columns: minmax(0, 220px) auto auto;
@@ -259,11 +261,23 @@
 @endpush
 
 @section('sidebar_nav')
+    <a href="#review-queue-panel" class="is-active" data-panel="review-queue-panel">
+        <strong>Queue</strong>
+        <span>Filter + summary</span>
+    </a>
+    <a href="#review-cards-panel" data-panel="review-cards-panel">
+        <strong>Cards</strong>
+        <span>Review cards</span>
+    </a>
+    <a href="#review-action-panel" data-panel="review-action-panel">
+        <strong>Action</strong>
+        <span>Approve or reject</span>
+    </a>
     <a href="/ui/admin-users">
         <strong>Admin Control</strong>
         <span>Back to admin landing</span>
     </a>
-    <a class="is-active" href="/ui/application-reviews">
+    <a href="/ui/application-reviews">
         <strong>Application Reviews</strong>
         <span>Current area</span>
     </a>
@@ -285,16 +299,9 @@
     </div>
 @endsection
 
-@section('section_nav')
-    <a href="#review-queue" class="is-active">Queue</a>
-    <a href="#review-cards">Cards</a>
-    <a href="#review-action">Action</a>
-    <a href="#review-debug">Context + API</a>
-@endsection
-
 @section('content')
     <div class="review-grid">
-        <div id="review-queue" class="review-panel ll-section">
+        <div id="review-queue-panel" class="review-panel ll-section review-panel-switch" data-display="block">
             <h3>Review queue</h3>
             <p class="review-note">Filter by status, then review from cards.</p>
 
@@ -311,35 +318,35 @@
                 <button class="review-button primary" type="button" onclick="loadApplications()">Load applications</button>
                 <button class="review-button soft" type="button" onclick="loadPendingApplications()">Reload pending</button>
             </div>
+            <div class="review-summary">
+                <div class="review-stat">
+                    <small>Loaded</small>
+                    <strong id="loadedCount">0</strong>
+                    <span class="review-help">Cards currently shown</span>
+                </div>
+                <div class="review-stat">
+                    <small>Pending</small>
+                    <strong id="pendingCount">0</strong>
+                    <span class="review-help">Waiting for review</span>
+                </div>
+                <div class="review-stat">
+                    <small>Selected</small>
+                    <strong id="selectedApplicationLabel">None</strong>
+                    <span class="review-help">Chosen for action</span>
+                </div>
+            </div>
         </div>
 
-        <div class="review-summary">
-            <div class="review-stat">
-                <small>Loaded</small>
-                <strong id="loadedCount">0</strong>
-                <span class="review-help">Cards currently shown</span>
-            </div>
-            <div class="review-stat">
-                <small>Pending</small>
-                <strong id="pendingCount">0</strong>
-                <span class="review-help">Waiting for review</span>
-            </div>
-            <div class="review-stat">
-                <small>Selected</small>
-                <strong id="selectedApplicationLabel">None</strong>
-                <span class="review-help">Chosen for action</span>
-            </div>
-        </div>
-
-        <div id="review-cards" class="review-panel ll-section">
+        <div id="review-cards-panel" class="review-panel ll-section review-panel-switch" data-display="block">
             <h3>Applications</h3>
             <p class="review-note">The queue below is the main admin view. Click any card to load it into the review form. Pending items are shown first when you keep the default filter.</p>
-            <div id="applicationCards" class="review-card-list" style="margin-top: 14px;"></div>
+            <div id="applicationCards" class="review-card-list ui-list-window" style="margin-top: 14px;"></div>
+            <div id="applicationCardsPagination" class="ui-list-pagination"></div>
         </div>
 
-        <div id="review-action" class="review-panel ll-section">
+        <div id="review-action-panel" class="review-panel ll-section review-panel-switch" data-display="block">
             <h3>Review action</h3>
-            <p class="review-note">The manual form is still here for direct review work and debugging, but card actions now prefill it for you.</p>
+            <p class="review-note">Use this form for direct review updates, or prefill it by selecting a card.</p>
 
             <label class="review-label" for="applicationId">Application ID</label>
             <input id="applicationId" class="review-input" placeholder="Application ID">
@@ -351,17 +358,6 @@
                 <button class="review-button accent" type="button" onclick="approveApplication()">Approve selected</button>
                 <button class="review-button reject" type="button" onclick="rejectApplication()">Reject selected</button>
             </div>
-        </div>
-
-        <div id="review-debug" class="review-panel ll-section">
-            <details class="ll-debug">
-                <summary>Stored admin context</summary>
-                <pre id="ctx" class="review-console"></pre>
-            </details>
-            <details class="ll-debug" style="margin-top: 10px;" open>
-                <summary>API response</summary>
-                <pre id="out" class="review-console"></pre>
-            </details>
         </div>
     </div>
 @endsection
@@ -375,12 +371,18 @@ const loadedCount = document.getElementById('loadedCount');
 const pendingCount = document.getElementById('pendingCount');
 const selectedApplicationLabel = document.getElementById('selectedApplicationLabel');
 const API = '/api';
+const reviewPanelIds = ['review-queue-panel', 'review-cards-panel', 'review-action-panel'];
 let state = {
     applications: [],
     selectedId: null,
+    pagination: {
+        cardsPageSize: 6,
+        cardsPage: 1,
+    },
 };
 
 function write(data) {
+    if (!window.lifeLinkShell?.isDebugEnabled() || !out) return;
     out.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
 }
 
@@ -392,7 +394,9 @@ function refreshContext() {
         CURRENT_USER_EMAIL: localStorage.getItem('CURRENT_USER_EMAIL'),
         CURRENT_USER_ROLES: JSON.parse(localStorage.getItem('CURRENT_USER_ROLES') || '[]'),
     };
-    ctx.textContent = JSON.stringify(data, null, 2);
+    if (ctx) {
+        ctx.textContent = JSON.stringify(data, null, 2);
+    }
 }
 
 function adminToken() {
@@ -429,6 +433,46 @@ async function call(path, method, body = null) {
     }
 }
 
+function paginateRows(rows, page, pageSize) {
+    const safeRows = Array.isArray(rows) ? rows : [];
+    const safeSize = Math.max(1, Number(pageSize) || 1);
+    const totalPages = Math.max(1, Math.ceil(safeRows.length / safeSize));
+    const safePage = Math.min(Math.max(1, Number(page) || 1), totalPages);
+    const start = (safePage - 1) * safeSize;
+    return {
+        rows: safeRows.slice(start, start + safeSize),
+        page: safePage,
+        totalPages,
+        totalRows: safeRows.length,
+    };
+}
+
+function renderApplicationCardsPagination(pageData) {
+    const root = document.getElementById('applicationCardsPagination');
+    if (!root) return;
+    if (pageData.totalRows <= state.pagination.cardsPageSize) {
+        root.innerHTML = '';
+        return;
+    }
+    root.innerHTML = `
+        <div class="ui-list-pagination__meta">Page ${pageData.page} of ${pageData.totalPages} (${pageData.totalRows} total)</div>
+        <div class="ui-list-pagination__controls">
+            <button class="review-button soft" type="button" ${pageData.page <= 1 ? 'disabled' : ''} onclick="prevApplicationCardsPage()">Previous</button>
+            <button class="review-button soft" type="button" ${pageData.page >= pageData.totalPages ? 'disabled' : ''} onclick="nextApplicationCardsPage()">Next</button>
+        </div>
+    `;
+}
+
+function prevApplicationCardsPage() {
+    state.pagination.cardsPage = Math.max(1, state.pagination.cardsPage - 1);
+    renderCards();
+}
+
+function nextApplicationCardsPage() {
+    state.pagination.cardsPage += 1;
+    renderCards();
+}
+
 function syncSummary() {
     loadedCount.textContent = String(state.applications.length);
     pendingCount.textContent = String(state.applications.filter(item => item.status === 'Pending').length);
@@ -455,11 +499,19 @@ function selectApplication(application, notesOverride = null) {
 function renderCards() {
     if (!state.applications.length) {
         cards.innerHTML = '<div class="review-card"><p class="review-empty">No applications found for this filter.</p></div>';
+        renderApplicationCardsPagination({ page: 1, totalPages: 1, totalRows: 0 });
         syncSummary();
         return;
     }
 
-    cards.innerHTML = state.applications.map(application => `
+    const pageData = paginateRows(
+        state.applications,
+        state.pagination.cardsPage,
+        state.pagination.cardsPageSize
+    );
+    state.pagination.cardsPage = pageData.page;
+
+    cards.innerHTML = pageData.rows.map(application => `
         <article class="review-card" data-id="${application.id}" style="${Number(state.selectedId) === Number(application.id) ? 'outline: 2px solid rgba(29, 78, 216, 0.22);' : ''}">
             <div class="review-card__top">
                 <div class="review-card__identity">
@@ -501,6 +553,7 @@ function renderCards() {
         </article>
     `).join('');
 
+    renderApplicationCardsPagination(pageData);
     syncSummary();
 }
 
@@ -518,6 +571,7 @@ async function loadApplications() {
 
     if (result.status >= 200 && result.status < 300) {
         state.applications = result.data?.applications || [];
+        state.pagination.cardsPage = 1;
         if (!state.applications.find(item => Number(item.id) === Number(state.selectedId))) {
             state.selectedId = null;
             document.getElementById('applicationId').value = '';
@@ -529,6 +583,7 @@ async function loadApplications() {
 
     state.applications = [];
     state.selectedId = null;
+    state.pagination.cardsPage = 1;
     renderCards();
 }
 
@@ -580,9 +635,19 @@ function rejectFromCard(applicationId) {
 }
 
 refreshContext();
+if (window.lifeLinkShell) {
+    window.lifeLinkShell.updateIdentityContext({
+        name: localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Admin',
+        userId: localStorage.getItem('CURRENT_USER_ID') || '-',
+        email: localStorage.getItem('CURRENT_USER_EMAIL') || '-',
+        role: 'Admin',
+        hideDepartment: true,
+    });
+    window.lifeLinkShell.initPanelNavigation({
+        panelIds: reviewPanelIds,
+        defaultPanel: 'review-queue-panel',
+    });
+}
 loadPendingApplications();
 </script>
 @endpush
- /*
- This is done to ensure the last commit went through
-*/

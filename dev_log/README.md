@@ -3428,3 +3428,112 @@ Blood Bank IT behavior and navigation mode separation were preserved.
   - `resources/views/ui/patient-portal.blade.php`
   - `resources/views/ui/it-bed-allocation.blade.php`
 - no backend schema/API contract change was introduced in this phase
+
+## Performance Audit + Slow-Path Removal Pass (2026-04-12)
+
+Scope:
+- targeted speed diagnosis and fixes for login/register/dashboard boot/data loading
+- no UI redesign
+- no route changes
+- no auth contract change
+- no Blood Bank flow removal
+
+### Slowness findings (exact files)
+1. `lifelink-app/resources/views/ui/dashboard.blade.php`
+- Found intentional delay: yes
+- Cause: forced `setTimeout(..., 1200)` delayed redirect from workspace hub to role dashboard.
+
+2. `lifelink-app/resources/views/ui/patient-portal.blade.php`
+- Found intentional delay: no critical-path delay (toast timeout only)
+- Cause: sequential startup and refresh waterfall (`loadBookingOptions -> loadPortal -> loadMedicalRecords -> loadAppointments -> loadBloodRequests`) plus sequential follow-up reloads after actions.
+
+3. `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+- Found intentional delay: no
+- Cause A: duplicate/overlapping Blood Bank workspace auto-load possible via both `setActivePanel()` and `loadDepartmentsScope()` before first load flag settled.
+- Cause B: eager regular IT data boot (`loadDoctors/loadPatients/loadAppointmentQueue`) even when hidden panels were not active.
+
+4. `lifelink-app/app/Http/Controllers/Api/DoctorClinicalController.php`
+- Found intentional delay: no
+- Cause: N+1 query pattern in `patients()` (one extra active-admission query per patient row).
+
+5. `lifelink-app/app/Http/Controllers/Api/AuthController.php`
+- Found intentional delay: no
+- Cause: timing instrumentation always executing and logging per login/register in non-debug paths.
+
+### What was optimized/removed
+1. Removed intentional dashboard redirect delay.
+- File: `resources/views/ui/dashboard.blade.php`
+- Change: removed delayed redirect and switched to immediate `window.location.replace(...)` for `/ui/dashboard`.
+
+2. Parallelized patient portal refresh + post-action reloads.
+- File: `resources/views/ui/patient-portal.blade.php`
+- Change:
+  - `refreshAll()` now runs `loadBookingOptions`, `loadPortal`, `loadMedicalRecords`, `loadAppointments`, `loadBloodRequests` in parallel.
+  - After booking/cancel blood actions, dependent reloads now use `Promise.all(...)` instead of sequential awaits.
+
+3. Removed duplicate hidden auto-load chains in IT dashboard boot.
+- File: `resources/views/ui/it-bed-allocation.blade.php`
+- Change:
+  - Added in-flight lock for Blood Bank workspace bootstrap (`workspaceLoading`) to prevent duplicate concurrent refreshes.
+  - Added lazy regular-workspace loader (`maybeLoadRegularWorkspace`) with in-flight dedupe.
+  - Changed boot behavior: regular IT heavy endpoints are now loaded when regular data panels are actually opened (`it-directory`, `it-appointments`, `it-admission`) instead of always at initial scope load.
+  - Blood Bank refresh path now parallel-loads request board + donor list where safe.
+
+4. Reduced backend query overhead for doctor dashboard patient load.
+- File: `app/Http/Controllers/Api/DoctorClinicalController.php`
+- Change: replaced per-patient active-admission query inside map with one batched admission query keyed by `patient_user_id`.
+
+5. Reduced auth-path overhead outside debug mode.
+- File: `app/Http/Controllers/Api/AuthController.php`
+- Change: `markDuration()` and `logTiming()` now no-op when `app.debug` is false.
+
+### Requests parallelized
+1. Patient portal boot/refresh:
+- `GET /api/patient/booking-options`
+- `GET /api/patient/portal`
+- `GET /api/patient/medical-records`
+- `GET /api/patient/appointments`
+- `GET /api/patient/blood-requests`
+
+2. Patient post-actions:
+- after appointment create/cancel: appointments + portal snapshot reload in parallel
+- after blood request submit: blood requests + portal snapshot reload in parallel
+
+3. IT Blood Bank workspace refresh:
+- request board and donor search refresh now run in parallel within workspace refresh path.
+
+### Hidden/duplicate loads removed
+1. IT Blood Bank workspace duplicate auto-load race removed using in-flight promise lock.
+2. IT regular directory/queue eager load on initial boot removed; now lazy by active panel.
+
+### Edited files
+- `lifelink-app/resources/views/ui/dashboard.blade.php`
+- `lifelink-app/resources/views/ui/patient-portal.blade.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+- `lifelink-app/app/Http/Controllers/Api/DoctorClinicalController.php`
+- `lifelink-app/app/Http/Controllers/Api/AuthController.php`
+
+### Verification in this pass
+- `php -l app/Http/Controllers/Api/AuthController.php` -> no syntax errors
+- `php -l app/Http/Controllers/Api/DoctorClinicalController.php` -> no syntax errors
+
+### Manual smoke tests (before/after checklist)
+1. Login
+- Before: workspace hub added visible wait before redirect.
+- After expected: no forced wait; redirect should happen immediately after valid session/role evaluation.
+
+2. Register flows (patient/donor/applicant)
+- Before: no intentional delay found.
+- After expected: unchanged business flow + unchanged redirect targets; no auth/route break.
+
+3. Patient dashboard boot (`/ui/patient-portal`)
+- Before: sequential startup waterfall.
+- After expected: faster first full data paint due to parallel initial loads.
+
+4. IT dashboard boot (`/ui/it-bed-allocation`)
+- Before: eager regular data loads + possible duplicate Blood Bank workspace auto-load overlap.
+- After expected: regular panel data loads on demand; Blood Bank workspace bootstrap de-duplicated.
+
+5. Doctor dashboard patient load (`/ui/doctor-dashboard`)
+- Before: patient list path included N+1 active-admission queries.
+- After expected: single batched admission query for active-admission mapping.

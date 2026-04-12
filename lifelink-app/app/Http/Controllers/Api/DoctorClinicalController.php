@@ -104,15 +104,19 @@ class DoctorClinicalController extends Controller
             ->with('patientProfile')
             ->whereIn('id', $patientIds)
             ->orderBy('id')
-            ->get()
-            ->map(function (User $user) use ($doctorId) {
-                $activeAdmission = Admission::query()
-                    ->where('patient_user_id', $user->id)
-                    ->where('admitted_by_doctor_id', $doctorId)
-                    ->where('status', 'Admitted')
-                    ->latest('id')
-                    ->first();
+            ->get();
 
+        $latestActiveAdmissionsByPatient = Admission::query()
+            ->where('admitted_by_doctor_id', $doctorId)
+            ->where('status', 'Admitted')
+            ->whereIn('patient_user_id', $patientIds)
+            ->orderByDesc('id')
+            ->get(['id', 'patient_user_id', 'status'])
+            ->unique('patient_user_id')
+            ->keyBy('patient_user_id');
+
+        $patientRows = $patients->map(function (User $user) use ($latestActiveAdmissionsByPatient) {
+                $activeAdmission = $latestActiveAdmissionsByPatient->get($user->id);
                 return [
                     'patient_user_id' => $user->id,
                     'full_name' => $user->full_name ?? $user->name,
@@ -126,7 +130,7 @@ class DoctorClinicalController extends Controller
         return response()->json([
             'department_id' => $doctor->department_id,
             'department' => $doctor->department?->dept_name,
-            'patients' => $patients,
+            'patients' => $patientRows,
         ]);
     }
 

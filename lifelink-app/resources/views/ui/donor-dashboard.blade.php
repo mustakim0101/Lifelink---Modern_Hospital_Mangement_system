@@ -1,6 +1,7 @@
 @extends('ui.layouts.app')
 
 @section('title', 'Donor Dashboard')
+@section('role_theme', 'donor')
 @section('workspace_label', '')
 @section('hero_badge', '')
 @section('hero_title', 'Donor Dashboard')
@@ -16,8 +17,8 @@
         --donor-muted: #475569;
         --donor-line: rgba(15, 23, 42, 0.12);
         --donor-card: rgba(255, 255, 255, 0.94);
-        --donor-primary: #0369a1;
-        --donor-primary-strong: #075985;
+        --donor-primary: #b91c1c;
+        --donor-primary-strong: #991b1b;
         --donor-accent: #dc2626;
         --donor-ok: #166534;
         --donor-warn: #b45309;
@@ -222,21 +223,6 @@
 
     .donor-panel { display: none; }
 
-    /* Donor page layout override: full-width page with sidebar flush left */
-    .app-shell {
-        width: 100%;
-        max-width: none;
-        margin-left: 0;
-        margin-right: 0;
-        padding-left: 0;
-        padding-right: 0;
-    }
-
-    .app-shell__sidebar {
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
-    }
-
     @media (max-width: 1100px) {
         .donor-row,
         .donor-actions,
@@ -260,26 +246,20 @@
     <a href="#donor-history">
         <strong>History</strong>
     </a>
-    <a href="#donor-debug">
-        <strong>API Response</strong>
-    </a>
 @endsection
 
 @section('sidebar')
 @endsection
 
-@section('hero_extra')
-    <div class="donor-stats donor-hero-stats">
-        <div class="donor-stat"><small>Total Donations</small><strong id="stDonations">0</strong></div>
-        <div class="donor-stat"><small>Total Units</small><strong id="stUnits">0</strong></div>
-        <div class="donor-stat"><small>Pending Requests</small><strong id="stPendingReq">0</strong></div>
-        <div class="donor-stat"><small>Week Max Bags</small><strong id="stWeekBags">0</strong></div>
-    </div>
-@endsection
-
 @section('content')
     <div class="donor-grid">
         <div id="donor-access" class="donor-card ll-section donor-panel" data-display="block">
+            <div class="donor-stats donor-hero-stats">
+                <div class="donor-stat"><small>Total Donations</small><strong id="stDonations">0</strong></div>
+                <div class="donor-stat"><small>Total Units</small><strong id="stUnits">0</strong></div>
+                <div class="donor-stat"><small>Pending Requests</small><strong id="stPendingReq">0</strong></div>
+                <div class="donor-stat"><small>Week Max Bags</small><strong id="stWeekBags">0</strong></div>
+            </div>
             <h3>Access and donor role</h3>
             <p class="donor-hint">Use USER_TOKEN first. Enable donor role if needed. Blood Bank nurses handle health checks, and Blood Bank IT staff log actual donations.</p>
             <label class="donor-label" for="tokenInput">Bearer token</label>
@@ -347,7 +327,8 @@
             <div class="donor-actions" style="margin-top: 12px;">
                 <button id="btnNotifications" class="donor-btn donor-btn-main" type="button" onclick="loadNotifications()">Refresh Notifications</button>
             </div>
-            <div id="notificationsGrid" class="donor-cards" style="margin-top: 12px;"></div>
+            <div id="notificationsGrid" class="donor-cards ui-list-window" style="margin-top: 12px;"></div>
+            <div id="notificationsPagination" class="ui-list-pagination"></div>
         </div>
 
         <div id="donor-history" class="donor-card ll-section donor-panel" data-display="block">
@@ -364,14 +345,9 @@
                     <tbody id="donationBody"></tbody>
                 </table>
             </div>
+            <div id="donationPagination" class="ui-list-pagination"></div>
         </div>
 
-        <div id="donor-debug" class="donor-card ll-section donor-panel" data-display="block">
-            <details class="ll-debug" open>
-                <summary>API response</summary>
-                <pre id="out" class="donor-pre"></pre>
-            </details>
-        </div>
     </div>
 
     <div id="toastStack" class="donor-toast-stack"></div>
@@ -381,9 +357,23 @@
 <script>
 const API = '/api';
 const out = document.getElementById('out');
+const donorState = {
+    availabilityRows: [],
+    notifications: [],
+    donations: [],
+    pagination: {
+        notificationsPageSize: 6,
+        notificationsPage: 1,
+        donationsPageSize: 10,
+        donationsPage: 1,
+    },
+};
 
 function byId(id) { return document.getElementById(id); }
-function write(value) { out.textContent = typeof value === 'string' ? value : JSON.stringify(value, null, 2); }
+function write(value) {
+    if (!window.lifeLinkShell?.isDebugEnabled() || !out) return;
+    out.textContent = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+}
 function html(value) {
     if (value === null || value === undefined) return '';
     return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
@@ -402,6 +392,120 @@ function setBusy(id, busy) {
     button.dataset.label = button.dataset.label || button.textContent;
     button.textContent = busy ? 'Working...' : button.dataset.label;
 }
+function paginateRows(rows, page, pageSize) {
+    const safeRows = Array.isArray(rows) ? rows : [];
+    const safeSize = Math.max(1, Number(pageSize) || 1);
+    const totalPages = Math.max(1, Math.ceil(safeRows.length / safeSize));
+    const safePage = Math.min(Math.max(1, Number(page) || 1), totalPages);
+    const start = (safePage - 1) * safeSize;
+    return {
+        rows: safeRows.slice(start, start + safeSize),
+        page: safePage,
+        totalPages,
+        totalRows: safeRows.length,
+    };
+}
+function renderPagination(rootId, pageData, prevHandler, nextHandler, pageSize, buttonClass = 'donor-btn donor-btn-soft') {
+    const root = byId(rootId);
+    if (!root) return;
+    if (pageData.totalRows <= pageSize) {
+        root.innerHTML = '';
+        return;
+    }
+    root.innerHTML = `
+        <div class="ui-list-pagination__meta">Page ${pageData.page} of ${pageData.totalPages} (${pageData.totalRows} total)</div>
+        <div class="ui-list-pagination__controls">
+            <button class="${buttonClass}" type="button" ${pageData.page <= 1 ? 'disabled' : ''} onclick="${prevHandler}">Previous</button>
+            <button class="${buttonClass}" type="button" ${pageData.page >= pageData.totalPages ? 'disabled' : ''} onclick="${nextHandler}">Next</button>
+        </div>
+    `;
+}
+function prevNotificationsPage() {
+    donorState.pagination.notificationsPage = Math.max(1, donorState.pagination.notificationsPage - 1);
+    renderNotifications();
+}
+function nextNotificationsPage() {
+    donorState.pagination.notificationsPage += 1;
+    renderNotifications();
+}
+function prevDonationsPage() {
+    donorState.pagination.donationsPage = Math.max(1, donorState.pagination.donationsPage - 1);
+    renderDonations();
+}
+function nextDonationsPage() {
+    donorState.pagination.donationsPage += 1;
+    renderDonations();
+}
+function renderAvailabilityRows() {
+    const rows = donorState.availabilityRows;
+    byId('availabilityBody').innerHTML = rows.length
+        ? rows.map((row) => `
+            <tr>
+                <td>${row.id}</td>
+                <td>${html(row.week_start_date || '-')}</td>
+                <td>${row.is_available ? '<span class="donor-badge ok">Available</span>' : '<span class="donor-badge warn">Not available</span>'}</td>
+                <td>${row.max_bags_possible}</td>
+                <td>${row.updated_at ? new Date(row.updated_at).toLocaleString() : '-'}</td>
+            </tr>
+        `).join('')
+        : '<tr><td colspan="5">No availability records found.</td></tr>';
+}
+function renderNotifications() {
+    const rows = donorState.notifications;
+    const pageData = paginateRows(rows, donorState.pagination.notificationsPage, donorState.pagination.notificationsPageSize);
+    donorState.pagination.notificationsPage = pageData.page;
+    byId('notificationsGrid').innerHTML = pageData.totalRows
+        ? pageData.rows.map((row) => `
+            <article class="donor-notification">
+                <h4>${html(row.title || 'Blood request notification')}</h4>
+                <div class="donor-meta">
+                    Request #${row.request_id} | Need ${html(row.request?.blood_group_needed || '-')} ${html(row.request?.component_type || '-')} | Units ${row.request?.units_required ?? '-'}<br>
+                    Department: ${html(row.request?.department_name || '-')} | Urgency: ${html(row.request?.urgency || '-')}<br>
+                    Status: <strong>${html(row.status || '-')}</strong>${row.response_status ? ` | Response: <strong>${html(row.response_status)}</strong>` : ''}<br>
+                    Sent: ${row.sent_at ? new Date(row.sent_at).toLocaleString() : '-'}
+                </div>
+                <p class="donor-hint">${html(row.message || 'No message')}</p>
+                <div class="donor-actions" style="margin-top: 12px;">
+                    <button class="donor-btn donor-btn-soft" type="button" onclick="markNotificationRead(${row.id})">Mark Read</button>
+                    <button class="donor-btn donor-btn-main" type="button" onclick="respondToNotification(${row.id}, 'Accepted')">Accept</button>
+                    <button class="donor-btn donor-btn-accent" type="button" onclick="respondToNotification(${row.id}, 'Declined')">Decline</button>
+                </div>
+            </article>
+        `).join('')
+        : '<div class="donor-card"><p class="donor-hint">No notifications yet.</p></div>';
+    renderPagination(
+        'notificationsPagination',
+        pageData,
+        'prevNotificationsPage()',
+        'nextNotificationsPage()',
+        donorState.pagination.notificationsPageSize
+    );
+}
+function renderDonations() {
+    const rows = donorState.donations;
+    const pageData = paginateRows(rows, donorState.pagination.donationsPage, donorState.pagination.donationsPageSize);
+    donorState.pagination.donationsPage = pageData.page;
+    byId('donationBody').innerHTML = pageData.totalRows
+        ? pageData.rows.map((row) => `
+            <tr>
+                <td>${row.id}</td>
+                <td>${row.donation_datetime ? new Date(row.donation_datetime).toLocaleString() : '-'}</td>
+                <td>${html(row.bank_name || '-')}</td>
+                <td>${html(row.blood_group || '-')}</td>
+                <td>${html(row.component_type || '-')}</td>
+                <td>${row.units_donated}</td>
+                <td>${row.linked_request_id ?? '-'}</td>
+            </tr>
+        `).join('')
+        : '<tr><td colspan="7">No donations logged yet.</td></tr>';
+    renderPagination(
+        'donationPagination',
+        pageData,
+        'prevDonationsPage()',
+        'nextDonationsPage()',
+        donorState.pagination.donationsPageSize
+    );
+}
 function useStoredDonorToken() { byId('tokenInput').value = localStorage.getItem('DONOR_TOKEN') || ''; }
 function useStoredUserToken() { byId('tokenInput').value = localStorage.getItem('USER_TOKEN') || ''; }
 function bootstrapToken() {
@@ -411,7 +515,7 @@ function bootstrapToken() {
 }
 function hasToken() { return !!byId('tokenInput').value.trim(); }
 
-const donorPanelIds = ['donor-access', 'donor-availability', 'donor-requests', 'donor-history', 'donor-debug'];
+const donorPanelIds = ['donor-access', 'donor-availability', 'donor-requests', 'donor-history'];
 const donorNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[href^="#donor-"]'));
 
 function setActivePanel(panelId) {
@@ -511,18 +615,8 @@ async function loadAvailability() {
         return;
     }
 
-    const rows = result.data?.availabilities || [];
-    byId('availabilityBody').innerHTML = rows.length
-        ? rows.map((row) => `
-            <tr>
-                <td>${row.id}</td>
-                <td>${html(row.week_start_date || '-')}</td>
-                <td>${row.is_available ? '<span class="donor-badge ok">Available</span>' : '<span class="donor-badge warn">Not available</span>'}</td>
-                <td>${row.max_bags_possible}</td>
-                <td>${row.updated_at ? new Date(row.updated_at).toLocaleString() : '-'}</td>
-            </tr>
-        `).join('')
-        : '<tr><td colspan="5">No availability records found.</td></tr>';
+    donorState.availabilityRows = result.data?.availabilities || [];
+    renderAvailabilityRows();
 }
 
 async function upsertAvailability() {
@@ -559,26 +653,9 @@ async function loadNotifications() {
         return;
     }
 
-    const rows = result.data?.notifications || [];
-    byId('notificationsGrid').innerHTML = rows.length
-        ? rows.map((row) => `
-            <article class="donor-notification">
-                <h4>${html(row.title || 'Blood request notification')}</h4>
-                <div class="donor-meta">
-                    Request #${row.request_id} | Need ${html(row.request?.blood_group_needed || '-')} ${html(row.request?.component_type || '-')} | Units ${row.request?.units_required ?? '-'}<br>
-                    Department: ${html(row.request?.department_name || '-')} | Urgency: ${html(row.request?.urgency || '-')}<br>
-                    Status: <strong>${html(row.status || '-')}</strong>${row.response_status ? ` | Response: <strong>${html(row.response_status)}</strong>` : ''}<br>
-                    Sent: ${row.sent_at ? new Date(row.sent_at).toLocaleString() : '-'}
-                </div>
-                <p class="donor-hint">${html(row.message || 'No message')}</p>
-                <div class="donor-actions" style="margin-top: 12px;">
-                    <button class="donor-btn donor-btn-soft" type="button" onclick="markNotificationRead(${row.id})">Mark Read</button>
-                    <button class="donor-btn donor-btn-main" type="button" onclick="respondToNotification(${row.id}, 'Accepted')">Accept</button>
-                    <button class="donor-btn donor-btn-accent" type="button" onclick="respondToNotification(${row.id}, 'Declined')">Decline</button>
-                </div>
-            </article>
-        `).join('')
-        : '<div class="donor-card"><p class="donor-hint">No notifications yet.</p></div>';
+    donorState.notifications = result.data?.notifications || [];
+    donorState.pagination.notificationsPage = 1;
+    renderNotifications();
 }
 
 async function markNotificationRead(notificationId) {
@@ -613,20 +690,9 @@ async function loadDonations() {
         return;
     }
 
-    const rows = result.data?.donations || [];
-    byId('donationBody').innerHTML = rows.length
-        ? rows.map((row) => `
-            <tr>
-                <td>${row.id}</td>
-                <td>${row.donation_datetime ? new Date(row.donation_datetime).toLocaleString() : '-'}</td>
-                <td>${html(row.bank_name || '-')}</td>
-                <td>${html(row.blood_group || '-')}</td>
-                <td>${html(row.component_type || '-')}</td>
-                <td>${row.units_donated}</td>
-                <td>${row.linked_request_id ?? '-'}</td>
-            </tr>
-        `).join('')
-        : '<tr><td colspan="7">No donations logged yet.</td></tr>';
+    donorState.donations = result.data?.donations || [];
+    donorState.pagination.donationsPage = 1;
+    renderDonations();
 }
 
 async function enrollDonorRole() {
@@ -674,6 +740,15 @@ async function refreshAll({ silentIfMissingToken = false } = {}) {
 
 function boot() {
     setupSidebarPanelNav();
+    if (window.lifeLinkShell) {
+        window.lifeLinkShell.updateIdentityContext({
+            name: localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Donor',
+            userId: localStorage.getItem('CURRENT_USER_ID') || '-',
+            email: localStorage.getItem('CURRENT_USER_EMAIL') || '-',
+            role: 'Donor',
+            hideDepartment: true,
+        });
+    }
     bootstrapToken();
     if (hasToken()) {
         refreshAll({ silentIfMissingToken: true });

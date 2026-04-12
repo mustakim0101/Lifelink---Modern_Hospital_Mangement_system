@@ -248,6 +248,12 @@
             .find(role => roles.includes(role));
         const config = roleConfig[preferredRole] || roleConfig.Patient;
         const currentPath = window.location.pathname;
+
+        if (currentPath === '/ui/dashboard') {
+            window.location.replace(config.primaryHref);
+            return;
+        }
+
         const bloodBankItAccess = await hasBloodBankItAccess();
 
         welcomeLine.textContent = `Welcome back, ${config.label}.`;
@@ -293,11 +299,6 @@
             adminToolsCard.classList.remove('hidden');
         }
 
-        if (currentPath === '/ui/dashboard') {
-            setTimeout(() => {
-                window.location.href = config.primaryHref;
-            }, 1200);
-        }
     }
 
     function logoutSession() {
