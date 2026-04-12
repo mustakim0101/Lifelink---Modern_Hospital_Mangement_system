@@ -7,24 +7,24 @@ use App\Http\Controllers\Api\BloodBankSchemaController;
 use App\Http\Controllers\Api\BloodMatchingController;
 use App\Http\Controllers\Api\DonorDashboardController;
 use App\Http\Controllers\Api\DonorNotificationController;
+use App\Http\Controllers\Api\DoctorReviewController;
 use App\Http\Controllers\Api\DoctorAppointmentRuleController;
 use App\Http\Controllers\Api\DoctorClinicalController;
 use App\Http\Controllers\Api\ItAppointmentQueueController;
 use App\Http\Controllers\Api\JobApplicationController;
 use App\Http\Controllers\Api\NurseCareController;
 use App\Http\Controllers\Api\PatientPortalController;
+use App\Http\Controllers\Api\PublicDepartmentController;
 use App\Http\Controllers\Api\ItBedAllocationController;
 use App\Http\Controllers\Api\WardCatalogController;
-use App\Models\Department;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/public/departments', function () {
-    return response()->json([
-        'departments' => Department::query()
-            ->where('is_active', true)
-            ->orderBy('dept_name')
-            ->get(['id', 'dept_name']),
-    ]);
+Route::prefix('public')->group(function () {
+    Route::get('/departments', [PublicDepartmentController::class, 'legacyList']);
+    Route::get('/departments/catalog', [PublicDepartmentController::class, 'catalog']);
+    Route::get('/departments/{slug}', [PublicDepartmentController::class, 'show']);
+    Route::get('/departments/{slug}/availability', [PublicDepartmentController::class, 'availability']);
+    Route::get('/doctors/{doctor}/reviews', [DoctorReviewController::class, 'index']);
 });
 
 Route::prefix('auth')->group(function () {
@@ -54,6 +54,7 @@ Route::prefix('admin')->middleware(['auth:api', 'active.user', 'role:Admin,ITWor
     Route::get('/applications', [ApplicationReviewController::class, 'index']);
     Route::post('/applications/{application}/approve', [ApplicationReviewController::class, 'approve']);
     Route::post('/applications/{application}/reject', [ApplicationReviewController::class, 'reject']);
+    Route::patch('/applications/{application}/department', [ApplicationReviewController::class, 'updateDepartment']);
 });
 
 Route::prefix('applications')->middleware(['auth:api', 'active.user'])->group(function () {
@@ -121,6 +122,7 @@ Route::prefix('patient')->middleware(['auth:api', 'active.user', 'role:Patient']
     Route::get('/booking-options', [PatientPortalController::class, 'bookingOptions']);
     Route::post('/appointments', [PatientPortalController::class, 'bookAppointment']);
     Route::post('/appointments/{appointment}/cancel', [PatientPortalController::class, 'cancelAppointment']);
+    Route::post('/doctors/{doctor}/reviews', [DoctorReviewController::class, 'store']);
     Route::post('/blood-requests', [PatientPortalController::class, 'requestBlood']);
     Route::get('/blood-requests', [PatientPortalController::class, 'myBloodRequests']);
 });

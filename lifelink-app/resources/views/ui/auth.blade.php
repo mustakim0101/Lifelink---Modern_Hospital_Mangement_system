@@ -211,8 +211,18 @@
     const sessionUser = document.getElementById('session-user');
     const sessionRoles = document.getElementById('session-roles');
     const advancedCard = document.getElementById('advanced-card');
+    const pageQueryParams = new URLSearchParams(window.location.search);
     const applicantRolesWithDepartment = ['Doctor'];
     const TEST_MODE_PASSWORD = '12345678';
+    const allowRawServerErrors = @json(app()->environment(['local', 'development']) && config('app.debug')) && pageQueryParams.get('showRawErrors') === '1';
+    const internalErrorPatterns = [
+        /secret is not set/i,
+        /stack trace/i,
+        /sqlstate/i,
+        /exception/i,
+        /error in/i,
+        /failed to open stream/i,
+    ];
     const rolePriority = ['Admin', 'ITWorker', 'Doctor', 'Nurse', 'Donor', 'Applicant', 'Patient'];
     const roleDestinations = {
         Admin: '/ui/admin-users',
@@ -227,6 +237,23 @@
     function showMessage(kind, text) {
         message.className = `message show ${kind}`;
         message.textContent = text;
+    }
+
+    function looksLikeInternalError(text) {
+        if (!text) return false;
+        const trimmed = String(text).trim();
+        if (!trimmed) return false;
+        if (trimmed.includes('<!DOCTYPE') || trimmed.includes('<html')) return true;
+        return internalErrorPatterns.some(pattern => pattern.test(trimmed));
+    }
+
+    function sanitizeServerMessage(rawText, fallback) {
+        if (typeof rawText !== 'string') return fallback;
+        const trimmed = rawText.trim();
+        if (!trimmed) return fallback;
+        if (allowRawServerErrors) return trimmed;
+        if (looksLikeInternalError(trimmed)) return fallback;
+        return trimmed;
     }
 
     function applyTestModePasswords() {
@@ -250,11 +277,13 @@
     }
 
     function extractMessage(result, fallback) {
-        if (typeof result?.data === 'string') return result.data;
-        if (result?.data?.message) return result.data.message;
+        if (typeof result?.data === 'string') return sanitizeServerMessage(result.data, fallback);
+        if (result?.data?.message) return sanitizeServerMessage(result.data.message, fallback);
         if (result?.data?.errors) {
             const firstKey = Object.keys(result.data.errors)[0];
-            if (firstKey && Array.isArray(result.data.errors[firstKey])) return result.data.errors[firstKey][0];
+            if (firstKey && Array.isArray(result.data.errors[firstKey])) {
+                return sanitizeServerMessage(result.data.errors[firstKey][0], fallback);
+            }
         }
         return fallback;
     }
@@ -453,9 +482,8 @@
 
     function hydrateLoginPage() {
         if (currentMode !== 'login') return;
-        const params = new URLSearchParams(window.location.search);
-        const email = params.get('email') || localStorage.getItem('LAST_USED_EMAIL') || '';
-        const source = params.get('from');
+        const email = pageQueryParams.get('email') || localStorage.getItem('LAST_USED_EMAIL') || '';
+        const source = pageQueryParams.get('from');
         if (email) document.getElementById('loginEmail').value = email;
         const notes = {
             patient: 'Patient account created. Log in to enter the patient flow.',

@@ -33,6 +33,8 @@ Route::view('/ui/it-bed-allocation', 'ui.it-bed-allocation');
 Route::view('/ui/doctor-dashboard', 'ui.doctor-dashboard');
 Route::view('/ui/nurse-dashboard', 'ui.nurse-dashboard');
 Route::view('/ui/patient-portal', 'ui.patient-portal');
+Route::view('/ui/departments', 'ui.departments');
+Route::view('/ui/departments/{slug}', 'ui.department-detail');
 Route::view('/ui/blood-bank-schema', 'ui.blood-bank-schema');
 Route::view('/ui/donor-dashboard', 'ui.donor-dashboard');
 Route::view('/ui/blood-matching', 'ui.blood-matching');

@@ -185,6 +185,7 @@
                         </div>
 
                         <div class="hero-actions">
+                            <a id="finder-department-link" class="button primary" href="/ui/departments">View Department</a>
                             <a class="button primary" href="/ui/login">Continue to Login</a>
                             <a class="button" href="#entry">See account entry</a>
                         </div>
@@ -225,100 +226,117 @@
     const finderRegionDescription = document.getElementById('finder-region-description');
     const finderRegionTags = document.getElementById('finder-region-tags');
     const finderRegionNote = document.getElementById('finder-region-note');
+    const finderDepartmentLink = document.getElementById('finder-department-link');
     const finderRegions = {
         eyes: {
             name: 'Eyes',
-            departments: ['Neurology'],
+            departments: ['Neurology & Neurosurgery'],
+            departmentSlug: 'neurology-neurosurgery',
             description: 'Visual changes, eye-related nerve symptoms, and neurological concerns affecting sight can begin with a neurology-led review.',
             note: 'This route helps surface vision symptoms that may connect to broader nerve or brain-related evaluation.'
         },
         brain: {
             name: 'Brain',
-            departments: ['Neurology'],
+            departments: ['Neurology & Neurosurgery'],
+            departmentSlug: 'neurology-neurosurgery',
             description: 'Neurology is the best fit for symptoms centered around the brain, nerves, memory, balance, or severe headaches.',
             note: 'A strong first route for neurological review, imaging decisions, and specialist follow-up inside the hospital workflow.'
         },
         'left-lung': {
             name: 'Left Lung',
-            departments: ['General Medicine'],
-            description: 'Breathing discomfort, coughing, congestion, or chest symptoms affecting the left lung can begin with general medicine triage.',
-            note: 'A useful entry point for respiratory review, baseline assessment, and referral into the next care path.'
+            departments: ['Pulmonology', 'General Medicine'],
+            departmentSlug: 'pulmonology',
+            description: 'Breathing discomfort, coughing, congestion, or chest symptoms affecting the left lung can begin with pulmonology-guided triage.',
+            note: 'A focused entry point for respiratory review, baseline assessment, and referral into the next care path.'
         },
         'right-lung': {
             name: 'Right Lung',
-            departments: ['General Medicine'],
-            description: 'Breathing discomfort, coughing, congestion, or chest symptoms affecting the right lung can begin with general medicine triage.',
-            note: 'This keeps respiratory symptoms moving through a clear internal medicine workflow before any specialty escalation.'
+            departments: ['Pulmonology', 'General Medicine'],
+            departmentSlug: 'pulmonology',
+            description: 'Breathing discomfort, coughing, congestion, or chest symptoms affecting the right lung can begin with pulmonology-guided triage.',
+            note: 'This keeps respiratory symptoms moving through a clear pulmonary workflow before any specialty escalation.'
         },
         heart: {
             name: 'Heart',
-            departments: ['Cardiology'],
+            departments: ['Cardiology & Vascular Medicine'],
+            departmentSlug: 'cardiology-vascular-medicine',
             description: 'Cardiology is the right match for chest pressure, palpitations, circulation concerns, or ongoing heart-health monitoring.',
             note: 'This path supports focused cardiac assessment, monitoring, and escalation into specialist-led treatment.'
         },
         liver: {
             name: 'Liver',
-            departments: ['General Medicine'],
-            description: 'General medicine is a practical first stop for liver-area discomfort, fatigue, metabolism concerns, or abnormal clinical findings.',
-            note: 'It helps patients start with broad assessment before being routed onward for more specialized digestive care if needed.'
+            departments: ['Gastroenterology & Hepatology', 'General Medicine'],
+            departmentSlug: 'gastroenterology-hepatology',
+            description: 'Gastroenterology and hepatology are a practical first stop for liver-area discomfort, fatigue, metabolism concerns, or abnormal clinical findings.',
+            note: 'This route supports focused digestive-liver assessment before any additional specialist escalation.'
         },
         stomach: {
             name: 'Stomach',
-            departments: ['General Medicine'],
-            description: 'Nausea, upper abdominal discomfort, indigestion, or appetite changes can begin with a general medicine workup.',
+            departments: ['Gastroenterology & Hepatology', 'General Medicine'],
+            departmentSlug: 'gastroenterology-hepatology',
+            description: 'Nausea, upper abdominal discomfort, indigestion, or appetite changes can begin with a gastroenterology workup.',
             note: 'This route supports symptom review, initial treatment, and referral when stomach-related issues need deeper investigation.'
         },
         'left-kidney': {
             name: 'Left Kidney',
-            departments: ['General Medicine'],
-            description: 'Left-sided flank pain, swelling, hydration issues, or suspected kidney-related symptoms can be triaged through general medicine.',
+            departments: ['Nephrology & Urology', 'General Medicine'],
+            departmentSlug: 'nephrology-urology',
+            description: 'Left-sided flank pain, swelling, hydration issues, or suspected kidney-related symptoms can be triaged through nephrology and urology care.',
             note: 'A balanced entry point for tests, acute symptom review, and internal medicine coordination for kidney-related concerns.'
         },
         'right-kidney': {
             name: 'Right Kidney',
-            departments: ['General Medicine'],
-            description: 'Right-sided flank pain, swelling, hydration issues, or suspected kidney-related symptoms can be triaged through general medicine.',
+            departments: ['Nephrology & Urology', 'General Medicine'],
+            departmentSlug: 'nephrology-urology',
+            description: 'Right-sided flank pain, swelling, hydration issues, or suspected kidney-related symptoms can be triaged through nephrology and urology care.',
             note: 'A balanced entry point for tests, acute symptom review, and internal medicine coordination for kidney-related concerns.'
         },
         intestines: {
             name: 'Intestines',
-            departments: ['General Medicine'],
-            description: 'Bowel discomfort, cramping, digestive irregularity, or lower abdominal symptoms are well suited to general medicine triage.',
+            departments: ['Gastroenterology & Hepatology', 'General Medicine'],
+            departmentSlug: 'gastroenterology-hepatology',
+            description: 'Bowel discomfort, cramping, digestive irregularity, or lower abdominal symptoms are well suited to gastroenterology triage.',
             note: 'This path helps turn broad digestive concerns into a clear next step with examination and follow-up planning.'
         },
         bladder: {
             name: 'Bladder',
-            departments: ['General Medicine'],
-            description: 'Urinary discomfort, lower pelvic pressure, or fluid-balance concerns can start with general medicine support.',
+            departments: ['Nephrology & Urology', 'General Medicine'],
+            departmentSlug: 'nephrology-urology',
+            description: 'Urinary discomfort, lower pelvic pressure, or fluid-balance concerns can start with nephrology and urology support.',
             note: 'Helpful for early assessment, testing coordination, and routing into the right treatment pathway.'
         },
         'hands-arms': {
             name: 'Hands and Arms',
-            departments: ['Orthopedics'],
+            departments: ['Orthopedics & Musculoskeletal Care'],
+            departmentSlug: 'orthopedics-musculoskeletal-care',
             description: 'Hand injuries, arm pain, joint strain, or limited upper-limb movement align well with orthopedic evaluation.',
             note: 'This route is useful for musculoskeletal issues affecting the shoulders, arms, wrists, or hands.'
         },
         legs: {
             name: 'Legs',
-            departments: ['Orthopedics'],
+            departments: ['Orthopedics & Musculoskeletal Care'],
+            departmentSlug: 'orthopedics-musculoskeletal-care',
             description: 'Leg pain, sports injuries, gait problems, fractures, or weight-bearing discomfort fit the orthopedic pathway.',
             note: 'A strong first stop for lower-limb injuries, stability concerns, and rehab-oriented treatment planning.'
         },
         'bones-joints': {
             name: 'Bones and Joints',
-            departments: ['Orthopedics'],
+            departments: ['Orthopedics & Musculoskeletal Care'],
+            departmentSlug: 'orthopedics-musculoskeletal-care',
             description: 'Bone pain, joint instability, posture issues, or broader skeletal discomfort align best with orthopedics.',
             note: 'Use this when symptoms feel structural or joint-based rather than isolated to the arms or legs alone.'
         },
         'child-care': {
             name: 'Child Care',
             departments: ['Pediatrics'],
+            departmentSlug: 'pediatrics',
             description: 'Pediatrics stays available for child wellness, fever monitoring, growth concerns, and age-specific clinical attention.',
             note: 'This gives families a clear path into child-focused care without treating pediatrics like a body-organ overlay.'
         },
         'blood-donation': {
             name: 'Blood and Donation',
             departments: ['Blood Bank'],
+            departmentSlug: 'blood-bank',
             description: 'Blood requests, donor coordination, and transfusion support should flow through the blood bank pathway.',
             note: 'Best for donation readiness, blood availability checks, and urgent blood-support coordination in LifeLink.'
         }
@@ -332,6 +350,13 @@
         finderRegionDescription.textContent = region.description;
         finderRegionNote.textContent = region.note;
         finderRegionTags.innerHTML = region.departments.map(department => `<span>${department}</span>`).join('');
+
+        if (finderDepartmentLink) {
+            const primaryDepartment = region.departments?.[0] || 'Department';
+            const slug = region.departmentSlug || '';
+            finderDepartmentLink.href = slug ? `/ui/departments/${slug}` : '/ui/departments';
+            finderDepartmentLink.textContent = `View ${primaryDepartment}`;
+        }
 
         finderHotspots.forEach(button => {
             const isActive = button.dataset.region === regionKey;

@@ -20,11 +20,17 @@ class Doctor extends Model
         'department_id',
         'specialization',
         'license_number',
+        'years_experience',
+        'consultation_fee',
+        'bio',
+        'profile_image_url',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'years_experience' => 'integer',
+        'consultation_fee' => 'decimal:2',
     ];
 
     public function user(): BelongsTo
@@ -40,5 +46,15 @@ class Doctor extends Model
     public function appointmentRules(): HasMany
     {
         return $this->hasMany(DoctorAppointmentRule::class, 'doctor_user_id', 'doctor_id');
+    }
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'doctor_user_id', 'doctor_id');
+    }
+
+    public function doctorReviews(): HasMany
+    {
+        return $this->hasMany(DoctorReview::class, 'doctor_user_id', 'doctor_id');
     }
 }

@@ -56,4 +56,9 @@ class Patient extends Model
     {
         return $this->hasMany(BloodRequest::class, 'patient_id', 'patient_id');
     }
+
+    public function doctorReviews(): HasMany
+    {
+        return $this->hasMany(DoctorReview::class, 'patient_id', 'patient_id');
+    }
 }
