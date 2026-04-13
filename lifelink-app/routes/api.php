@@ -15,11 +15,13 @@ use App\Http\Controllers\Api\JobApplicationController;
 use App\Http\Controllers\Api\NurseCareController;
 use App\Http\Controllers\Api\PatientPortalController;
 use App\Http\Controllers\Api\PublicDepartmentController;
+use App\Http\Controllers\Api\PublicWelcomeController;
 use App\Http\Controllers\Api\ItBedAllocationController;
 use App\Http\Controllers\Api\WardCatalogController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('public')->group(function () {
+    Route::get('/welcome/metrics', [PublicWelcomeController::class, 'metrics']);
     Route::get('/departments', [PublicDepartmentController::class, 'legacyList']);
     Route::get('/departments/catalog', [PublicDepartmentController::class, 'catalog']);
     Route::get('/departments/{slug}', [PublicDepartmentController::class, 'show']);

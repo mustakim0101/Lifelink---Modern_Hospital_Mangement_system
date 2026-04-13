@@ -1,10 +1,10 @@
 @extends('ui.layouts.app')
 
 @section('title', 'Department Directory')
-@section('role_theme', 'patient')
+@section('public_page', '1')
 
 @section('top_actions')
-    <a href="/ui/patient-portal">Patient Portal</a>
+    <a class="is-active" href="/ui/departments">Directory</a>
 @endsection
 
 @section('sidebar_nav')
@@ -82,6 +82,31 @@
     .dept-card h3 {
         margin: 0;
         font-size: 1.02rem;
+    }
+
+    .dept-card-head {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+    }
+
+    .dept-card-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 11px;
+        border: 1px solid rgba(3, 105, 161, 0.2);
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(224, 242, 254, 0.78));
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+    }
+
+    .dept-card-icon img {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+        display: block;
     }
 
     .dept-card p {
@@ -239,6 +264,10 @@ function renderDepartmentGrid() {
     }
 
     departmentGrid.innerHTML = rows.map((department) => {
+        const anatomy = window.lifeLinkAnatomy?.resolveDepartmentAsset(department) || {
+            src: '/assets/anatomy/human-heart-svgrepo-com.svg',
+            alt: 'Department icon',
+        };
         const chips = (department.organ_coverage_summary || [])
             .slice(0, 6)
             .map((item) => `<span class="dept-chip">${catalogHtml(item)}</span>`)
@@ -246,7 +275,10 @@ function renderDepartmentGrid() {
 
         return `
             <article class="dept-card">
-                <h3>${catalogHtml(department.name)}</h3>
+                <div class="dept-card-head">
+                    <span class="dept-card-icon"><img src="${catalogHtml(anatomy.src)}" alt="${catalogHtml(anatomy.alt)}"></span>
+                    <h3>${catalogHtml(department.name)}</h3>
+                </div>
                 <p>${catalogHtml(department.short_description || 'Department profile information is available on the detail page.')}</p>
                 <div class="dept-meta">
                     <div class="dept-meta-row">

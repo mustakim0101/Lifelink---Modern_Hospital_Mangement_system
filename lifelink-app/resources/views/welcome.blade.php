@@ -20,7 +20,7 @@
                 <a href="#overview">Overview</a>
                 <a href="#find-department">Department Finder</a>
                 <a href="#modules">Platform</a>
-                <a href="#entry">Entry</a>
+                <a class="cta" href="/ui/login">Login</a>
             </nav>
         </div>
     </header>
@@ -181,7 +181,7 @@
                         </div>
 
                         <div class="finder-note">
-                            <p id="finder-region-note">Hover or tap the anatomy to preview the most relevant department path, then continue into LifeLink.</p>
+                            <p id="finder-region-note">Click an organ or support path to lock your recommended department, then continue into LifeLink.</p>
                         </div>
 
                         <div class="hero-actions">
@@ -195,20 +195,16 @@
 
             <section class="welcome-impact" aria-label="LifeLink highlights">
                 <article class="welcome-impact__item">
-                    <strong>10K+</strong>
+                    <strong id="welcomeMetricPatients">--</strong>
                     <span>Patients Served</span>
                 </article>
                 <article class="welcome-impact__item">
-                    <strong>500+</strong>
+                    <strong id="welcomeMetricStaff">--</strong>
                     <span>Medical Staff</span>
                 </article>
                 <article class="welcome-impact__item">
-                    <strong>1,000+</strong>
+                    <strong id="welcomeMetricDonors">--</strong>
                     <span>Active Donors</span>
-                </article>
-                <article class="welcome-impact__item welcome-impact__item--danger">
-                    <strong>99.9%</strong>
-                    <span>Uptime</span>
                 </article>
             </section>
 
@@ -227,6 +223,9 @@
     const finderRegionTags = document.getElementById('finder-region-tags');
     const finderRegionNote = document.getElementById('finder-region-note');
     const finderDepartmentLink = document.getElementById('finder-department-link');
+    const welcomeMetricPatients = document.getElementById('welcomeMetricPatients');
+    const welcomeMetricStaff = document.getElementById('welcomeMetricStaff');
+    const welcomeMetricDonors = document.getElementById('welcomeMetricDonors');
     const finderRegions = {
         eyes: {
             name: 'Eyes',
@@ -371,20 +370,41 @@
         });
     }
 
-    finderHotspots.forEach(button => {
-        const activate = () => renderFinderRegion(button.dataset.region);
-        button.addEventListener('mouseenter', activate);
-        button.addEventListener('focus', activate);
-        button.addEventListener('click', activate);
+    finderHotspots.forEach((button) => {
+        button.addEventListener('click', () => {
+            renderFinderRegion(button.dataset.region);
+        });
     });
 
-    finderSupportButtons.forEach(button => {
-        const activate = () => renderFinderRegion(button.dataset.region);
-        button.addEventListener('focus', activate);
-        button.addEventListener('click', activate);
+    finderSupportButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            renderFinderRegion(button.dataset.region);
+        });
     });
+
+    function formatMetricCount(value) {
+        const numberValue = Number(value || 0);
+        return Number.isFinite(numberValue) ? new Intl.NumberFormat().format(numberValue) : '0';
+    }
+
+    async function loadWelcomeMetrics() {
+        try {
+            const response = await fetch('/api/public/welcome/metrics', {
+                headers: { Accept: 'application/json' },
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) return;
+
+            if (welcomeMetricPatients) welcomeMetricPatients.textContent = formatMetricCount(payload?.metrics?.patients);
+            if (welcomeMetricStaff) welcomeMetricStaff.textContent = formatMetricCount(payload?.metrics?.medical_staff);
+            if (welcomeMetricDonors) welcomeMetricDonors.textContent = formatMetricCount(payload?.metrics?.active_donors);
+        } catch (error) {
+            // Keep graceful static fallback when public metrics endpoint is unavailable.
+        }
+    }
 
     renderFinderRegion('brain');
+    loadWelcomeMetrics();
 
     </script>
 </body>
