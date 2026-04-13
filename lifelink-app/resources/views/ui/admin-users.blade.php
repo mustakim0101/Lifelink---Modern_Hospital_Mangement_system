@@ -400,6 +400,44 @@ function escapeHtml(value) {
         .replaceAll("'", '&#39;');
 }
 
+function normalizeId(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) return null;
+    return Math.trunc(parsed);
+}
+
+function roleRequiresDepartment(roleName) {
+    return ['Doctor', 'Nurse', 'ITWorker'].includes(String(roleName || ''));
+}
+
+function departmentIdForApplication(application) {
+    if (!application) return null;
+    return normalizeId(application.assigned_department_id)
+        ?? normalizeId(application.applied_department_id);
+}
+
+function departmentOptionsMarkup(selectedId) {
+    const normalizedSelectedId = normalizeId(selectedId);
+    const options = state.departments.map((department) => {
+        const departmentId = normalizeId(department.id);
+        const selected = normalizedSelectedId !== null && departmentId === normalizedSelectedId ? 'selected' : '';
+        return `<option value="${departmentId}" ${selected}>${escapeHtml(department.dept_name)}</option>`;
+    }).join('');
+    return `<option value="">Select department</option>${options}`;
+}
+
+function extractMessage(result, fallbackMessage) {
+    const payload = result?.data;
+    if (typeof payload === 'string' && payload.trim()) return payload;
+    if (payload?.message) return payload.message;
+    const errors = payload?.errors;
+    if (errors && typeof errors === 'object') {
+        const first = Object.values(errors).find((items) => Array.isArray(items) && items.length);
+        if (first) return String(first[0]);
+    }
+    return fallbackMessage;
+}
+
 function paginateRows(rows, page, pageSize) {
     const safeRows = Array.isArray(rows) ? rows : [];
     const safeSize = Math.max(1, Number(pageSize) || 1);
@@ -487,6 +525,12 @@ function renderPendingCards() {
                 <span class="admin-chip">${escapeHtml(application.applied_role || 'Unknown role')}</span>
                 <span class="admin-chip">${escapeHtml(application.applied_department || 'No department chosen')}</span>
             </div>
+            ${roleRequiresDepartment(application.applied_role) || application.department_required ? `
+            <label class="admin-label" for="cardDepartment-${application.id}" style="margin-top: 12px;">Department assignment</label>
+            <select id="cardDepartment-${application.id}" class="admin-select">
+                ${departmentOptionsMarkup(departmentIdForApplication(application))}
+            </select>
+            ` : ''}
             <label class="admin-label" for="reviewNote-${application.id}" style="margin-top: 12px;">Review note</label>
             <textarea id="reviewNote-${application.id}" class="admin-textarea" placeholder="Write a note for this applicant">${escapeHtml(application.review_notes || '')}</textarea>
             <div class="admin-actions">
@@ -514,12 +558,17 @@ function applicationNote(applicationId) {
     return field ? field.value.trim() : '';
 }
 
+function selectedDepartmentFromCard(applicationId) {
+    const field = document.getElementById(`cardDepartment-${applicationId}`);
+    return field ? normalizeId(field.value) : null;
+}
+
 function prefillSetupFromApplication(application) {
     if (!application) return;
 
     const role = application.applied_role;
     const userId = application.user?.id || '';
-    const departmentId = application.applied_department_id || '';
+    const departmentId = departmentIdForApplication(application) || '';
 
     if (role === 'Nurse') {
         document.getElementById('nurseUserId').value = String(userId || '');
@@ -538,12 +587,31 @@ function prefillSetupFromApplication(application) {
 }
 
 async function approveApplication(applicationId) {
+    const application = state.pendingApplications.find((item) => Number(item.id) === Number(applicationId));
+    if (!application) {
+        window.alert('Application not found in current pending list. Refresh and try again.');
+        return;
+    }
+
+    const requiresDepartment = roleRequiresDepartment(application.applied_role) || !!application.department_required;
+    const selectedDepartmentId = selectedDepartmentFromCard(applicationId) ?? departmentIdForApplication(application);
+    if (requiresDepartment && !selectedDepartmentId) {
+        window.alert('Department is required before approving Doctor, Nurse, and ITWorker applicants.');
+        return;
+    }
+
     const review_notes = applicationNote(applicationId);
     const body = review_notes ? { review_notes } : {};
+    if (selectedDepartmentId) {
+        body.departmentId = selectedDepartmentId;
+    }
     const result = await call(`/admin/applications/${applicationId}/approve`, 'POST', body);
     write(result);
     if (result.status < 300 && result.data?.application) {
         prefillSetupFromApplication(result.data.application);
+        window.alert(extractMessage(result, 'Application approved and moved to staff setup.'));
+    } else {
+        window.alert(extractMessage(result, 'Unable to approve application.'));
     }
     await loadPendingApplications();
 }

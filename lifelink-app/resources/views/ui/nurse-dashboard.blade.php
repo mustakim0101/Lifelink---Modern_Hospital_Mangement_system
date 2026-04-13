@@ -64,10 +64,10 @@
                 <h3>Shift quick actions</h3>
                 <p id="overviewModeHint" class="nurse-note">Load profile and patient data to see live nurse priorities for this shift.</p>
                 <div class="nurse-actions">
-                    <button class="nurse-button soft" type="button" onclick="goToNursePanel('nurse-monitoring')">Open monitoring</button>
-                    <button class="nurse-button soft" type="button" onclick="goToNursePanel('nurse-blood-bank')">Open blood bank</button>
-                    <button class="nurse-button primary" type="button" onclick="applyQuickPatientFilter('Admitted')">Show admitted only</button>
-                    <button class="nurse-button soft" type="button" onclick="clearDepartmentFilters()">Clear filters</button>
+                    <button id="quickOpenMonitoring" class="nurse-button soft" type="button" onclick="goToNursePanel('nurse-monitoring')">Open monitoring</button>
+                    <button id="quickOpenBloodBank" class="nurse-button soft" type="button" onclick="goToNursePanel('nurse-blood-bank')">Open blood bank</button>
+                    <button id="quickFilterAdmitted" class="nurse-button primary" type="button" onclick="applyQuickPatientFilter('Admitted')">Show admitted only</button>
+                    <button id="quickClearFilters" class="nurse-button soft" type="button" onclick="clearDepartmentFilters()">Clear filters</button>
                 </div>
             </div>
 
@@ -386,25 +386,75 @@ const state = {
 
 function normalizeDepartmentName(value) {
     if (!value) return '';
-    if (typeof value === 'string') return value.trim().toLowerCase();
+    if (typeof value === 'string') {
+        return value.trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+    }
     if (typeof value === 'object') {
         return String(
             value.dept_name
             || value.department
             || value.department_name
+            || value.departmentName
+            || value.deptName
+            || value.label
             || value.name
             || ''
-        ).trim().toLowerCase();
+        ).trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
     }
-    return String(value).trim().toLowerCase();
+    return String(value).trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+}
+
+function nurseDepartmentCandidates(nurse) {
+    if (!nurse || typeof nurse !== 'object') return [];
+    return [
+        nurse.department,
+        nurse.department_name,
+        nurse.dept_name,
+        nurse.departmentName,
+        nurse.deptName,
+        nurse.department_label,
+        nurse.departmentLabel,
+        nurse.profile_department,
+        nurse.profileDepartment,
+        nurse.meta?.department,
+        nurse.department_info,
+    ];
+}
+
+function resolvedNurseDepartmentName() {
+    for (const candidate of nurseDepartmentCandidates(state.nurse)) {
+        const normalized = normalizeDepartmentName(candidate);
+        if (normalized) {
+            return normalized;
+        }
+    }
+    return '';
+}
+
+function resolvedNurseDepartmentLabel() {
+    const normalized = resolvedNurseDepartmentName();
+    if (!normalized) return '';
+    return normalized
+        .split(' ')
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+}
+
+function resolvedNurseDepartmentKey() {
+    return resolvedNurseDepartmentName().replace(/[^a-z0-9]/g, '');
 }
 
 function isBloodBankNurse() {
-    return normalizeDepartmentName(
-        state.nurse?.department
-        || state.nurse?.department_name
-        || state.nurse?.dept_name
-    ) === 'blood bank';
+    return resolvedNurseDepartmentKey() === 'bloodbank';
+}
+
+function canUseBloodBankWorkflow() {
+    return state.nurseProfileLoaded && !!state.nurse && isBloodBankNurse();
+}
+
+function canUseRegularWorkflow() {
+    return state.nurseProfileLoaded && !!state.nurse && !isBloodBankNurse();
 }
 
 function allowedNursePanels() {
@@ -428,8 +478,27 @@ function updateNurseSidebarByMode() {
     const allowed = allowedNursePanels();
     nurseNavLinks.forEach((link) => {
         const panelId = link.dataset.panel || '';
-        link.style.display = allowed.includes(panelId) ? '' : 'none';
+        const canShow = allowed.includes(panelId);
+        link.hidden = !canShow;
+        link.style.display = canShow ? '' : 'none';
     });
+
+    if (!allowed.includes(state.activePanel)) {
+        const panelId = preferredNursePanel();
+        setActivePanel(panelId);
+        history.replaceState(null, '', `#${panelId}`);
+    }
+}
+
+function updateOverviewQuickActions() {
+    const profileLoaded = state.nurseProfileLoaded && !!state.nurse;
+    const bloodMode = canUseBloodBankWorkflow();
+    const regularMode = canUseRegularWorkflow();
+
+    setVisibility('quickOpenMonitoring', profileLoaded && regularMode, 'inline-flex');
+    setVisibility('quickOpenBloodBank', profileLoaded && bloodMode, 'inline-flex');
+    setVisibility('quickFilterAdmitted', profileLoaded && regularMode, 'inline-flex');
+    setVisibility('quickClearFilters', profileLoaded && regularMode, 'inline-flex');
 }
 
 function write(data) {
@@ -486,33 +555,45 @@ function setupSidebarPanelNav() {
 }
 
 async function maybeLoadPanelData(panelId) {
-    if (!document.getElementById('nurseTokenInput').value.trim()) {
+    if (!currentNurseToken()) {
         return;
     }
 
     await loadNurseProfile({ force: false });
 
     if (panelId === 'nurse-overview') {
-        if (isBloodBankNurse()) {
+        if (canUseBloodBankWorkflow()) {
             await loadBloodBankDonors({ force: false });
             return;
         }
+        if (canUseRegularWorkflow()) {
+            await loadPatients({ force: false });
+        }
+        return;
+    }
+
+    if (panelId === 'nurse-monitoring' && canUseRegularWorkflow()) {
         await loadPatients({ force: false });
         return;
     }
 
-    if (panelId === 'nurse-monitoring' && !isBloodBankNurse()) {
-        await loadPatients({ force: false });
-        return;
-    }
-
-    if (panelId === 'nurse-blood-bank' && isBloodBankNurse()) {
+    if (panelId === 'nurse-blood-bank' && canUseBloodBankWorkflow()) {
         await loadBloodBankDonors({ force: false });
     }
 }
 
 function useStoredUserToken() {
-    document.getElementById('nurseTokenInput').value = localStorage.getItem('USER_TOKEN') || '';
+    const tokenInput = document.getElementById('nurseTokenInput');
+    if (tokenInput) {
+        tokenInput.value = localStorage.getItem('USER_TOKEN') || '';
+    }
+}
+
+function currentNurseToken() {
+    const tokenInput = document.getElementById('nurseTokenInput');
+    const typedToken = tokenInput ? tokenInput.value.trim() : '';
+    if (typedToken) return typedToken;
+    return (localStorage.getItem('USER_TOKEN') || '').trim();
 }
 
 function buildUrl(path, query = null) {
@@ -523,7 +604,7 @@ function buildUrl(path, query = null) {
 }
 
 async function call(path, method = 'GET', body = null, tokenType = 'nurse', query = null) {
-    const token = document.getElementById('nurseTokenInput').value.trim();
+    const token = currentNurseToken();
 
     if (!token) {
         return { status: 401, data: { message: `${tokenType} token missing` } };
@@ -691,18 +772,21 @@ function goToNursePanel(panelId) {
 }
 
 async function focusAdmissionFromOverview(admissionId, patientUserId) {
+    if (!canUseRegularWorkflow()) return;
     goToNursePanel('nurse-monitoring');
     await loadPatients({ force: false });
     await selectAdmission(admissionId, patientUserId);
 }
 
 async function applyQuickPatientFilter(statusValue) {
+    if (!canUseRegularWorkflow()) return;
     const statusFilter = document.getElementById('statusFilter');
     if (statusFilter) statusFilter.value = statusValue;
     await loadPatients({ force: true });
 }
 
 async function clearDepartmentFilters() {
+    if (!canUseRegularWorkflow()) return;
     const statusFilter = document.getElementById('statusFilter');
     const queryFilter = document.getElementById('queryFilter');
     if (statusFilter) statusFilter.value = '';
@@ -883,17 +967,18 @@ function renderBloodBankAccess() {
         ? 'Load your profile to unlock the correct nurse workspace.'
         : isBloodBank
             ? 'Blood Bank nurse mode is active for this account.'
-            : `Regular nurse mode is active for ${state.nurse?.department || 'this department'}.`;
+            : `Regular nurse mode is active for ${resolvedNurseDepartmentLabel() || 'this department'}.`;
     if (window.lifeLinkShell) {
         window.lifeLinkShell.updateIdentityContext({
             name: localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Nurse',
             userId: localStorage.getItem('CURRENT_USER_ID') || '-',
             email: localStorage.getItem('CURRENT_USER_EMAIL') || '-',
             role: 'Nurse',
-            department: state.nurse?.department || state.nurse?.department_name || state.nurse?.dept_name || null,
+            department: resolvedNurseDepartmentLabel() || null,
         });
     }
     updateNurseSidebarByMode();
+    updateOverviewQuickActions();
     renderOverviewInsights();
 }
 
@@ -1025,8 +1110,17 @@ async function loadNurseProfile(options = {}) {
         state.nurseProfileLoaded = true;
         if (result.status < 300 && result.data?.nurse) {
             state.nurse = result.data.nurse;
+            const normalizedDepartment = resolvedNurseDepartmentLabel();
+            if (normalizedDepartment) {
+                state.nurse.department = normalizedDepartment;
+            }
         } else {
             state.nurse = null;
+            state.patients = [];
+            state.bloodBankDonors = [];
+            state.selectedAdmissionId = null;
+            state.selectedPatientUserId = null;
+            state.selectedDonorId = null;
             state.patientsLoaded = false;
             state.bloodBankDonorsLoaded = false;
         }
@@ -1048,6 +1142,10 @@ async function loadNurseProfile(options = {}) {
 }
 
 async function loadPatients(options = {}) {
+    if (!canUseRegularWorkflow()) {
+        return;
+    }
+
     const force = options.force !== false;
     const status = document.getElementById('statusFilter').value.trim();
     const queryValue = document.getElementById('queryFilter').value.trim();
@@ -1093,6 +1191,7 @@ async function loadPatients(options = {}) {
 }
 
 async function selectAdmission(admissionId, patientUserId) {
+    if (!canUseRegularWorkflow()) return;
     state.selectedAdmissionId = Number(admissionId);
     state.selectedPatientUserId = Number(patientUserId);
     document.getElementById('vAdmissionId').value = String(state.selectedAdmissionId);
@@ -1102,6 +1201,7 @@ async function selectAdmission(admissionId, patientUserId) {
 }
 
 async function loadAdmissionDetail() {
+    if (!canUseRegularWorkflow()) return;
     if (!state.selectedAdmissionId) {
         write({ status: 422, data: { message: 'Select an admission first.' } });
         return;
@@ -1118,6 +1218,7 @@ async function loadAdmissionDetail() {
 }
 
 async function loadSelectedAdmissionVitals() {
+    if (!canUseRegularWorkflow()) return;
     const admissionId = Number(document.getElementById('vAdmissionId').value);
     if (!admissionId) {
         write({ status: 422, data: { message: 'Admission ID required for vital refresh.' } });
@@ -1139,6 +1240,7 @@ function maybeNumber(id) {
 }
 
 async function logVitals() {
+    if (!canUseRegularWorkflow()) return;
     const admissionId = Number(document.getElementById('vAdmissionId').value);
     const patientUserId = Number(document.getElementById('vPatientUserId').value);
     if (!admissionId || !patientUserId) {
@@ -1170,6 +1272,10 @@ async function logVitals() {
 }
 
 async function loadBloodBankDonors(options = {}) {
+    if (!canUseBloodBankWorkflow()) {
+        return;
+    }
+
     const force = options.force !== false;
     const query = {};
     const search = document.getElementById('bbDonorQuery').value.trim();
@@ -1205,6 +1311,11 @@ async function loadBloodBankDonors(options = {}) {
                 renderBloodBankHealthChecks([]);
             } else if (selectedDonor) {
                 renderSelectedBloodBankDonor(selectedDonor);
+            } else if (!state.selectedDonorId && state.bloodBankDonors.length) {
+                state.selectedDonorId = Number(state.bloodBankDonors[0].donor_id);
+                renderBloodBankDonors();
+                renderSelectedBloodBankDonor(state.bloodBankDonors[0]);
+                await loadSelectedDonorHealthChecks({ force: false });
             }
         } else {
             state.bloodBankDonors = [];
@@ -1223,6 +1334,7 @@ async function loadBloodBankDonors(options = {}) {
 }
 
 async function selectBloodBankDonor(donorId) {
+    if (!canUseBloodBankWorkflow()) return;
     state.selectedDonorId = Number(donorId);
     renderBloodBankDonors();
     const donor = state.bloodBankDonors.find((entry) => Number(entry.donor_id) === Number(donorId)) || null;
@@ -1231,6 +1343,11 @@ async function selectBloodBankDonor(donorId) {
 }
 
 async function loadSelectedDonorHealthChecks(options = {}) {
+    if (!canUseBloodBankWorkflow()) {
+        renderBloodBankHealthChecks([]);
+        return;
+    }
+
     const force = options.force !== false;
     const donorId = Number(document.getElementById('bbDonorId').value || state.selectedDonorId || 0);
     if (!donorId) {
@@ -1288,6 +1405,7 @@ function previewEligibility() {
 }
 
 async function logBloodBankHealthCheck() {
+    if (!canUseBloodBankWorkflow()) return;
     const donorId = Number(document.getElementById('bbDonorId').value);
     if (!donorId) {
         write({ status: 422, data: { message: 'Select a donor first.' } });
@@ -1337,7 +1455,7 @@ async function bootNurseDashboard() {
     resetBloodBankEligibilityFeedback();
     useStoredUserToken();
 
-    if (document.getElementById('nurseTokenInput').value.trim()) {
+    if (currentNurseToken()) {
         await loadNurseProfile({ force: false });
     } else {
         write('Login first or use USER_TOKEN so the nurse dashboard can auto-load your profile.');

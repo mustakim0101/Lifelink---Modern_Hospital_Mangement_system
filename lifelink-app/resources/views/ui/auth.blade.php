@@ -32,7 +32,7 @@
     <title>LifeLink | {{ $config['title'] }}</title>
     <link rel="stylesheet" href="/css/ui-system.css">
 </head>
-<body class="auth-page">
+<body class="auth-page auth-page--{{ $mode }}">
     <header class="topbar topbar--public">
         <div class="shell topbar-inner auth-shell__topbar">
                 <div class="brand">
@@ -81,9 +81,9 @@
                     </div>
 
                     <div class="auth-register-stack">
-                        <a class="button button-secondary auth-register-btn" href="/ui/register/patient">Register as Patient</a>
-                        <a class="button button-secondary auth-register-btn" href="/ui/register/donor">Register as Donor</a>
-                        <a class="button button-secondary auth-register-btn" href="/ui/register/applicant">Apply to Join Staff</a>
+                        <a class="button button-secondary auth-register-btn auth-register-btn--patient" href="/ui/register/patient">Register as Patient</a>
+                        <a class="button button-secondary auth-register-btn auth-register-btn--donor" href="/ui/register/donor">Register as Donor</a>
+                        <a class="button button-secondary auth-register-btn auth-register-btn--applicant" href="/ui/register/applicant">Apply to Join Staff</a>
                         <a class="button button-secondary auth-home-link" href="/">Back to Home</a>
                     </div>
 
@@ -142,7 +142,7 @@
                     <div class="field"><label for="patientEmergencyName">Emergency contact name</label><input id="patientEmergencyName" type="text" placeholder="Optional emergency contact"></div>
                     <div class="field"><label for="patientEmergencyPhone">Emergency contact phone</label><input id="patientEmergencyPhone" type="text" placeholder="Optional contact number"></div>
                     <div class="button-row">
-                        <button class="button button-primary" type="button" onclick="registerPatient()">Create patient account</button>
+                        <button class="button button-primary auth-submit-btn" type="button" onclick="registerPatient()">Create patient account</button>
                         <a class="ghost-link" href="/ui/login">Already have an account?</a>
                     </div>
                 @elseif ($mode === 'donor')
@@ -166,7 +166,7 @@
                     </div>
                     <div class="field"><label for="donorNotes">Notes</label><textarea id="donorNotes" placeholder="Optional donor notes"></textarea></div>
                     <div class="button-row">
-                        <button class="button button-primary" type="button" onclick="registerDonor()">Create donor account</button>
+                        <button class="button button-primary auth-submit-btn" type="button" onclick="registerDonor()">Create donor account</button>
                         <a class="ghost-link" href="/ui/login">Already have an account?</a>
                     </div>
                 @else
@@ -194,7 +194,7 @@
                         </select>
                     </div>
                     <div class="button-row">
-                        <button class="button button-primary" type="button" onclick="registerApplicant()">Create applicant account</button>
+                        <button class="button button-primary auth-submit-btn" type="button" onclick="registerApplicant()">Create applicant account</button>
                         <a class="ghost-link" href="/ui/login">Already have an account?</a>
                     </div>
                 @endif

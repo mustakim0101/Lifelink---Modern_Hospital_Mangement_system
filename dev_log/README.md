@@ -3537,3 +3537,62 @@ Scope:
 5. Doctor dashboard patient load (`/ui/doctor-dashboard`)
 - Before: patient list path included N+1 active-admission queries.
 - After expected: single batched admission query for active-admission mapping.
+
+## Regression Fix Pass - Welcome + Public Department + Sidebar (2026-04-13)
+
+### Scope
+- Fixed welcome-page nav regression and restored stronger public top-nav interaction styling.
+- Switched anatomy finder behavior to click-based selection persistence.
+- Made department directory/detail pages render in public-friendly shell mode (no patient-only framing).
+- Added public DB-backed welcome metrics endpoint and wired welcome impact cards to live load values.
+- Fixed shared sidebar first-item clipping/shape issue in shell navigation.
+
+### Changes
+1. Welcome nav/UI
+- Removed `Entry` from the welcome top nav.
+- Added top-nav `Login` button to `/ui/login`.
+- Improved public topbar brand contrast and button hover/active visibility.
+
+2. Welcome metrics (database-backed)
+- Added `GET /api/public/welcome/metrics`.
+- Source counts:
+  - patients: active `patients` rows
+  - medical staff: active `users` with `Doctor` or `Nurse` role
+  - active donors: eligible `donor_profiles` with recent available `donor_availabilities`
+- Removed uptime card from the welcome impact row.
+
+3. Anatomy finder interaction
+- Removed hover/focus-driven panel replacement.
+- Selection now updates on explicit click only (organs + support buttons).
+- Active state and `aria-pressed` are preserved on selected item.
+
+4. Public department page behavior
+- Added a public-page mode in shared shell layout to remove logged-in session framing and logout CTA.
+- Department directory/detail now use public mode and keep public browsing behavior.
+- Booking/review gating remains protected by existing patient token/role checks.
+
+5. Sidebar clipping fix
+- Increased sidebar top spacing and adjusted sidebar nav overflow behavior.
+- Removed upward transform on sidebar nav item active/hover states to prevent top-edge clipping of first item.
+
+### Note
+- Nurse blood-bank / non-blood-bank restoration was intentionally not modified in this pass.
+
+## Nurse Dashboard mode-restore patch (2026-04-13)
+- Restored old nurse behavior split in the current panel system: Blood Bank nurses now stay in donor screening workflow, non-Blood-Bank nurses stay in patient monitoring workflow.
+- Department decision is now enforced via normalized profile department in `isBloodBankNurse()`, with mode guards `canUseBloodBankWorkflow()` and `canUseRegularWorkflow()` used by panel lazy-loading and action handlers.
+- Corrected panel/sidebar behavior using existing helpers (`allowedNursePanels`, `preferredNursePanel`, `updateNurseSidebarByMode`, `setActivePanel`) so hidden mode panels do not remain accessible after profile load or mode changes.
+- Restored missing Blood Bank wiring: donor list auto-selects first donor when none is selected and immediately refreshes donor health-check history.
+- Kept newer shell/design and intentionally did not restore old debug-first UI (API response panel/debug block).
+
+## Regression Fix Pass - Department Icons + Auth Role Colors + Nurse Mode Robustness (2026-04-13)
+- Added shared anatomy icon mapping helper (`window.lifeLinkAnatomy.resolveDepartmentAsset`) in the app shell layout and integrated it into both public department pages.
+- Department directory cards now show compact anatomy icons; department detail hero now shows a compact mapped icon beside the department title.
+- Login register-entry buttons were restored to role-colored treatments:
+  - Patient register button uses patient-blue/teal accent.
+  - Donor register button uses donor-red accent.
+  - Staff/applicant register button uses slate staff accent.
+- Registration surfaces were restored with mode-specific accent backgrounds and card styling for `/ui/register/patient`, `/ui/register/donor`, and `/ui/register/applicant`.
+- Nurse department detection was hardened to normalize multiple possible profile fields and formats (`department`, `department_name`, `dept_name`, nested/object variants, case/spacing/hyphen/underscore differences), then classify Blood Bank by normalized key `bloodbank`.
+- Sidebar visibility + panel fallback now re-check allowed panels after profile mode resolution, so wrong-mode sidebar entries and content panels do not remain active.
+- Current nurse profile API source verified: `/api/nurse/profile` returns `nurse.department` (from backend `dept_name`) and `nurse.department_id`; frontend now robustly supports these and legacy variants.

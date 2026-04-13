@@ -8,29 +8,39 @@
     @stack('styles')
 </head>
 <body>
+    @php($isPublicPage = trim($__env->yieldContent('public_page')) === '1')
     <div class="app-shell" data-role-theme="@yield('role_theme', 'default')">
         <header class="app-shell__topbar">
             <div class="app-shell__topbar-main">
                 <a class="app-shell__brand" href="/">
                     <div class="app-shell__mark">LL</div>
                     <div class="app-shell__brand-copy">
-                        <strong>LifeLink Workspace</strong>
+                        <strong>{{ $isPublicPage ? 'LifeLink' : 'LifeLink Workspace' }}</strong>
                     </div>
                 </a>
-                <div class="app-shell__session-pill app-shell__session-pill--topbar">
-                    <small id="shell-role-label" class="app-shell__session-label">Welcome back,</small>
-                    <strong id="shell-user-name">No active session</strong>
-                    <span id="shell-user-meta">ID: - | Email: -</span>
-                </div>
+                @unless($isPublicPage)
+                    <div class="app-shell__session-pill app-shell__session-pill--topbar">
+                        <small id="shell-role-label" class="app-shell__session-label">Welcome back,</small>
+                        <strong id="shell-user-name">No active session</strong>
+                        <span id="shell-user-meta">ID: - | Email: -</span>
+                    </div>
+                @endunless
             </div>
 
             <nav class="topnav" aria-label="Workspace top navigation">
-                <a href="/">Home</a>
-                @if(trim($__env->yieldContent('show_prototype_directory')) === '1')
-                    <a href="/ui">Prototype Directory</a>
+                @if($isPublicPage)
+                    <a href="/">Home</a>
+                    <a href="/ui/departments">Departments</a>
+                    @yield('top_actions')
+                    <a class="cta" href="/ui/login">Login</a>
+                @else
+                    <a href="/">Home</a>
+                    @if(trim($__env->yieldContent('show_prototype_directory')) === '1')
+                        <a href="/ui">Prototype Directory</a>
+                    @endif
+                    @yield('top_actions')
+                    <a class="cta" href="#" onclick="window.lifeLinkShell.logout(); return false;">Logout</a>
                 @endif
-                @yield('top_actions')
-                <a class="cta" href="#" onclick="window.lifeLinkShell.logout(); return false;">Logout</a>
             </nav>
         </header>
 
@@ -155,7 +165,55 @@
         }
     };
 
+    window.lifeLinkAnatomy = {
+        fallback: {
+            src: '/assets/anatomy/human-heart-svgrepo-com.svg',
+            alt: 'General medical anatomy icon',
+        },
+        rules: [
+            { icon: '/assets/anatomy/human circulatorysystemfor cardiology.jpg', alt: 'Circulatory system icon', keywords: ['cardio', 'vascular', 'circulatory', 'hematology', 'blood bank', 'transfusion'] },
+            { icon: '/assets/anatomy/lungs-svgrepo-com.svg', alt: 'Lungs anatomy icon', keywords: ['pulmo', 'respirat', 'lung'] },
+            { icon: '/assets/anatomy/skull-svgrepo-com.svg', alt: 'Neurology anatomy icon', keywords: ['neuro', 'brain', 'skull', 'neurosurgery'] },
+            { icon: '/assets/anatomy/kidneys-svgrepo-com.svg', alt: 'Kidneys anatomy icon', keywords: ['nephro', 'uro', 'renal', 'kidney'] },
+            { icon: '/assets/anatomy/colon-svgrepo-com.svg', alt: 'Digestive anatomy icon', keywords: ['gastro', 'hepato', 'digest', 'liver', 'stomach', 'intestin', 'colon'] },
+            { icon: '/assets/anatomy/spine-svgrepo-com.svg', alt: 'Spine anatomy icon', keywords: ['spine', 'vertebra'] },
+            { icon: '/assets/anatomy/knee-svgrepo-com.svg', alt: 'Knee anatomy icon', keywords: ['knee'] },
+            { icon: '/assets/anatomy/bone-svgrepo-com.svg', alt: 'Bone anatomy icon', keywords: ['ortho', 'musculo', 'skelet', 'joint', 'bone', 'fracture'] },
+            { icon: '/assets/anatomy/eye-svgrepo-com.svg', alt: 'Eye anatomy icon', keywords: ['ophthal', 'eye', 'vision', 'optic'] },
+            { icon: '/assets/anatomy/tongue-svgrepo-com.svg', alt: 'Oral and ENT anatomy icon', keywords: ['ent', 'otolaryng', 'tongue', 'oral', 'mouth', 'throat'] },
+        ],
+        normalize(value) {
+            return String(value || '')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, ' ')
+                .trim();
+        },
+        resolveDepartmentAsset(department = {}) {
+            const tokens = [
+                department.name,
+                department.slug,
+                department.icon_key,
+                department.short_description,
+                ...(Array.isArray(department.organ_coverage_summary) ? department.organ_coverage_summary : []),
+                ...(Array.isArray(department.organ_coverage) ? department.organ_coverage : []),
+                ...(Array.isArray(department.services) ? department.services : []),
+            ]
+                .filter(Boolean)
+                .map((entry) => this.normalize(entry))
+                .join(' ');
+
+            if (!tokens) return this.fallback;
+
+            const match = this.rules.find((rule) => rule.keywords.some((word) => tokens.includes(this.normalize(word))));
+            if (!match) return this.fallback;
+            return { src: match.icon, alt: match.alt };
+        },
+    };
+
     (function hydrateShell() {
+        const isPublicPage = @json($isPublicPage);
+        if (isPublicPage) return;
+
         const fullName = localStorage.getItem('CURRENT_USER_FULL_NAME') || '';
         const userId = localStorage.getItem('CURRENT_USER_ID') || '';
         const email = localStorage.getItem('CURRENT_USER_EMAIL') || 'No active session';
@@ -174,4 +232,3 @@
     @stack('scripts')
 </body>
 </html>
-

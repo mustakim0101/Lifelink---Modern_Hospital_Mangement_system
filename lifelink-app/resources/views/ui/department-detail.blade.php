@@ -1,11 +1,10 @@
 @extends('ui.layouts.app')
 
 @section('title', 'Department Detail')
-@section('role_theme', 'patient')
+@section('public_page', '1')
 
 @section('top_actions')
     <a href="/ui/departments">Department Directory</a>
-    <a href="/ui/patient-portal">Patient Portal</a>
 @endsection
 
 @section('sidebar_nav')
@@ -54,6 +53,28 @@
         padding: 4px 10px;
     }
     .dept-title { margin: 0; font-size: 1.36rem; }
+    .dept-title-row {
+        display: grid;
+        grid-template-columns: 56px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+    }
+    .dept-anatomy-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        border: 1px solid rgba(3, 105, 161, 0.2);
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(224, 242, 254, 0.78));
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+    }
+    .dept-anatomy-icon img {
+        width: 34px;
+        height: 34px;
+        object-fit: contain;
+        display: block;
+    }
     .dept-copy { margin: 0; color: var(--ui-text-muted); line-height: 1.6; }
     .dept-chip-list { display: flex; flex-wrap: wrap; gap: 7px; }
     .dept-chip {
@@ -130,7 +151,10 @@
         <section id="department-hero" class="dept-panel dept-hero">
             <a href="/ui/departments" class="dept-btn dept-btn-soft" style="width: fit-content; text-decoration: none;">Back to directory</a>
             <span class="dept-kicker">Department Profile</span>
-            <h2 id="departmentName" class="dept-title">Loading department...</h2>
+            <div class="dept-title-row">
+                <span id="departmentAnatomyIcon" class="dept-anatomy-icon"><img src="/assets/anatomy/human-heart-svgrepo-com.svg" alt="Department anatomy icon"></span>
+                <h2 id="departmentName" class="dept-title">Loading department...</h2>
+            </div>
             <p id="departmentBannerDescription" class="dept-copy"></p>
             <div id="departmentCoverageChips" class="dept-chip-list"></div>
         </section>
@@ -244,6 +268,7 @@ const detailState = {
 };
 
 const departmentName = document.getElementById('departmentName');
+const departmentAnatomyIcon = document.getElementById('departmentAnatomyIcon');
 const departmentBannerDescription = document.getElementById('departmentBannerDescription');
 const departmentCoverageChips = document.getElementById('departmentCoverageChips');
 const departmentOverview = document.getElementById('departmentOverview');
@@ -337,8 +362,15 @@ function bookButtonLabel() {
 function renderDepartmentMeta() {
     const department = detailState.department;
     if (!department) return;
+    const anatomy = window.lifeLinkAnatomy?.resolveDepartmentAsset(department) || {
+        src: '/assets/anatomy/human-heart-svgrepo-com.svg',
+        alt: 'Department icon',
+    };
 
     departmentName.textContent = department.banner_title || department.name;
+    if (departmentAnatomyIcon) {
+        departmentAnatomyIcon.innerHTML = `<img src="${detailHtml(anatomy.src)}" alt="${detailHtml(anatomy.alt)}">`;
+    }
     departmentBannerDescription.textContent = department.banner_description || department.short_description || 'Department profile information is being prepared.';
     departmentOverview.textContent = department.short_description || 'This department provides focused care based on mapped organ coverage and services.';
 
@@ -571,6 +603,9 @@ function updateDoctorSelectedDateSummary(payload) {
 
 function renderPageNotFound() {
     departmentName.textContent = 'Department not found';
+    if (departmentAnatomyIcon) {
+        departmentAnatomyIcon.innerHTML = '<img src="/assets/anatomy/human-heart-svgrepo-com.svg" alt="Department icon">';
+    }
     departmentBannerDescription.textContent = 'The requested department page is unavailable.';
     departmentCoverageChips.innerHTML = '';
     departmentOverview.textContent = 'Please go back to the department directory and choose another department.';
