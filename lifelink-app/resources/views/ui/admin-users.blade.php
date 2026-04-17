@@ -195,6 +195,10 @@
         <strong>Overview</strong>
         <span>Current area</span>
     </a>
+    <a href="#admin-profile-panel" data-panel="admin-profile-panel">
+        <strong>Personal Profile</strong>
+        <span>Identity details</span>
+    </a>
     <a href="#admin-queue-panel" data-panel="admin-queue-panel">
         <strong>Pending Queue</strong>
         <span>Applicant cards</span>
@@ -216,23 +220,13 @@
 @section('sidebar')
     <div class="app-shell__sidebar-card">
         <strong>Admin order of work</strong>
-        <p>1. Check pending applications. 2. Leave a note and approve or reject. 3. Use the approved user id, not the application id, to finish doctor, nurse, or IT worker setup here before that staff member starts using their own dashboard.</p>
-    </div>
-
-    <div class="app-shell__sidebar-card">
-        <strong>Role boundary</strong>
-        <p>Nurse and IT dashboards should be operational pages only. Staff department assignment belongs here in admin control because it is part of approval and provisioning.</p>
+        <p>Review pending applicants, decide status, and complete staff setup with the approved user ID.</p>
     </div>
 @endsection
 
 @section('content')
     <div class="admin-grid">
         <div id="admin-overview-panel" class="ll-section admin-panel" data-display="block">
-            <section class="ll-overview-welcome" style="margin-bottom: 12px;">
-                <h2>Welcome back</h2>
-                <div id="adminWelcomeName" class="ll-welcome-name">Admin</div>
-                <div id="adminWelcomeMeta" class="ll-welcome-meta">Loading admin session context...</div>
-            </section>
             <div class="admin-summary">
                 <div class="admin-stat"><small>Pending applicants</small><strong id="pendingCount">0</strong></div>
                 <div class="admin-stat"><small>Departments loaded</small><strong id="departmentCount">0</strong></div>
@@ -254,13 +248,16 @@
 
                 <div class="admin-card">
                     <h3>Quick pending refresh</h3>
-                    <p class="admin-hint">This pulls pending applicants directly into cards here. Use the full review page if you want a larger dedicated review workspace.</p>
                     <div class="admin-actions">
                         <button class="admin-btn admin-btn-main" type="button" onclick="loadPendingApplications()">Load pending applicants</button>
                         <a class="admin-btn admin-btn-soft" href="/ui/application-reviews">Open Application Reviews</a>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div id="admin-profile-panel" class="admin-card ll-section admin-panel" data-display="block">
+            <div id="adminProfileMount"></div>
         </div>
 
         <div id="admin-queue-panel" class="admin-card ll-section admin-panel" data-display="block">
@@ -341,7 +338,7 @@
 const out = document.getElementById('out');
 const ctx = document.getElementById('ctx');
 const API = '/api';
-const adminPanelIds = ['admin-overview-panel', 'admin-queue-panel', 'admin-setup-panel'];
+const adminPanelIds = ['admin-overview-panel', 'admin-profile-panel', 'admin-queue-panel', 'admin-setup-panel'];
 const state = {
     pendingApplications: [],
     departments: [],
@@ -677,15 +674,17 @@ if (window.lifeLinkShell) {
     const adminName = localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Admin';
     const adminEmail = localStorage.getItem('CURRENT_USER_EMAIL') || '-';
     const adminId = localStorage.getItem('CURRENT_USER_ID') || '-';
-    const adminWelcomeName = document.getElementById('adminWelcomeName');
-    const adminWelcomeMeta = document.getElementById('adminWelcomeMeta');
-    if (adminWelcomeName) adminWelcomeName.textContent = adminName;
-    if (adminWelcomeMeta) adminWelcomeMeta.textContent = `Role: Admin | Email: ${adminEmail} | ID: ${adminId}`;
     window.lifeLinkShell.updateIdentityContext({
         name: adminName,
         userId: adminId,
         email: adminEmail,
         role: 'Admin',
+        hideDepartment: true,
+    });
+    window.lifeLinkShell.mountProfileEditor({
+        containerId: 'adminProfileMount',
+        role: 'Admin',
+        userId: adminId,
         hideDepartment: true,
     });
     window.lifeLinkShell.initPanelNavigation({

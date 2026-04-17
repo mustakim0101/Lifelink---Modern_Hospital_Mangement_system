@@ -86,6 +86,7 @@ class Department extends Model
         return $query
             ->where('is_active', true)
             ->whereNotNull('slug')
+            ->where('slug', '!=', 'hematology-lymphatic-care')
             ->orderByRaw('CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END')
             ->orderBy('sort_order')
             ->orderBy('dept_name');

@@ -146,6 +146,39 @@
     font-size: 0.92rem;
 }
 
+.doctor-field input,
+.doctor-field select,
+.doctor-field textarea,
+.admin-input,
+.admin-select,
+.admin-textarea,
+.portal-input,
+.portal-select,
+.portal-textarea,
+.donor-input,
+.donor-select,
+.donor-textarea,
+.nurse-input,
+.nurse-select,
+.nurse-textarea,
+.it-input,
+.it-select,
+.it-textarea {
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: 12px;
+}
+
+.doctor-actions-row,
+.admin-actions,
+.portal-btn-row,
+.donor-actions,
+.nurse-actions,
+.it-actions,
+.bbops-actions {
+    gap: 10px;
+}
+
 .ll-section-copy,
 .nurse-note,
 .it-note,

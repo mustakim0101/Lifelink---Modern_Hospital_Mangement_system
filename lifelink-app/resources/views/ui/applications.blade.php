@@ -221,7 +221,10 @@
 
 @section('sidebar_nav')
     <a class="is-active" href="#app-status">
-        <strong>Status</strong>
+        <strong>Overview</strong>
+    </a>
+    <a href="#app-profile">
+        <strong>Personal Profile</strong>
     </a>
     <a href="#app-waiting">
         <strong>Waiting State</strong>
@@ -237,11 +240,6 @@
 @section('content')
     <div class="applicant-shell">
         <section id="app-status" class="ll-section applicant-panel" data-display="block">
-            <section class="ll-overview-welcome" style="margin-bottom: 12px;">
-                <h2>Welcome back</h2>
-                <div id="applicantWelcomeName" class="ll-welcome-name">Applicant</div>
-                <div id="applicantWelcomeMeta" class="ll-welcome-meta">Loading applicant session context...</div>
-            </section>
             <div class="applicant-header">
                 <h2>Application Status</h2>
                 <p>Track your staff application progress.</p>
@@ -260,6 +258,10 @@
                 <button class="applicant-btn applicant-btn-main" type="button" onclick="loadLatest()">Refresh status</button>
                 <button class="applicant-btn applicant-btn-soft" type="button" onclick="loadAll()">Load history</button>
             </div>
+        </section>
+
+        <section id="app-profile" class="applicant-history-card ll-section applicant-panel" data-display="block">
+            <div id="applicantProfileMount"></div>
         </section>
 
         <section id="app-waiting" class="applicant-row ll-section applicant-panel" data-display="grid">
@@ -302,7 +304,7 @@
 <script>
 const out = document.getElementById('out');
 const API = '/api';
-const applicantPanelIds = ['app-status', 'app-waiting', 'app-history'];
+const applicantPanelIds = ['app-status', 'app-profile', 'app-waiting', 'app-history'];
 const applicantNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[href^="#app-"]'));
 const applicantState = {
     applications: [],
@@ -486,8 +488,14 @@ function hydrateApplicantIdentity() {
     const applicantEmail = localStorage.getItem('CURRENT_USER_EMAIL') || 'No applicant session found.';
     const applicantName = localStorage.getItem('CURRENT_USER_FULL_NAME') || applicantEmail || 'Applicant';
     document.getElementById('applicantEmail').textContent = applicantEmail;
-    document.getElementById('applicantWelcomeName').textContent = applicantName;
-    document.getElementById('applicantWelcomeMeta').textContent = `Role: Applicant | Email: ${applicantEmail || '-'} | ID: ${localStorage.getItem('CURRENT_USER_ID') || '-'}`;
+    if (window.lifeLinkShell) {
+        window.lifeLinkShell.mountProfileEditor({
+            containerId: 'applicantProfileMount',
+            role: 'Applicant',
+            userId: localStorage.getItem('CURRENT_USER_ID') || '-',
+            hideDepartment: true,
+        });
+    }
 }
 
 hydrateApplicantIdentity();

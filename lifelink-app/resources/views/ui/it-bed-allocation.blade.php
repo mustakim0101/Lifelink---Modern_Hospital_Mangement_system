@@ -14,6 +14,9 @@
     <a class="is-active" href="#it-overview" data-panel="it-overview" data-mode="all">
         <strong>Overview</strong>
     </a>
+    <a href="#it-profile" data-panel="it-profile" data-mode="all">
+        <strong>Personal Profile</strong>
+    </a>
     <a href="#it-directory" data-panel="it-directory" data-mode="regular">
         <strong>Doctor + Patient Lookup</strong>
     </a>
@@ -57,13 +60,6 @@
         <input id="tokenInput" type="hidden">
         <div id="it-overview" class="it-split ll-section it-panel-switch" data-display="grid">
             <div class="it-panel it-col-12">
-                <section class="ll-overview-welcome">
-                    <h2>Welcome back</h2>
-                    <div id="itWelcomeName" class="ll-welcome-name">IT Worker</div>
-                    <div id="itWelcomeMeta" class="ll-welcome-meta">Loading department scope and role context...</div>
-                </section>
-            </div>
-            <div class="it-panel it-col-12">
                 <h3>Current totals</h3>
                 <p id="scopeModeSummary" class="it-note">Load your departments to open the correct IT workspace.</p>
                 <div class="it-summary">
@@ -73,6 +69,10 @@
                     <div class="it-stat"><small>Admissions shown</small><strong id="admissionCount">0</strong></div>
                 </div>
             </div>
+        </div>
+
+        <div id="it-profile" class="it-panel ll-section it-panel-switch" data-display="block">
+            <div id="itProfileMount"></div>
         </div>
 
         <div id="it-blood-bank" class="it-panel it-panel-switch ll-section" data-display="block">
@@ -669,7 +669,7 @@
 <script>
 const API = '/api';
 const out = document.getElementById('out');
-const itPanelIds = ['it-overview', 'it-directory', 'it-appointments', 'it-admission', 'it-reference', 'it-blood-bank'];
+const itPanelIds = ['it-overview', 'it-profile', 'it-directory', 'it-appointments', 'it-admission', 'it-reference', 'it-blood-bank'];
 const itBloodBankSectionIds = ['request-board', 'approval-fulfillment', 'match-timeline', 'donor-suggestions', 'donor-search', 'donation-logging'];
 const itBloodBankSectionHashMap = {
     'it-bb-request-board': 'request-board',
@@ -701,6 +701,7 @@ const regularWorkspacePanels = new Set(['it-directory', 'it-appointments', 'it-a
 const state = {
     activePanel: 'it-overview',
     activeBloodBankSection: 'request-board',
+    profileMounted: false,
     scopeLoaded: false,
     departments: [],
     scopeDepartments: [],
@@ -762,21 +763,21 @@ function isBloodBankDepartment(department) {
 
 function allowedPanels() {
     if (!state.scopeLoaded) {
-        return ['it-overview'];
+        return ['it-overview', 'it-profile'];
     }
 
     const blood = hasBloodBankScope();
     const regular = hasNonBloodBankScope();
 
     if (blood && !regular) {
-        return ['it-overview', 'it-blood-bank'];
+        return ['it-overview', 'it-profile', 'it-blood-bank'];
     }
 
     if (blood && regular) {
-        return ['it-overview', 'it-directory', 'it-appointments', 'it-admission', 'it-reference', 'it-blood-bank'];
+        return ['it-overview', 'it-profile', 'it-directory', 'it-appointments', 'it-admission', 'it-reference', 'it-blood-bank'];
     }
 
-    return ['it-overview', 'it-directory', 'it-appointments', 'it-admission', 'it-reference'];
+    return ['it-overview', 'it-profile', 'it-directory', 'it-appointments', 'it-admission', 'it-reference'];
 }
 
 function updateSidebarByScope() {
@@ -922,18 +923,16 @@ function renderItWelcome() {
     const departmentLabel = state.scopeDepartments.length
         ? state.scopeDepartments.map((department) => department.dept_name).slice(0, 2).join(', ')
         : 'Pending scope';
-    const modeLabel = hasBloodBankScope() && hasNonBloodBankScope()
-        ? 'Mixed IT + Blood Bank scope'
-        : hasBloodBankScope()
-            ? 'Blood Bank IT scope'
-            : hasNonBloodBankScope()
-                ? 'Regular IT scope'
-                : 'No scope loaded';
 
-    const nameNode = document.getElementById('itWelcomeName');
-    const metaNode = document.getElementById('itWelcomeMeta');
-    if (nameNode) nameNode.textContent = itName;
-    if (metaNode) metaNode.textContent = `Role: IT Worker | Department: ${departmentLabel} | Mode: ${modeLabel} | Email: ${itEmail} | ID: ${itId}`;
+    if (window.lifeLinkShell && !state.profileMounted) {
+        window.lifeLinkShell.mountProfileEditor({
+            containerId: 'itProfileMount',
+            role: 'ITWorker',
+            userId: itId,
+            department: departmentLabel,
+        });
+        state.profileMounted = true;
+    }
 }
 
 function buildApiUrl(path, query = null) {
@@ -1115,7 +1114,7 @@ function renderDepartmentMode() {
     }
 
     const bloodBankVisible = bloodBankAccess && selectedPanel === 'it-blood-bank';
-    const regularWorkspaceVisible = regularAccess && selectedPanel !== 'it-blood-bank';
+    const regularWorkspaceVisible = regularAccess && ['it-directory', 'it-appointments', 'it-admission', 'it-reference'].includes(selectedPanel);
     setVisibility('it-blood-bank', bloodBankVisible, 'block');
     setVisibility('standardItWorkArea', regularWorkspaceVisible, 'block');
     setVisibility('regularItLocked', !regularAccess && selectedPanel !== 'it-blood-bank', 'block');
@@ -2068,12 +2067,13 @@ async function loadDepartmentsScope() {
     }
     renderDepartmentMode();
 
-    if (!allowedPanels().includes(state.activePanel) || state.activePanel === 'it-overview') {
+    if (!allowedPanels().includes(state.activePanel) || state.activePanel === 'it-overview' || state.activePanel === 'it-profile') {
         const initialHash = (window.location.hash || '').replace('#', '');
         const resolvedBloodSection = itBloodBankSectionHashMap[initialHash] || '';
         const hashIsBloodBankSection = !!resolvedBloodSection;
         const requestedPanel = hashIsBloodBankSection ? 'it-blood-bank' : initialHash;
-        const nextPanel = allowedPanels().includes(requestedPanel) ? requestedPanel : (allowedPanels()[1] || allowedPanels()[0]);
+        const fallbackPanels = allowedPanels().filter((panelId) => panelId !== 'it-overview' && panelId !== 'it-profile');
+        const nextPanel = allowedPanels().includes(requestedPanel) ? requestedPanel : (fallbackPanels[0] || allowedPanels()[0]);
         const nextSection = nextPanel === 'it-blood-bank'
             ? (hashIsBloodBankSection ? resolvedBloodSection : 'request-board')
             : '';

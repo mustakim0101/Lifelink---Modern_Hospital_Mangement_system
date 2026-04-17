@@ -52,19 +52,66 @@
 
         .welcome-caption {
             position: absolute;
-            left: 26px;
-            right: 26px;
-            bottom: 24px;
+            top: 50%;
+            max-width: min(440px, calc(100% - 52px));
             z-index: 2;
             color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.24);
-            border-radius: 16px;
-            padding: 14px 16px;
-            background: rgba(15, 23, 42, 0.46);
-            backdrop-filter: blur(4px);
+            border-radius: 22px;
+            padding: 18px 20px 18px 24px;
+            background:
+                radial-gradient(circle at top right, rgba(125, 211, 252, 0.26), transparent 14rem),
+                linear-gradient(145deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.44));
+            backdrop-filter: blur(9px);
             opacity: 0;
-            transform: translateY(8px);
+            transform: translateY(-50%) translateX(0);
             transition: opacity 0.45s ease, transform 0.45s ease;
+        }
+
+        .welcome-caption::before {
+            content: "";
+            position: absolute;
+            left: 10px;
+            top: 14px;
+            bottom: 14px;
+            width: 3px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, rgba(125, 211, 252, 0.95), rgba(45, 212, 191, 0.9));
+        }
+
+        .welcome-caption__kicker {
+            display: block;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            font-weight: 800;
+            color: rgba(224, 242, 254, 0.94);
+        }
+
+        .welcome-caption__headline {
+            margin: 6px 0 0;
+            font-family: "Sora", "Trebuchet MS", sans-serif;
+            font-size: clamp(1.15rem, 2vw, 1.62rem);
+            line-height: 1.22;
+            color: #f8fafc;
+        }
+
+        .welcome-caption__detail {
+            margin: 8px 0 0;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: rgba(226, 232, 240, 0.92);
+        }
+
+        .welcome-caption.is-right {
+            right: 26px;
+            left: auto;
+            text-align: left;
+        }
+
+        .welcome-caption.is-left {
+            left: 26px;
+            right: auto;
+            text-align: left;
         }
 
         .welcome-caption.is-active {
@@ -105,6 +152,30 @@
             font-size: 0.9rem;
         }
 
+        .welcome-actions-card .button.welcome-role-patient {
+            background: linear-gradient(135deg, #0284c7, #0f766e);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .welcome-actions-card .button.welcome-role-donor {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .welcome-actions-card .button.welcome-role-applicant {
+            background: linear-gradient(135deg, #475569, #334155);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .welcome-actions-card .button.welcome-role-login {
+            background: linear-gradient(135deg, #0369a1, #0d9488);
+            color: #fff;
+            border-color: transparent;
+        }
+
         .welcome-services-grid {
             margin-top: 12px;
             display: grid;
@@ -115,13 +186,20 @@
         .finder-panel .hero-actions {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 8px;
+            gap: 10px;
+            margin-top: 6px;
         }
 
         .finder-panel .hero-actions .button {
             width: 100%;
-            min-height: 42px;
+            min-height: 44px;
             text-align: center;
+        }
+
+        .finder-panel {
+            background:
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 16rem),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 248, 252, 0.94));
         }
 
         .welcome-service {
@@ -157,9 +235,12 @@
             }
 
             .welcome-caption {
+                max-width: calc(100% - 28px);
                 left: 14px;
                 right: 14px;
-                bottom: 12px;
+                top: auto;
+                bottom: 14px;
+                transform: translateY(0);
             }
 
             .welcome-actions-card .hero-actions,
@@ -192,27 +273,31 @@
         <main class="welcome-main">
             <section class="welcome-carousel" id="overview" aria-label="LifeLink highlights">
                 <div class="welcome-carousel-track" id="welcomeCarouselTrack">
-                    <article class="welcome-slide is-active" data-caption="Connected care begins with faster, clearer public access.">
+                    <article class="welcome-slide is-active" data-kicker="LifeLink Public Access" data-headline="Connected care begins with faster, clearer public access." data-detail="From discovery to login, one guided path keeps decisions simple.">
                         <img src="/assets/welcome_pg/welcome1.jpg" alt="Modern hospital care team.">
                     </article>
-                    <article class="welcome-slide" data-caption="Department discovery, booking, and role dashboards stay in one flow.">
+                    <article class="welcome-slide" data-kicker="One Connected Journey" data-headline="Department discovery, booking, and role dashboards stay in one flow." data-detail="Public browsing and role workspaces stay aligned instead of fragmented across tools.">
                         <img src="/assets/welcome_pg/welcome2.jpg" alt="Hospital operations and patient care.">
                     </article>
-                    <article class="welcome-slide" data-caption="Blood Bank coordination stays linked across patient, nurse, and IT workflows.">
+                    <article class="welcome-slide" data-kicker="Blood Bank Coordination" data-headline="Blood Bank coordination stays linked across patient, nurse, and IT workflows." data-detail="Requests, screening, approval, and donation logging remain synchronized in one lifecycle.">
                         <img src="/assets/welcome_pg/welcome3.jpg" alt="Healthcare technology and support systems.">
                     </article>
                 </div>
-                <div id="welcomeCaption" class="welcome-caption is-active">Connected care begins with faster, clearer public access.</div>
+                <div id="welcomeCaption" class="welcome-caption is-active is-right">
+                    <span class="welcome-caption__kicker">LifeLink Public Access</span>
+                    <p class="welcome-caption__headline">Connected care begins with faster, clearer public access.</p>
+                    <p class="welcome-caption__detail">From discovery to login, one guided path keeps decisions simple.</p>
+                </div>
             </section>
 
             <section class="welcome-actions-card" id="entry">
                 <h2>Start your LifeLink access</h2>
                 <p>Choose your path to create an account or continue into your workspace.</p>
                 <div class="hero-actions">
-                    <a class="button primary" href="/ui/register/patient">Register as Patient</a>
-                    <a class="button" href="/ui/register/donor">Register as Donor</a>
-                    <a class="button" href="/ui/register/applicant">Join Our Team</a>
-                    <a class="button primary" href="/ui/login">Login</a>
+                    <a class="button welcome-role-patient" href="/ui/register/patient">Register as Patient</a>
+                    <a class="button welcome-role-donor" href="/ui/register/donor">Register as Donor</a>
+                    <a class="button welcome-role-applicant" href="/ui/register/applicant">Join Our Team</a>
+                    <a class="button welcome-role-login" href="/ui/login">Login</a>
                 </div>
             </section>
 
@@ -296,10 +381,6 @@
                             <div id="finder-region-tags" class="finder-tags"></div>
                         </div>
 
-                        <div class="finder-note">
-                            <p id="finder-region-note">Click an organ or support path to lock your recommended department, then continue into LifeLink.</p>
-                        </div>
-
                         <div class="hero-actions">
                             <a id="finder-department-link" class="button primary" href="/ui/departments?from=welcome">View Department</a>
                             <a class="button" href="/ui/departments?from=welcome">Browse All Departments</a>
@@ -379,7 +460,17 @@
 
         welcomeCaption.classList.remove('is-active');
         window.setTimeout(() => {
-            welcomeCaption.textContent = welcomeSlides[safeIndex].dataset.caption || '';
+            const slide = welcomeSlides[safeIndex];
+            const kicker = slide.dataset.kicker || 'LifeLink';
+            const headline = slide.dataset.headline || slide.dataset.caption || '';
+            const detail = slide.dataset.detail || '';
+            welcomeCaption.innerHTML = `
+                <span class="welcome-caption__kicker">${kicker}</span>
+                <p class="welcome-caption__headline">${headline}</p>
+                <p class="welcome-caption__detail">${detail}</p>
+            `;
+            welcomeCaption.classList.toggle('is-right', safeIndex % 2 === 0);
+            welcomeCaption.classList.toggle('is-left', safeIndex % 2 === 1);
             welcomeCaption.classList.add('is-active');
         }, 180);
     }
@@ -396,7 +487,6 @@
     const finderRegionTitle = document.getElementById('finder-region-title');
     const finderRegionDescription = document.getElementById('finder-region-description');
     const finderRegionTags = document.getElementById('finder-region-tags');
-    const finderRegionNote = document.getElementById('finder-region-note');
     const finderDepartmentLink = document.getElementById('finder-department-link');
     const welcomeMetricPatients = document.getElementById('welcomeMetricPatients');
     const welcomeMetricStaff = document.getElementById('welcomeMetricStaff');
@@ -518,11 +608,10 @@
 
     function renderFinderRegion(regionKey) {
         const region = finderRegions[regionKey];
-        if (!region || !finderRegionTitle || !finderRegionDescription || !finderRegionTags || !finderRegionNote) return;
+        if (!region || !finderRegionTitle || !finderRegionDescription || !finderRegionTags) return;
 
         finderRegionTitle.textContent = region.name;
         finderRegionDescription.textContent = region.description;
-        finderRegionNote.textContent = region.note;
         finderRegionTags.innerHTML = region.departments.map((department) => `<span>${department}</span>`).join('');
 
         if (finderDepartmentLink) {

@@ -1869,6 +1869,198 @@ main {
     }
 }
 
+/* Shared dashboard/profile spacing */
+.ll-profile-card {
+    border: 1px solid var(--ui-border);
+    border-radius: 20px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(240, 248, 252, 0.92));
+    box-shadow: var(--ui-shadow-sm);
+    padding: 16px;
+    display: grid;
+    gap: 12px;
+}
+
+.ll-profile-card__head h2 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.ll-profile-card__head p {
+    margin: 6px 0 0;
+    color: var(--ui-text-muted);
+}
+
+.ll-profile-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ll-profile-field {
+    display: grid;
+    gap: 6px;
+}
+
+.ll-profile-field--wide {
+    grid-column: span 2;
+}
+
+.ll-profile-field span {
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ui-text-muted);
+}
+
+.ll-profile-field input,
+.ll-profile-field textarea {
+    width: 100%;
+    min-height: 44px;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 23, 42, 0.16);
+    background: #fbfdff;
+    color: var(--ui-text);
+    font: inherit;
+    padding: 10px 12px;
+}
+
+.ll-profile-field textarea {
+    min-height: 88px;
+    resize: vertical;
+}
+
+.ll-profile-field input:focus,
+.ll-profile-field textarea:focus {
+    outline: none;
+    border-color: var(--ui-primary);
+    box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.12);
+}
+
+.ll-profile-field input[disabled] {
+    background: rgba(241, 245, 249, 0.92);
+    color: var(--ui-text-muted);
+}
+
+.ll-profile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.ll-profile-meta {
+    color: var(--ui-text-muted);
+    font-size: 0.86rem;
+}
+
+.app-shell__sidebar {
+    padding-top: 8px;
+}
+
+.app-shell__nav {
+    padding-top: 0;
+}
+
+.app-shell__nav a:first-child {
+    margin-top: 0;
+}
+
+.app-shell__content-body--public {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.app-shell--no-sidebar .app-shell__body {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.app-shell--no-sidebar .app-shell__content {
+    padding-left: 18px;
+    padding-right: 18px;
+}
+
+.app-shell--public-page.app-shell--no-sidebar .app-shell__body {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    min-height: 0;
+    overflow: visible;
+}
+
+.app-shell--public-page.app-shell--no-sidebar .app-shell__content {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 18px clamp(24px, 3.4vw, 40px) 26px;
+    background: transparent;
+}
+
+.app-shell__content--public-full {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    width: 100%;
+    max-width: none;
+}
+
+.doctor-field input,
+.doctor-field select,
+.doctor-field textarea,
+.admin-input,
+.admin-select,
+.admin-textarea,
+.portal-input,
+.portal-select,
+.portal-textarea,
+.donor-input,
+.donor-select,
+.donor-textarea,
+.nurse-input,
+.nurse-select,
+.nurse-textarea,
+.it-input,
+.it-select,
+.it-textarea {
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: 12px;
+}
+
+.doctor-actions-row,
+.admin-actions,
+.portal-btn-row,
+.donor-actions,
+.nurse-actions,
+.it-actions,
+.bbops-actions {
+    gap: 10px;
+}
+
+.admin-btn,
+.doctor-action-btn,
+.doctor-submit,
+.portal-btn,
+.donor-btn,
+.nurse-button,
+.it-button {
+    min-height: 42px;
+    padding: 10px 13px;
+}
+
+@media (max-width: 900px) {
+    .ll-profile-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ll-profile-field--wide {
+        grid-column: span 1;
+    }
+}
+
 /* ===== ui-dashboard.css ===== */
 .app-shell__content-body > * + * {
     margin-top: var(--ui-space-3);
