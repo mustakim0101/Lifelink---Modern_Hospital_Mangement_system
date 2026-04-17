@@ -286,9 +286,10 @@
 @section('content')
     <div class="doctor-shell">
         <div id="doctor-overview" class="doctor-panel ll-section" data-display="block">
-            <section class="doctor-head">
-                <h2 id="doctorWelcome">Welcome, Doctor</h2>
-                <p id="doctorMetaLine">Loading doctor profile...</p>
+            <section class="ll-overview-welcome">
+                <h2 id="doctorWelcome">Welcome back</h2>
+                <div id="doctorWelcomeName" class="ll-welcome-name">Doctor</div>
+                <div id="doctorMetaLine" class="ll-welcome-meta">Loading doctor profile...</div>
             </section>
 
             <section class="doctor-stats">
@@ -634,8 +635,9 @@ function renderOverview() {
     const name = profile.full_name || profile.fullName || localStorage.getItem('CURRENT_USER_FULL_NAME') || 'Doctor';
     const dept = profile.department || profile.dept_name || profile.department_name || 'Department';
     const spec = profile.specialization || profile.speciality || 'Clinical Operations';
-    document.getElementById('doctorWelcome').textContent = `Welcome, ${name}`;
-    document.getElementById('doctorMetaLine').textContent = `${dept} - ${spec}`;
+    document.getElementById('doctorWelcome').textContent = 'Welcome back';
+    document.getElementById('doctorWelcomeName').textContent = name;
+    document.getElementById('doctorMetaLine').textContent = `Role: Doctor | Department: ${dept} | Focus: ${spec} | Email: ${localStorage.getItem('CURRENT_USER_EMAIL') || '-'} | ID: ${localStorage.getItem('CURRENT_USER_ID') || '-'}`;
     if (window.lifeLinkShell) {
         window.lifeLinkShell.updateIdentityContext({
             name,

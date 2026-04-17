@@ -186,6 +186,11 @@
 @section('content')
     <div class="portal-grid">
         <div id="portal-snapshot" class="portal-card ll-section portal-panel" data-display="block">
+            <section class="ll-overview-welcome" style="margin-bottom: 12px;">
+                <h2>Welcome back</h2>
+                <div id="patientWelcomeName" class="ll-welcome-name">Patient</div>
+                <div id="patientWelcomeMeta" class="ll-welcome-meta">Loading account context...</div>
+            </section>
             <h3>Snapshot</h3>
             <p class="portal-hint">Live summary from <code>GET /api/patient/portal</code>.</p>
             <label class="portal-label" for="tokenInput">Patient token</label>
@@ -758,9 +763,12 @@ async function refreshAll() {
 
 function boot() {
     setupSidebarPanelNav();
+    const patientName = localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Patient';
+    byId('patientWelcomeName').textContent = patientName;
+    byId('patientWelcomeMeta').textContent = `Role: Patient | Email: ${localStorage.getItem('CURRENT_USER_EMAIL') || '-'} | ID: ${localStorage.getItem('CURRENT_USER_ID') || '-'}`;
     if (window.lifeLinkShell) {
         window.lifeLinkShell.updateIdentityContext({
-            name: localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Patient',
+            name: patientName,
             userId: localStorage.getItem('CURRENT_USER_ID') || '-',
             email: localStorage.getItem('CURRENT_USER_EMAIL') || '-',
             role: 'Patient',

@@ -2,18 +2,10 @@
 
 @section('title', 'Department Directory')
 @section('public_page', '1')
+@section('hide_sidebar', '1')
 
 @section('top_actions')
     <a class="is-active" href="/ui/departments">Directory</a>
-@endsection
-
-@section('sidebar_nav')
-    <a class="is-active" href="#dept-directory-panel">
-        <strong>Directory</strong>
-    </a>
-@endsection
-
-@section('sidebar')
 @endsection
 
 @push('styles')
@@ -214,6 +206,7 @@
 const catalogState = {
     departments: [],
     search: '',
+    from: '',
 };
 
 const departmentGrid = document.getElementById('departmentGrid');
@@ -268,6 +261,7 @@ function renderDepartmentGrid() {
             src: '/assets/anatomy/human-heart-svgrepo-com.svg',
             alt: 'Department icon',
         };
+        const fromQuery = catalogState.from ? `?from=${encodeURIComponent(catalogState.from)}` : '';
         const chips = (department.organ_coverage_summary || [])
             .slice(0, 6)
             .map((item) => `<span class="dept-chip">${catalogHtml(item)}</span>`)
@@ -292,7 +286,7 @@ function renderDepartmentGrid() {
                 </div>
                 <div class="dept-chips">${chips || '<span class="dept-chip">Coverage pending</span>'}</div>
                 <div class="dept-actions">
-                    <a class="dept-link" href="/ui/departments/${encodeURIComponent(department.slug)}">Open Department</a>
+                    <a class="dept-link" href="/ui/departments/${encodeURIComponent(department.slug)}${fromQuery}">Open Department</a>
                 </div>
             </article>
         `;
@@ -315,6 +309,9 @@ async function loadDepartmentCatalog() {
 }
 
 function bootDepartmentDirectory() {
+    const params = new URLSearchParams(window.location.search);
+    catalogState.from = params.get('from') || 'directory';
+
     window.lifeLinkShell?.updateIdentityContext({
         name: localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Guest user',
         userId: localStorage.getItem('CURRENT_USER_ID') || '-',

@@ -9,48 +9,63 @@
 </head>
 <body>
     @php($isPublicPage = trim($__env->yieldContent('public_page')) === '1')
-    <div class="app-shell" data-role-theme="@yield('role_theme', 'default')">
-        <header class="app-shell__topbar">
-            <div class="app-shell__topbar-main">
-                <a class="app-shell__brand" href="/">
-                    <div class="app-shell__mark">LL</div>
-                    <div class="app-shell__brand-copy">
-                        <strong>{{ $isPublicPage ? 'LifeLink' : 'LifeLink Workspace' }}</strong>
+    @php($hideSidebar = trim($__env->yieldContent('hide_sidebar')) === '1')
+    <div class="app-shell {{ $hideSidebar ? 'app-shell--no-sidebar' : '' }}" data-role-theme="@yield('role_theme', 'default')">
+        @if($isPublicPage)
+            <header class="topbar topbar--public">
+                <div class="shell topbar-inner">
+                    <div class="brand">
+                        <div class="brand-mark">LL</div>
+                        <div class="brand-copy">
+                            <strong>LifeLink</strong>
+                        </div>
                     </div>
-                </a>
-                @unless($isPublicPage)
+                    <nav class="topnav" aria-label="Public top navigation">
+                        <a href="/">Home</a>
+                        <a href="/ui/departments">Departments</a>
+                        <a href="/about">About</a>
+                        @yield('top_actions')
+                        <a class="cta" href="/ui/login">Login</a>
+                    </nav>
+                </div>
+            </header>
+        @else
+            <header class="app-shell__topbar">
+                <div class="app-shell__topbar-main">
+                    <a class="app-shell__brand" href="/">
+                        <div class="app-shell__mark">LL</div>
+                        <div class="app-shell__brand-copy">
+                            <strong>LifeLink</strong>
+                            <span>Workspace</span>
+                        </div>
+                    </a>
                     <div class="app-shell__session-pill app-shell__session-pill--topbar">
                         <small id="shell-role-label" class="app-shell__session-label">Welcome back,</small>
                         <strong id="shell-user-name">No active session</strong>
                         <span id="shell-user-meta">ID: - | Email: -</span>
                     </div>
-                @endunless
-            </div>
+                </div>
 
-            <nav class="topnav" aria-label="Workspace top navigation">
-                @if($isPublicPage)
-                    <a href="/">Home</a>
-                    <a href="/ui/departments">Departments</a>
-                    @yield('top_actions')
-                    <a class="cta" href="/ui/login">Login</a>
-                @else
+                <nav class="topnav" aria-label="Workspace top navigation">
                     <a href="/">Home</a>
                     @if(trim($__env->yieldContent('show_prototype_directory')) === '1')
                         <a href="/ui">Prototype Directory</a>
                     @endif
                     @yield('top_actions')
                     <a class="cta" href="#" onclick="window.lifeLinkShell.logout(); return false;">Logout</a>
-                @endif
-            </nav>
-        </header>
+                </nav>
+            </header>
+        @endif
 
         <section class="app-shell__body">
-            <aside class="app-shell__sidebar" id="shell-sidebar">
-                <nav class="app-shell__nav" aria-label="Workspace sections">
-                    @yield('sidebar_nav')
-                </nav>
-                @yield('sidebar')
-            </aside>
+            @unless($hideSidebar)
+                <aside class="app-shell__sidebar" id="shell-sidebar">
+                    <nav class="app-shell__nav" aria-label="Workspace sections">
+                        @yield('sidebar_nav')
+                    </nav>
+                    @yield('sidebar')
+                </aside>
+            @endunless
 
             <main class="app-shell__content">
                 @hasSection('section_nav')

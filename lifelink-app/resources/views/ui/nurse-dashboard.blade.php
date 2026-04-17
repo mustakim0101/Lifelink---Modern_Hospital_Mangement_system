@@ -28,6 +28,14 @@
 @section('content')
     <div class="nurse-grid">
         <div id="nurse-overview" class="nurse-split ll-section nurse-panel-switch" data-display="grid">
+            <div class="nurse-panel nurse-col-12">
+                <section class="ll-overview-welcome">
+                    <h2>Welcome back</h2>
+                    <div id="nurseWelcomeName" class="ll-welcome-name">Nurse</div>
+                    <div id="nurseWelcomeMeta" class="ll-welcome-meta">Loading profile and department context...</div>
+                </section>
+            </div>
+
             <div class="nurse-panel nurse-col-4">
                 <h3>Current mode</h3>
                 <p id="nurseModeSummary" class="nurse-note">Load your profile to unlock the correct nurse workspace.</p>
@@ -968,9 +976,16 @@ function renderBloodBankAccess() {
         : isBloodBank
             ? 'Blood Bank nurse mode is active for this account.'
             : `Regular nurse mode is active for ${resolvedNurseDepartmentLabel() || 'this department'}.`;
+    const nurseName = localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Nurse';
+    const nurseDepartment = resolvedNurseDepartmentLabel() || '-';
+    setTextById('nurseWelcomeName', nurseName);
+    setTextById(
+        'nurseWelcomeMeta',
+        `Role: Nurse | Department: ${nurseDepartment} | Email: ${localStorage.getItem('CURRENT_USER_EMAIL') || '-'} | ID: ${localStorage.getItem('CURRENT_USER_ID') || '-'}`
+    );
     if (window.lifeLinkShell) {
         window.lifeLinkShell.updateIdentityContext({
-            name: localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Nurse',
+            name: nurseName,
             userId: localStorage.getItem('CURRENT_USER_ID') || '-',
             email: localStorage.getItem('CURRENT_USER_EMAIL') || '-',
             role: 'Nurse',

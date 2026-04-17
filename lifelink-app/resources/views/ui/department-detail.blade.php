@@ -8,19 +8,19 @@
 @endsection
 
 @section('sidebar_nav')
-    <a class="is-active" href="#department-hero">
+    <a class="is-active" href="#department-hero" data-panel="department-hero">
         <strong>Overview</strong>
     </a>
-    <a href="#department-about">
+    <a href="#department-about" data-panel="department-about">
         <strong>Services</strong>
     </a>
-    <a href="#department-doctors">
+    <a href="#department-doctors" data-panel="department-doctors">
         <strong>Doctors</strong>
     </a>
-    <a href="#department-reviews">
+    <a href="#department-reviews" data-panel="department-reviews">
         <strong>Reviews</strong>
     </a>
-    <a href="#department-availability">
+    <a href="#department-availability" data-panel="department-availability">
         <strong>Availability</strong>
     </a>
 @endsection
@@ -31,6 +31,7 @@
 @push('styles')
 <style>
     .dept-detail { display: grid; gap: 14px; }
+    .dept-panel-view { display: none; }
     .dept-panel { border: 1px solid var(--ui-border); border-radius: 18px; background: rgba(255, 255, 255, 0.95); box-shadow: var(--ui-shadow-sm); padding: 15px; }
     .dept-hero {
         display: grid;
@@ -148,8 +149,8 @@
 
 @section('content')
     <div class="dept-detail">
-        <section id="department-hero" class="dept-panel dept-hero">
-            <a href="/ui/departments" class="dept-btn dept-btn-soft" style="width: fit-content; text-decoration: none;">Back to directory</a>
+        <section id="department-hero" class="dept-panel dept-hero dept-panel-view" data-display="grid">
+            <a id="departmentBackLink" href="/ui/departments" class="dept-btn dept-btn-soft" style="width: fit-content; text-decoration: none;">Back to directory</a>
             <span class="dept-kicker">Department Profile</span>
             <div class="dept-title-row">
                 <span id="departmentAnatomyIcon" class="dept-anatomy-icon"><img src="/assets/anatomy/human-heart-svgrepo-com.svg" alt="Department anatomy icon"></span>
@@ -159,7 +160,7 @@
             <div id="departmentCoverageChips" class="dept-chip-list"></div>
         </section>
 
-        <section id="department-about" class="dept-panel dept-split">
+        <section id="department-about" class="dept-panel dept-split dept-panel-view" data-display="grid">
             <article>
                 <h3 class="dept-subtitle">About this department</h3>
                 <p id="departmentOverview" class="dept-copy"></p>
@@ -172,7 +173,7 @@
             </article>
         </section>
 
-        <section id="department-doctors" class="dept-panel">
+        <section id="department-doctors" class="dept-panel dept-panel-view" data-display="block">
             <h3 class="dept-subtitle">Doctors in this department</h3>
             <p class="dept-copy">Book by date with capacity-aware availability. This workflow uses daily capacity, not per-minute slot booking.</p>
             <div class="dept-doctor-toolbar">
@@ -190,7 +191,7 @@
             <div id="departmentDoctorsGrid" class="dept-doctor-grid"></div>
         </section>
 
-        <section id="department-reviews" class="dept-panel">
+        <section id="department-reviews" class="dept-panel dept-panel-view" data-display="block">
             <h3 class="dept-subtitle">Doctor Reviews</h3>
             <div class="dept-review-toolbar">
                 <div>
@@ -210,7 +211,7 @@
             <div id="departmentReviewsList" class="dept-reviews-list"></div>
         </section>
 
-        <section id="department-availability" class="dept-panel">
+        <section id="department-availability" class="dept-panel dept-panel-view" data-display="block">
             <h3 class="dept-subtitle">Department Availability</h3>
             <div class="dept-availability-toolbar">
                 <div>
@@ -265,7 +266,10 @@ const detailState = {
     doctors: [],
     selectedDoctorId: null,
     availabilityPayload: null,
+    from: '',
 };
+const detailPanelIds = ['department-hero', 'department-about', 'department-doctors', 'department-reviews', 'department-availability'];
+let detailPanelControl = null;
 
 const departmentName = document.getElementById('departmentName');
 const departmentAnatomyIcon = document.getElementById('departmentAnatomyIcon');
@@ -721,7 +725,7 @@ async function bookDepartmentAppointment(doctorUserId) {
 function focusDoctorReviews(doctorUserId) {
     detailState.selectedDoctorId = Number(doctorUserId);
     reviewDoctorSelect.value = String(doctorUserId);
-    document.getElementById('department-reviews').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    detailPanelControl?.setActivePanel?.('department-reviews', true);
     loadSelectedDoctorReviews();
 }
 
@@ -835,9 +839,24 @@ function bindEvents() {
 }
 
 async function bootDepartmentDetail() {
+    const params = new URLSearchParams(window.location.search);
+    detailState.from = params.get('from') || 'directory';
     detailState.slug = departmentSlugFromPath();
     initDateDefaults();
     bindEvents();
+
+    detailPanelControl = window.lifeLinkShell?.initPanelNavigation?.({
+        panelIds: detailPanelIds,
+        defaultPanel: 'department-hero',
+        navSelector: '.app-shell__nav a[data-panel]',
+    }) || null;
+
+    const backLink = document.getElementById('departmentBackLink');
+    if (backLink) {
+        const fromWelcome = detailState.from === 'welcome';
+        backLink.href = fromWelcome ? '/' : '/ui/departments';
+        backLink.textContent = fromWelcome ? 'Back to welcome' : 'Back to directory';
+    }
 
     window.lifeLinkShell?.updateIdentityContext({
         name: localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Guest user',
