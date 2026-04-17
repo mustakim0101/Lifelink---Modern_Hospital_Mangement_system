@@ -3596,3 +3596,14 @@ Scope:
 - Nurse department detection was hardened to normalize multiple possible profile fields and formats (`department`, `department_name`, `dept_name`, nested/object variants, case/spacing/hyphen/underscore differences), then classify Blood Bank by normalized key `bloodbank`.
 - Sidebar visibility + panel fallback now re-check allowed panels after profile mode resolution, so wrong-mode sidebar entries and content panels do not remain active.
 - Current nurse profile API source verified: `/api/nurse/profile` returns `nurse.department` (from backend `dept_name`) and `nurse.department_id`; frontend now robustly supports these and legacy variants.
+
+## Targeted UI/UX Correction Pass (2026-04-17)
+- Unified public top navigation alignment across welcome, auth, and public department pages, and added direct public `Departments` + `About` access.
+- Standardized registration form spacing and control rhythm, improved donor registration CTA contrast, and preserved role-specific patient/donor/applicant accents.
+- Rebuilt welcome top section into an image carousel hero with fading captions, moved primary action buttons below hero, kept anatomy finder, and added a new key-services section after finder.
+- Converted department detail sections (Overview/Services/Doctors/Reviews/Availability) to panel switching via sidebar navigation instead of long scroll anchors.
+- Added public About page with contributor summary, project overview, and technology stack.
+- Removed stale auth autofill behavior: no forced password presets, no automatic last-used email prefill, and dev bootstrap tools are now hidden unless explicit debug query mode.
+- Reduced sidebar first-item top gap by tightening shared sidebar/nav spacing while keeping existing hover/active styles intact.
+- Blood Bank IT workspace now behaves as feature panels (request board, approval/fulfillment, match timeline, donor suggestions/search, donation logging) instead of one long stacked flow.
+- Improved overview welcome presentation for dashboards with clearer hierarchy for name, role, department context, and secondary email/ID metadata.

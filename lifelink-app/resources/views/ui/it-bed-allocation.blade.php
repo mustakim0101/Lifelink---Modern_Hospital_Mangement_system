@@ -57,6 +57,13 @@
         <input id="tokenInput" type="hidden">
         <div id="it-overview" class="it-split ll-section it-panel-switch" data-display="grid">
             <div class="it-panel it-col-12">
+                <section class="ll-overview-welcome">
+                    <h2>Welcome back</h2>
+                    <div id="itWelcomeName" class="ll-welcome-name">IT Worker</div>
+                    <div id="itWelcomeMeta" class="ll-welcome-meta">Loading department scope and role context...</div>
+                </section>
+            </div>
+            <div class="it-panel it-col-12">
                 <h3>Current totals</h3>
                 <p id="scopeModeSummary" class="it-note">Load your departments to open the correct IT workspace.</p>
                 <div class="it-summary">
@@ -75,6 +82,14 @@
                 <div class="it-stat"><small>Blood Bank access</small><strong id="bloodBankScopeStatus">Locked</strong></div>
                 <div class="it-stat"><small>Blood Bank departments</small><strong id="bloodBankScopeCount">0</strong></div>
             </div>
+            <nav class="bbops-section-tabs" aria-label="Blood Bank feature views">
+                <button class="it-button soft bbops-tab is-active" type="button" data-bb-section-tab="request-board" onclick="selectBloodBankSection('request-board')">Request Board</button>
+                <button class="it-button soft bbops-tab" type="button" data-bb-section-tab="approval-fulfillment" onclick="selectBloodBankSection('approval-fulfillment')">Approval + Fulfillment</button>
+                <button class="it-button soft bbops-tab" type="button" data-bb-section-tab="match-timeline" onclick="selectBloodBankSection('match-timeline')">Match Timeline</button>
+                <button class="it-button soft bbops-tab" type="button" data-bb-section-tab="donor-suggestions" onclick="selectBloodBankSection('donor-suggestions')">Donor Suggestions</button>
+                <button class="it-button soft bbops-tab" type="button" data-bb-section-tab="donor-search" onclick="selectBloodBankSection('donor-search')">Donor Search</button>
+                <button class="it-button soft bbops-tab" type="button" data-bb-section-tab="donation-logging" onclick="selectBloodBankSection('donation-logging')">Donation Logging</button>
+            </nav>
             <div class="bbops-grid u-mt-4">
                 <div class="bbops-summary">
                     <div class="it-stat"><small>Requests shown</small><strong id="bbRequestCount">0</strong></div>
@@ -83,7 +98,7 @@
                     <div class="it-stat"><small>Selected request</small><strong id="bbSelectedRequestLabel">None</strong></div>
                 </div>
 
-                <section id="request-board" class="bbops-section">
+                <section id="request-board" class="bbops-section bbops-section-panel" data-bb-section="request-board">
                     <div class="bbops-card">
                         <h3>Request Board</h3>
                         <p class="it-note">Select a blood request here. The approval, donor search, and donation tools below will align to the selected request.</p>
@@ -153,61 +168,61 @@
                     </div>
                 </section>
 
-                <section id="approval-fulfillment" class="bbops-section">
-                    <div class="bbops-toolbar">
-                        <div class="bbops-card">
-                            <h3>Approval + Fulfillment</h3>
-                            <p id="bbSelectedRequestHint" class="it-note">Pick a request from the Request Board to unlock request-specific actions.</p>
-                            <div id="bbSelectedRequestMeta" class="bbops-meta">No request selected.</div>
-                            <div class="bbops-action-grid">
-                                <div>
-                                    <label class="it-label" for="bbSelectedMatchId">Accepted match ID</label>
-                                    <input id="bbSelectedMatchId" class="it-input" type="number" placeholder="Choose from match timeline">
-                                </div>
-                                <div>
-                                    <label class="it-label" for="bbLinkedRequestId">Linked request ID</label>
-                                    <input id="bbLinkedRequestId" class="it-input" type="number" placeholder="Auto-filled from selected request">
-                                </div>
+                <section id="approval-fulfillment" class="bbops-section bbops-section-panel" data-bb-section="approval-fulfillment">
+                    <div class="bbops-card">
+                        <h3>Approval + Fulfillment</h3>
+                        <p id="bbSelectedRequestHint" class="it-note">Pick a request from the Request Board to unlock request-specific actions.</p>
+                        <div id="bbSelectedRequestMeta" class="bbops-meta">No request selected.</div>
+                        <div class="bbops-action-grid">
+                            <div>
+                                <label class="it-label" for="bbSelectedMatchId">Accepted match ID</label>
+                                <input id="bbSelectedMatchId" class="it-input" type="number" placeholder="Choose from match timeline">
                             </div>
-                            <label class="it-label" for="bbNotifyMessage">Notification message</label>
-                            <textarea id="bbNotifyMessage" class="it-textarea" placeholder="Please come to the blood bank within the next 3 days."></textarea>
-                            <label class="it-label" for="bbWorkflowNote">Workflow note</label>
-                            <textarea id="bbWorkflowNote" class="it-textarea" placeholder="Optional approval or fulfillment note"></textarea>
-                            <label class="it-label" for="bbConsumeInventory">Fulfillment mode</label>
-                            <div class="bbops-meta">
-                                <label><input id="bbConsumeInventory" type="checkbox"> Deduct inventory during fulfillment when stored blood is used.</label>
-                            </div>
-                            <div class="bbops-actions">
-                                <button class="it-button primary" type="button" onclick="notifyBloodBankDonors()">Auto notify donors</button>
-                                <button class="it-button soft" type="button" onclick="approveBloodBankMatch()">Approve accepted donor</button>
-                                <button class="it-button accent" type="button" onclick="fulfillBloodBankRequest()">Fulfill request</button>
+                            <div>
+                                <label class="it-label" for="bbLinkedRequestId">Linked request ID</label>
+                                <input id="bbLinkedRequestId" class="it-input" type="number" placeholder="Auto-filled from selected request">
                             </div>
                         </div>
-
-                        <div id="match-timeline" class="bbops-card">
-                            <h3>Match timeline</h3>
-                            <p class="it-note">Accepted donors from this table can feed both approval and donation logging.</p>
-                            <div class="it-table-wrap">
-                                <table class="it-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Match ID</th>
-                                            <th>Donor</th>
-                                            <th>Group</th>
-                                            <th>Status</th>
-                                            <th>Notified</th>
-                                            <th>Responded</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="bbMatchesBody"></tbody>
-                                </table>
-                            </div>
+                        <label class="it-label" for="bbNotifyMessage">Notification message</label>
+                        <textarea id="bbNotifyMessage" class="it-textarea" placeholder="Please come to the blood bank within the next 3 days."></textarea>
+                        <label class="it-label" for="bbWorkflowNote">Workflow note</label>
+                        <textarea id="bbWorkflowNote" class="it-textarea" placeholder="Optional approval or fulfillment note"></textarea>
+                        <label class="it-label" for="bbConsumeInventory">Fulfillment mode</label>
+                        <div class="bbops-meta">
+                            <label><input id="bbConsumeInventory" type="checkbox"> Deduct inventory during fulfillment when stored blood is used.</label>
+                        </div>
+                        <div class="bbops-actions">
+                            <button class="it-button primary" type="button" onclick="notifyBloodBankDonors()">Auto notify donors</button>
+                            <button class="it-button soft" type="button" onclick="approveBloodBankMatch()">Approve accepted donor</button>
+                            <button class="it-button accent" type="button" onclick="fulfillBloodBankRequest()">Fulfill request</button>
                         </div>
                     </div>
                 </section>
 
-                <section id="donor-suggestions" class="bbops-section">
+                <section id="match-timeline" class="bbops-section bbops-section-panel" data-bb-section="match-timeline">
+                    <div class="bbops-card">
+                        <h3>Match timeline</h3>
+                        <p class="it-note">Accepted donors from this table can feed both approval and donation logging.</p>
+                        <div class="it-table-wrap">
+                            <table class="it-table">
+                                <thead>
+                                    <tr>
+                                        <th>Match ID</th>
+                                        <th>Donor</th>
+                                        <th>Group</th>
+                                        <th>Status</th>
+                                        <th>Notified</th>
+                                        <th>Responded</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bbMatchesBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="donor-suggestions" class="bbops-section bbops-section-panel" data-bb-section="donor-suggestions">
                     <div class="bbops-card">
                         <h3>Compatible donor suggestions</h3>
                         <p class="it-note">Tick suggested donors before using Auto notify. This stays request-aware and uses the current selected request.</p>
@@ -215,125 +230,125 @@
                     </div>
                 </section>
 
-                <section id="donor-search" class="bbops-section">
-                    <div class="bbops-toolbar">
-                        <div class="bbops-card">
-                            <h3>Donor Search</h3>
-                            <p class="it-note">Search across Blood Bank donors for request-linked matching or casual walk-in donation handling.</p>
-                            <div class="bbops-filter-grid">
-                                <div>
-                                    <label class="it-label" for="bbDonorSearchQuery">Donor search</label>
-                                    <input id="bbDonorSearchQuery" class="it-input" placeholder="Donor name, email, or donor id">
-                                </div>
-                                <div>
-                                    <label class="it-label" for="bbDonorSearchRequestId">Request filter</label>
-                                    <input id="bbDonorSearchRequestId" class="it-input" type="number" min="1" placeholder="Optional request id">
-                                </div>
-                                <div>
-                                    <label class="it-label" for="bbDonorSearchBloodGroup">Blood group</label>
-                                    <select id="bbDonorSearchBloodGroup" class="it-select">
-                                        <option value="">All</option>
-                                        <option>A+</option>
-                                        <option>A-</option>
-                                        <option>B+</option>
-                                        <option>B-</option>
-                                        <option>AB+</option>
-                                        <option>AB-</option>
-                                        <option>O+</option>
-                                        <option>O-</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="it-label" for="bbDonorSearchEligible">Eligibility</label>
-                                    <select id="bbDonorSearchEligible" class="it-select">
-                                        <option value="">All</option>
-                                        <option value="true">Eligible</option>
-                                        <option value="false">Not eligible</option>
-                                    </select>
-                                </div>
+                <section id="donor-search" class="bbops-section bbops-section-panel" data-bb-section="donor-search">
+                    <div class="bbops-card">
+                        <h3>Donor Search</h3>
+                        <p class="it-note">Search across Blood Bank donors for request-linked matching or casual walk-in donation handling.</p>
+                        <div class="bbops-filter-grid">
+                            <div>
+                                <label class="it-label" for="bbDonorSearchQuery">Donor search</label>
+                                <input id="bbDonorSearchQuery" class="it-input" placeholder="Donor name, email, or donor id">
                             </div>
-                            <div class="bbops-actions">
-                                <button class="it-button primary" type="button" onclick="loadBloodBankStaffDonors()">Refresh donor search</button>
+                            <div>
+                                <label class="it-label" for="bbDonorSearchRequestId">Request filter</label>
+                                <input id="bbDonorSearchRequestId" class="it-input" type="number" min="1" placeholder="Optional request id">
                             </div>
-                            <div id="bbStaffDonorGrid" class="bbops-card-grid"></div>
-                            <div id="bbStaffDonorPagination" class="ui-list-pagination"></div>
+                            <div>
+                                <label class="it-label" for="bbDonorSearchBloodGroup">Blood group</label>
+                                <select id="bbDonorSearchBloodGroup" class="it-select">
+                                    <option value="">All</option>
+                                    <option>A+</option>
+                                    <option>A-</option>
+                                    <option>B+</option>
+                                    <option>B-</option>
+                                    <option>AB+</option>
+                                    <option>AB-</option>
+                                    <option>O+</option>
+                                    <option>O-</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="it-label" for="bbDonorSearchEligible">Eligibility</label>
+                                <select id="bbDonorSearchEligible" class="it-select">
+                                    <option value="">All</option>
+                                    <option value="true">Eligible</option>
+                                    <option value="false">Not eligible</option>
+                                </select>
+                            </div>
                         </div>
+                        <div class="bbops-actions">
+                            <button class="it-button primary" type="button" onclick="loadBloodBankStaffDonors()">Refresh donor search</button>
+                        </div>
+                        <div id="bbStaffDonorGrid" class="bbops-card-grid"></div>
+                        <div id="bbStaffDonorPagination" class="ui-list-pagination"></div>
+                    </div>
+                </section>
 
-                        <div id="donation-logging" class="bbops-card">
-                            <h3>Donation Logging</h3>
-                            <p class="it-note">Record the actual donation after nurse screening. This supports both request-linked donations and non-request walk-ins.</p>
-                            <div class="bbops-action-grid">
-                                <div>
-                                    <label class="it-label" for="bbDonationDonorId">Donor ID</label>
-                                    <input id="bbDonationDonorId" class="it-input" type="number" placeholder="Auto-filled from donor selection">
-                                </div>
-                                <div>
-                                    <label class="it-label" for="bbDonationHealthCheckId">Health check ID</label>
-                                    <select id="bbDonationHealthCheckId" class="it-select">
-                                        <option value="">Select latest nurse screening</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="it-label" for="bbDonationBankId">Blood bank ID</label>
-                                    <select id="bbDonationBankId" class="it-select">
-                                        <option value="">Choose blood bank</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="it-label" for="bbDonationDateTime">Donation datetime</label>
-                                    <input id="bbDonationDateTime" class="it-input" type="datetime-local">
-                                </div>
-                                <div>
-                                    <label class="it-label" for="bbDonationBloodGroup">Blood group</label>
-                                    <select id="bbDonationBloodGroup" class="it-select">
-                                        <option>A+</option>
-                                        <option>A-</option>
-                                        <option>B+</option>
-                                        <option>B-</option>
-                                        <option>AB+</option>
-                                        <option>AB-</option>
-                                        <option>O+</option>
-                                        <option>O-</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="it-label" for="bbComponentType">Component type</label>
-                                    <select id="bbComponentType" class="it-select">
-                                        <option selected>WholeBlood</option>
-                                        <option>Plasma</option>
-                                        <option>Platelets</option>
-                                        <option>RBC</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="it-label" for="bbUnitsDonated">Units donated</label>
-                                    <input id="bbUnitsDonated" class="it-input" type="number" min="1" max="5" value="1">
-                                </div>
-                                <div>
-                                    <label class="it-label" for="bbDonationNotes">Donation note</label>
-                                    <input id="bbDonationNotes" class="it-input" placeholder="Optional staff note">
-                                </div>
+                <section id="donation-logging" class="bbops-section bbops-section-panel" data-bb-section="donation-logging">
+                    <div class="bbops-card">
+                        <h3>Donation Logging</h3>
+                        <p class="it-note">Record the actual donation after nurse screening. This supports both request-linked donations and non-request walk-ins.</p>
+                        <div class="bbops-action-grid">
+                            <div>
+                                <label class="it-label" for="bbDonationDonorId">Donor ID</label>
+                                <input id="bbDonationDonorId" class="it-input" type="number" placeholder="Auto-filled from donor selection">
                             </div>
-                            <div class="bbops-actions">
-                                <button class="it-button accent" type="button" onclick="logBloodBankDonation()">Record donation</button>
-                                <button class="it-button soft" type="button" onclick="loadBloodBankDonationHealthChecks()">Refresh health checks</button>
-                                <a class="it-button soft" href="/ui/blood-bank-schema">Open Blood Bank schema</a>
+                            <div>
+                                <label class="it-label" for="bbDonationHealthCheckId">Health check ID</label>
+                                <select id="bbDonationHealthCheckId" class="it-select">
+                                    <option value="">Select latest nurse screening</option>
+                                </select>
                             </div>
-                            <div class="it-table-wrap">
-                                <table class="it-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Health Check ID</th>
-                                            <th>Time</th>
-                                            <th>Weight</th>
-                                            <th>Temp</th>
-                                            <th>Hb</th>
-                                            <th>Checked by</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="bbDonationHealthChecksBody"></tbody>
-                                </table>
+                            <div>
+                                <label class="it-label" for="bbDonationBankId">Blood bank ID</label>
+                                <select id="bbDonationBankId" class="it-select">
+                                    <option value="">Choose blood bank</option>
+                                </select>
                             </div>
+                            <div>
+                                <label class="it-label" for="bbDonationDateTime">Donation datetime</label>
+                                <input id="bbDonationDateTime" class="it-input" type="datetime-local">
+                            </div>
+                            <div>
+                                <label class="it-label" for="bbDonationBloodGroup">Blood group</label>
+                                <select id="bbDonationBloodGroup" class="it-select">
+                                    <option>A+</option>
+                                    <option>A-</option>
+                                    <option>B+</option>
+                                    <option>B-</option>
+                                    <option>AB+</option>
+                                    <option>AB-</option>
+                                    <option>O+</option>
+                                    <option>O-</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="it-label" for="bbComponentType">Component type</label>
+                                <select id="bbComponentType" class="it-select">
+                                    <option selected>WholeBlood</option>
+                                    <option>Plasma</option>
+                                    <option>Platelets</option>
+                                    <option>RBC</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="it-label" for="bbUnitsDonated">Units donated</label>
+                                <input id="bbUnitsDonated" class="it-input" type="number" min="1" max="5" value="1">
+                            </div>
+                            <div>
+                                <label class="it-label" for="bbDonationNotes">Donation note</label>
+                                <input id="bbDonationNotes" class="it-input" placeholder="Optional staff note">
+                            </div>
+                        </div>
+                        <div class="bbops-actions">
+                            <button class="it-button accent" type="button" onclick="logBloodBankDonation()">Record donation</button>
+                            <button class="it-button soft" type="button" onclick="loadBloodBankDonationHealthChecks()">Refresh health checks</button>
+                            <a class="it-button soft" href="/ui/blood-bank-schema">Open Blood Bank schema</a>
+                        </div>
+                        <div class="it-table-wrap">
+                            <table class="it-table">
+                                <thead>
+                                    <tr>
+                                        <th>Health Check ID</th>
+                                        <th>Time</th>
+                                        <th>Weight</th>
+                                        <th>Temp</th>
+                                        <th>Hb</th>
+                                        <th>Checked by</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bbDonationHealthChecksBody"></tbody>
+                            </table>
                         </div>
                     </div>
                 </section>
@@ -655,6 +670,7 @@
 const API = '/api';
 const out = document.getElementById('out');
 const itPanelIds = ['it-overview', 'it-directory', 'it-appointments', 'it-admission', 'it-reference', 'it-blood-bank'];
+const itBloodBankSectionIds = ['request-board', 'approval-fulfillment', 'match-timeline', 'donor-suggestions', 'donor-search', 'donation-logging'];
 const itBloodBankSectionHashMap = {
     'it-bb-request-board': 'request-board',
     'it-bb-approval-fulfillment': 'approval-fulfillment',
@@ -678,11 +694,13 @@ const itBloodBankSectionHashById = {
     'donation-logging': 'it-bb-donation-logging',
 };
 const itNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[data-panel]'));
+const itBloodBankSectionPanels = Array.from(document.querySelectorAll('.bbops-section-panel[data-bb-section]'));
+const itBloodBankSectionTabs = Array.from(document.querySelectorAll('[data-bb-section-tab]'));
 const regularWorkspacePanels = new Set(['it-directory', 'it-appointments', 'it-admission']);
 
 const state = {
     activePanel: 'it-overview',
-    activeBloodBankSection: '',
+    activeBloodBankSection: 'request-board',
     scopeLoaded: false,
     departments: [],
     scopeDepartments: [],
@@ -781,6 +799,29 @@ function setVisibility(elementId, visible, displayValue = 'block') {
     element.style.display = visible ? displayValue : 'none';
 }
 
+function renderBloodBankSectionViews() {
+    const activeSection = itBloodBankSectionIds.includes(state.activeBloodBankSection)
+        ? state.activeBloodBankSection
+        : 'request-board';
+    state.activeBloodBankSection = activeSection;
+
+    itBloodBankSectionPanels.forEach((sectionPanel) => {
+        const sectionId = sectionPanel.dataset.bbSection || sectionPanel.id || '';
+        sectionPanel.style.display = sectionId === activeSection ? 'block' : 'none';
+    });
+
+    itBloodBankSectionTabs.forEach((tabButton) => {
+        const sectionId = tabButton.dataset.bbSectionTab || '';
+        tabButton.classList.toggle('is-active', sectionId === activeSection);
+    });
+}
+
+function selectBloodBankSection(sectionId) {
+    const nextSection = itBloodBankSectionIds.includes(sectionId) ? sectionId : 'request-board';
+    setActivePanel('it-blood-bank', nextSection);
+    history.replaceState(null, '', `#${itBloodBankSectionHashById[nextSection] || nextSection}`);
+}
+
 function setActivePanel(panelId, sectionId = '') {
     const allowed = allowedPanels();
     if (!allowed.includes(panelId)) {
@@ -788,7 +829,9 @@ function setActivePanel(panelId, sectionId = '') {
     }
 
     state.activePanel = panelId;
-    state.activeBloodBankSection = panelId === 'it-blood-bank' ? sectionId : '';
+    state.activeBloodBankSection = panelId === 'it-blood-bank'
+        ? (itBloodBankSectionIds.includes(sectionId) ? sectionId : (state.activeBloodBankSection || 'request-board'))
+        : '';
 
     itPanelIds.forEach((id) => {
         const panel = document.getElementById(id);
@@ -804,6 +847,8 @@ function setActivePanel(panelId, sectionId = '') {
         const isGenericPanelActive = isPanelActive && !anchorId;
         link.classList.toggle('is-active', isAnchorActive || isGenericPanelActive);
     });
+
+    renderBloodBankSectionViews();
 
     renderDepartmentMode();
 
@@ -868,6 +913,27 @@ function refreshCtx() {
         LAST_BED_ID: localStorage.getItem('LAST_BED_ID'),
         SCOPE_DEPARTMENTS: state.scopeDepartments.map((department) => ({ id: department.id, dept_name: department.dept_name })),
     }, null, 2);
+}
+
+function renderItWelcome() {
+    const itName = localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'IT Worker';
+    const itEmail = localStorage.getItem('CURRENT_USER_EMAIL') || '-';
+    const itId = localStorage.getItem('CURRENT_USER_ID') || '-';
+    const departmentLabel = state.scopeDepartments.length
+        ? state.scopeDepartments.map((department) => department.dept_name).slice(0, 2).join(', ')
+        : 'Pending scope';
+    const modeLabel = hasBloodBankScope() && hasNonBloodBankScope()
+        ? 'Mixed IT + Blood Bank scope'
+        : hasBloodBankScope()
+            ? 'Blood Bank IT scope'
+            : hasNonBloodBankScope()
+                ? 'Regular IT scope'
+                : 'No scope loaded';
+
+    const nameNode = document.getElementById('itWelcomeName');
+    const metaNode = document.getElementById('itWelcomeMeta');
+    if (nameNode) nameNode.textContent = itName;
+    if (metaNode) metaNode.textContent = `Role: IT Worker | Department: ${departmentLabel} | Mode: ${modeLabel} | Email: ${itEmail} | ID: ${itId}`;
 }
 
 function buildApiUrl(path, query = null) {
@@ -1078,6 +1144,7 @@ function renderDepartmentMode() {
             department: departmentLabel,
         });
     }
+    renderItWelcome();
     updateSidebarByScope();
 }
 
@@ -2007,7 +2074,9 @@ async function loadDepartmentsScope() {
         const hashIsBloodBankSection = !!resolvedBloodSection;
         const requestedPanel = hashIsBloodBankSection ? 'it-blood-bank' : initialHash;
         const nextPanel = allowedPanels().includes(requestedPanel) ? requestedPanel : (allowedPanels()[1] || allowedPanels()[0]);
-        const nextSection = nextPanel === 'it-blood-bank' && hashIsBloodBankSection ? resolvedBloodSection : '';
+        const nextSection = nextPanel === 'it-blood-bank'
+            ? (hashIsBloodBankSection ? resolvedBloodSection : 'request-board')
+            : '';
         const nextHash = nextSection ? (itBloodBankSectionHashById[nextSection] || nextSection) : nextPanel;
         setActivePanel(nextPanel, nextSection);
         history.replaceState(null, '', `#${nextHash}`);

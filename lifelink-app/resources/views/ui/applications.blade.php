@@ -237,6 +237,11 @@
 @section('content')
     <div class="applicant-shell">
         <section id="app-status" class="ll-section applicant-panel" data-display="block">
+            <section class="ll-overview-welcome" style="margin-bottom: 12px;">
+                <h2>Welcome back</h2>
+                <div id="applicantWelcomeName" class="ll-welcome-name">Applicant</div>
+                <div id="applicantWelcomeMeta" class="ll-welcome-meta">Loading applicant session context...</div>
+            </section>
             <div class="applicant-header">
                 <h2>Application Status</h2>
                 <p>Track your staff application progress.</p>
@@ -478,7 +483,11 @@ async function loadAll() {
 }
 
 function hydrateApplicantIdentity() {
-    document.getElementById('applicantEmail').textContent = localStorage.getItem('CURRENT_USER_EMAIL') || 'No applicant session found.';
+    const applicantEmail = localStorage.getItem('CURRENT_USER_EMAIL') || 'No applicant session found.';
+    const applicantName = localStorage.getItem('CURRENT_USER_FULL_NAME') || applicantEmail || 'Applicant';
+    document.getElementById('applicantEmail').textContent = applicantEmail;
+    document.getElementById('applicantWelcomeName').textContent = applicantName;
+    document.getElementById('applicantWelcomeMeta').textContent = `Role: Applicant | Email: ${applicantEmail || '-'} | ID: ${localStorage.getItem('CURRENT_USER_ID') || '-'}`;
 }
 
 hydrateApplicantIdentity();

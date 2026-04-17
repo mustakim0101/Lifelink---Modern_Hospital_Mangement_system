@@ -254,6 +254,11 @@
 @section('content')
     <div class="donor-grid">
         <div id="donor-access" class="donor-card ll-section donor-panel" data-display="block">
+            <section class="ll-overview-welcome" style="margin-bottom: 12px;">
+                <h2>Welcome back</h2>
+                <div id="donorWelcomeName" class="ll-welcome-name">Donor</div>
+                <div id="donorWelcomeMeta" class="ll-welcome-meta">Loading donor context...</div>
+            </section>
             <div class="donor-stats donor-hero-stats">
                 <div class="donor-stat"><small>Total Donations</small><strong id="stDonations">0</strong></div>
                 <div class="donor-stat"><small>Total Units</small><strong id="stUnits">0</strong></div>
@@ -740,9 +745,12 @@ async function refreshAll({ silentIfMissingToken = false } = {}) {
 
 function boot() {
     setupSidebarPanelNav();
+    const donorName = localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Donor';
+    byId('donorWelcomeName').textContent = donorName;
+    byId('donorWelcomeMeta').textContent = `Role: Donor | Email: ${localStorage.getItem('CURRENT_USER_EMAIL') || '-'} | ID: ${localStorage.getItem('CURRENT_USER_ID') || '-'}`;
     if (window.lifeLinkShell) {
         window.lifeLinkShell.updateIdentityContext({
-            name: localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Donor',
+            name: donorName,
             userId: localStorage.getItem('CURRENT_USER_ID') || '-',
             email: localStorage.getItem('CURRENT_USER_EMAIL') || '-',
             role: 'Donor',

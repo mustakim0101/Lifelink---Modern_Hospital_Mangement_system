@@ -5,6 +5,169 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LifeLink | Modern Hospital Management</title>
     <link rel="stylesheet" href="/css/ui-system.css">
+    <style>
+        .welcome-carousel {
+            border: 1px solid var(--ui-border);
+            border-radius: 26px;
+            overflow: hidden;
+            position: relative;
+            min-height: 420px;
+            box-shadow: var(--ui-shadow-lg);
+            background: #0f172a;
+        }
+
+        .welcome-carousel-track {
+            position: relative;
+            min-height: 420px;
+        }
+
+        .welcome-slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+
+        .welcome-slide.is-active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .welcome-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            min-height: 420px;
+            filter: saturate(1.02);
+        }
+
+        .welcome-slide::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.18), rgba(15, 23, 42, 0.58));
+        }
+
+        .welcome-caption {
+            position: absolute;
+            left: 26px;
+            right: 26px;
+            bottom: 24px;
+            z-index: 2;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 16px;
+            padding: 14px 16px;
+            background: rgba(15, 23, 42, 0.46);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.45s ease, transform 0.45s ease;
+        }
+
+        .welcome-caption.is-active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .welcome-actions-card,
+        .welcome-services {
+            border: 1px solid var(--ui-border);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: var(--ui-shadow-md);
+            padding: 18px;
+        }
+
+        .welcome-actions-card h2,
+        .welcome-services h2 {
+            margin: 0;
+        }
+
+        .welcome-actions-card p {
+            margin: 8px 0 14px;
+            color: var(--ui-text-muted);
+        }
+
+        .welcome-actions-card .hero-actions {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .welcome-actions-card .button {
+            min-height: 46px;
+            width: 100%;
+            text-align: center;
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+
+        .welcome-services-grid {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .finder-panel .hero-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .finder-panel .hero-actions .button {
+            width: 100%;
+            min-height: 42px;
+            text-align: center;
+        }
+
+        .welcome-service {
+            border: 1px solid var(--ui-border);
+            border-radius: 14px;
+            background: rgba(248, 250, 252, 0.92);
+            padding: 12px;
+        }
+
+        .welcome-service h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .welcome-service p {
+            margin: 6px 0 0;
+            color: var(--ui-text-muted);
+            line-height: 1.55;
+        }
+
+        @media (max-width: 980px) {
+            .welcome-actions-card .hero-actions,
+            .welcome-services-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 700px) {
+            .welcome-carousel,
+            .welcome-carousel-track,
+            .welcome-slide img {
+                min-height: 320px;
+            }
+
+            .welcome-caption {
+                left: 14px;
+                right: 14px;
+                bottom: 12px;
+            }
+
+            .welcome-actions-card .hero-actions,
+            .welcome-services-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body class="welcome-page">
     <header class="topbar topbar--public">
@@ -17,9 +180,9 @@
             </div>
 
             <nav class="topnav">
-                <a href="#overview">Overview</a>
+                <a href="/ui/departments">Departments</a>
                 <a href="#find-department">Department Finder</a>
-                <a href="#modules">Platform</a>
+                <a href="/about">About</a>
                 <a class="cta" href="/ui/login">Login</a>
             </nav>
         </div>
@@ -27,76 +190,29 @@
 
     <div class="shell">
         <main class="welcome-main">
-            <section class="welcome-hero" id="overview">
-                <article class="welcome-hero__copy">
-                    <span class="badge">Healthcare SaaS Platform</span>
-                    <h1>Modern Hospital Management <span class="welcome-hero__title-accent">Made Simple</span></h1>
-                    <p>Streamline operations, improve patient care, and keep Blood Bank response connected through one role-aware LifeLink workspace.</p>
-                    <div id="entry" class="hero-actions">
-                        <a class="button primary" href="/ui/register/patient">Register as Patient</a>
-                        <a class="button" href="/ui/register/donor">Register as Donor</a>
-                        <a class="button" href="/ui/register/applicant">Join Our Team</a>
-                        <a class="button" href="/ui/login">Login</a>
-                    </div>
-                </article>
-                <aside class="welcome-hero__aside">
-                    <article class="welcome-highlight">
-                        <span class="welcome-highlight__label">Unified Hospital System</span>
-                        <strong>From public entry to role dashboards, every workflow stays in one trusted platform.</strong>
-                        <p>LifeLink keeps admissions, clinical coordination, donor support, and operations aligned.</p>
+            <section class="welcome-carousel" id="overview" aria-label="LifeLink highlights">
+                <div class="welcome-carousel-track" id="welcomeCarouselTrack">
+                    <article class="welcome-slide is-active" data-caption="Connected care begins with faster, clearer public access.">
+                        <img src="/assets/welcome_pg/welcome1.jpg" alt="Modern hospital care team.">
                     </article>
-                    <div class="welcome-metrics">
-                        <article class="welcome-metric">
-                            <strong>7</strong>
-                            <span>Role workspaces</span>
-                        </article>
-                        <article class="welcome-metric">
-                            <strong>24/7</strong>
-                            <span>Operational readiness</span>
-                        </article>
-                        <article class="welcome-metric">
-                            <strong>1</strong>
-                            <span>Connected platform</span>
-                        </article>
-                    </div>
-                </aside>
+                    <article class="welcome-slide" data-caption="Department discovery, booking, and role dashboards stay in one flow.">
+                        <img src="/assets/welcome_pg/welcome2.jpg" alt="Hospital operations and patient care.">
+                    </article>
+                    <article class="welcome-slide" data-caption="Blood Bank coordination stays linked across patient, nurse, and IT workflows.">
+                        <img src="/assets/welcome_pg/welcome3.jpg" alt="Healthcare technology and support systems.">
+                    </article>
+                </div>
+                <div id="welcomeCaption" class="welcome-caption is-active">Connected care begins with faster, clearer public access.</div>
             </section>
 
-            <section id="modules" class="welcome-solutions">
-                <div class="welcome-solutions__head">
-                    <h2>Comprehensive Healthcare Solutions</h2>
-                </div>
-                <div class="welcome-module-grid">
-                    <article class="card welcome-module-card">
-                        <span class="hub-label">Admin</span>
-                        <h3>Admin Control Center</h3>
-                        <p>Complete oversight of operations, staffing, and application reviews.</p>
-                    </article>
-                    <article class="card welcome-module-card">
-                        <span class="hub-label">Patient</span>
-                        <h3>Patient Care</h3>
-                        <p>Appointments, records, and requests are managed in one secure flow.</p>
-                    </article>
-                    <article class="card welcome-module-card">
-                        <span class="hub-label">IT</span>
-                        <h3>IT Operations</h3>
-                        <p>Admissions, bed allocation, and ward operations stay coordinated.</p>
-                    </article>
-                    <article class="card welcome-module-card">
-                        <span class="hub-label">Doctor</span>
-                        <h3>Doctor Dashboard</h3>
-                        <p>Daily appointments, active patients, and requests in one workspace.</p>
-                    </article>
-                    <article class="card welcome-module-card">
-                        <span class="hub-label">Nurse</span>
-                        <h3>Nurse Workspace</h3>
-                        <p>Patient monitoring, vitals tracking, and Blood Bank screening tasks.</p>
-                    </article>
-                    <article class="card welcome-module-card">
-                        <span class="hub-label">Blood Bank</span>
-                        <h3>Blood Operations</h3>
-                        <p>Donor matching, approval, fulfillment, and donation logging.</p>
-                    </article>
+            <section class="welcome-actions-card" id="entry">
+                <h2>Start your LifeLink access</h2>
+                <p>Choose your path to create an account or continue into your workspace.</p>
+                <div class="hero-actions">
+                    <a class="button primary" href="/ui/register/patient">Register as Patient</a>
+                    <a class="button" href="/ui/register/donor">Register as Donor</a>
+                    <a class="button" href="/ui/register/applicant">Join Our Team</a>
+                    <a class="button primary" href="/ui/login">Login</a>
                 </div>
             </section>
 
@@ -185,11 +301,41 @@
                         </div>
 
                         <div class="hero-actions">
-                            <a id="finder-department-link" class="button primary" href="/ui/departments">View Department</a>
-                            <a class="button primary" href="/ui/login">Continue to Login</a>
-                            <a class="button" href="#entry">See account entry</a>
+                            <a id="finder-department-link" class="button primary" href="/ui/departments?from=welcome">View Department</a>
+                            <a class="button" href="/ui/departments?from=welcome">Browse All Departments</a>
+                            <a class="button" href="/ui/login">Continue to Login</a>
                         </div>
                     </aside>
+                </div>
+            </section>
+
+            <section class="welcome-services" id="services">
+                <h2>What you can do on this platform</h2>
+                <div class="welcome-services-grid">
+                    <article class="welcome-service">
+                        <h3>Public Department Discovery</h3>
+                        <p>Browse departments, doctor profiles, ratings, and date-based availability before login.</p>
+                    </article>
+                    <article class="welcome-service">
+                        <h3>Patient Care Flow</h3>
+                        <p>Book appointments, view medical records, and submit blood requests from one patient portal.</p>
+                    </article>
+                    <article class="welcome-service">
+                        <h3>Clinical Operations</h3>
+                        <p>Doctor, nurse, and IT dashboards coordinate admissions, monitoring, and care transitions.</p>
+                    </article>
+                    <article class="welcome-service">
+                        <h3>Blood Bank Coordination</h3>
+                        <p>Donor response, nurse screening, and IT approval and fulfillment are linked end to end.</p>
+                    </article>
+                    <article class="welcome-service">
+                        <h3>Admin Governance</h3>
+                        <p>Manage applicant reviews, account status controls, and staff setup from admin workspace.</p>
+                    </article>
+                    <article class="welcome-service">
+                        <h3>Role-aware Routing</h3>
+                        <p>Users land on their role overview panel with consistent UI and focused task access.</p>
+                    </article>
                 </div>
             </section>
 
@@ -216,6 +362,35 @@
     </div>
 
     <script>
+    const welcomeSlides = Array.from(document.querySelectorAll('.welcome-slide'));
+    const welcomeCaption = document.getElementById('welcomeCaption');
+    let currentWelcomeSlide = 0;
+    let welcomeTimer = null;
+
+    function setWelcomeSlide(index) {
+        if (!welcomeSlides.length || !welcomeCaption) return;
+        const safeIndex = ((index % welcomeSlides.length) + welcomeSlides.length) % welcomeSlides.length;
+        currentWelcomeSlide = safeIndex;
+
+        welcomeSlides.forEach((slide, slideIndex) => {
+            const active = slideIndex === safeIndex;
+            slide.classList.toggle('is-active', active);
+        });
+
+        welcomeCaption.classList.remove('is-active');
+        window.setTimeout(() => {
+            welcomeCaption.textContent = welcomeSlides[safeIndex].dataset.caption || '';
+            welcomeCaption.classList.add('is-active');
+        }, 180);
+    }
+
+    function startWelcomeCarousel() {
+        if (welcomeTimer || welcomeSlides.length <= 1) return;
+        welcomeTimer = window.setInterval(() => {
+            setWelcomeSlide(currentWelcomeSlide + 1);
+        }, 4200);
+    }
+
     const finderHotspots = Array.from(document.querySelectorAll('.finder-hotspot'));
     const finderSupportButtons = Array.from(document.querySelectorAll('.finder-support-button'));
     const finderRegionTitle = document.getElementById('finder-region-title');
@@ -348,22 +523,22 @@
         finderRegionTitle.textContent = region.name;
         finderRegionDescription.textContent = region.description;
         finderRegionNote.textContent = region.note;
-        finderRegionTags.innerHTML = region.departments.map(department => `<span>${department}</span>`).join('');
+        finderRegionTags.innerHTML = region.departments.map((department) => `<span>${department}</span>`).join('');
 
         if (finderDepartmentLink) {
             const primaryDepartment = region.departments?.[0] || 'Department';
             const slug = region.departmentSlug || '';
-            finderDepartmentLink.href = slug ? `/ui/departments/${slug}` : '/ui/departments';
+            finderDepartmentLink.href = slug ? `/ui/departments/${slug}?from=welcome` : '/ui/departments?from=welcome';
             finderDepartmentLink.textContent = `View ${primaryDepartment}`;
         }
 
-        finderHotspots.forEach(button => {
+        finderHotspots.forEach((button) => {
             const isActive = button.dataset.region === regionKey;
             button.classList.toggle('is-active', isActive);
             button.setAttribute('aria-pressed', String(isActive));
         });
 
-        finderSupportButtons.forEach(button => {
+        finderSupportButtons.forEach((button) => {
             const isActive = button.dataset.region === regionKey;
             button.classList.toggle('is-active', isActive);
             button.setAttribute('aria-pressed', String(isActive));
@@ -399,10 +574,12 @@
             if (welcomeMetricStaff) welcomeMetricStaff.textContent = formatMetricCount(payload?.metrics?.medical_staff);
             if (welcomeMetricDonors) welcomeMetricDonors.textContent = formatMetricCount(payload?.metrics?.active_donors);
         } catch (error) {
-            // Keep graceful static fallback when public metrics endpoint is unavailable.
+            // Graceful fallback for metric endpoint failures.
         }
     }
 
+    setWelcomeSlide(0);
+    startWelcomeCarousel();
     renderFinderRegion('brain');
     loadWelcomeMetrics();
 

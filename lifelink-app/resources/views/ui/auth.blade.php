@@ -43,6 +43,8 @@
                 </div>
                 <nav class="topnav">
                     <a href="/">Home</a>
+                    <a href="/ui/departments">Departments</a>
+                    <a href="/about">About</a>
                     <a class="{{ $mode === 'login' ? 'is-active' : '' }}" href="/ui/login">Login</a>
                     <a class="{{ $mode === 'patient' ? 'is-active' : '' }}" href="/ui/register/patient">Patient Register</a>
                     <a class="{{ $mode === 'donor' ? 'is-active' : '' }}" href="/ui/register/donor">Donor Register</a>
@@ -87,45 +89,47 @@
                         <a class="button button-secondary auth-home-link" href="/">Back to Home</a>
                     </div>
 
-                    <details class="auth-dev-tools">
-                        <summary>Session and bootstrap tools</summary>
-                        <div class="session-card auth-session-card">
-                            <strong>Current session</strong>
-                            <div class="session-grid">
-                                <div><small>User</small><strong id="session-user">No active session</strong></div>
-                                <div><small>Roles</small><strong id="session-roles">None</strong></div>
+                    @if(app()->environment(['local', 'development']) && config('app.debug'))
+                        <details class="auth-dev-tools" id="authDevTools" hidden>
+                            <summary>Session and bootstrap tools</summary>
+                            <div class="session-card auth-session-card">
+                                <strong>Current session</strong>
+                                <div class="session-grid">
+                                    <div><small>User</small><strong id="session-user">No active session</strong></div>
+                                    <div><small>Roles</small><strong id="session-roles">None</strong></div>
+                                </div>
+                                <div class="button-row">
+                                    <button class="button button-secondary" type="button" onclick="clearStorage()">Clear session</button>
+                                </div>
                             </div>
-                            <div class="button-row">
-                                <button class="button button-secondary" type="button" onclick="clearStorage()">Clear session</button>
-                            </div>
-                        </div>
 
-                        <button class="advanced-toggle" type="button" onclick="toggleAdvanced()">Need bootstrap tools?</button>
-                        <div id="advanced-card" class="advanced-card">
-                            <div class="field">
-                                <label for="adminName">Admin full name</label>
-                                <input id="adminName" type="text" placeholder="Admin full name">
+                            <button class="advanced-toggle" type="button" onclick="toggleAdvanced()">Need bootstrap tools?</button>
+                            <div id="advanced-card" class="advanced-card">
+                                <div class="field">
+                                    <label for="adminName">Admin full name</label>
+                                    <input id="adminName" type="text" placeholder="Admin full name">
+                                </div>
+                                <div class="field">
+                                    <label for="adminEmail">Admin email</label>
+                                    <input id="adminEmail" type="email" placeholder="admin@example.com">
+                                </div>
+                                <div class="field">
+                                    <label for="adminPassword">Admin password</label>
+                                    <input id="adminPassword" type="password" placeholder="Create a strong password">
+                                </div>
+                                <div class="button-row">
+                                    <button class="button button-warm" type="button" onclick="createAdmin()">Create first admin</button>
+                                </div>
                             </div>
-                            <div class="field">
-                                <label for="adminEmail">Admin email</label>
-                                <input id="adminEmail" type="email" placeholder="admin@example.com">
-                            </div>
-                            <div class="field">
-                                <label for="adminPassword">Admin password</label>
-                                <input id="adminPassword" type="password" value="admin12345">
-                            </div>
-                            <div class="button-row">
-                                <button class="button button-warm" type="button" onclick="createAdmin()">Create first admin</button>
-                            </div>
-                        </div>
-                    </details>
+                        </details>
+                    @endif
                 @elseif ($mode === 'patient')
                     <div class="field"><label for="patientName">Full name</label><input id="patientName" type="text" placeholder="Full name"></div>
                     <div class="field"><label for="patientEmail">Email</label><input id="patientEmail" type="email" placeholder="patient@example.com"></div>
                     <div class="field field--password">
                         <label for="patientPassword">Password</label>
                         <div class="password-input-wrap">
-                            <input id="patientPassword" type="password" value="patient12345">
+                            <input id="patientPassword" type="password" placeholder="Create your password">
                             <button class="password-toggle" type="button" data-password-target="patientPassword" aria-label="Show password" aria-pressed="false">Show</button>
                         </div>
                     </div>
@@ -151,7 +155,7 @@
                     <div class="field field--password">
                         <label for="donorPassword">Password</label>
                         <div class="password-input-wrap">
-                            <input id="donorPassword" type="password" value="donor12345">
+                            <input id="donorPassword" type="password" placeholder="Create your password">
                             <button class="password-toggle" type="button" data-password-target="donorPassword" aria-label="Show password" aria-pressed="false">Show</button>
                         </div>
                     </div>
@@ -175,7 +179,7 @@
                     <div class="field field--password">
                         <label for="applicantPassword">Password</label>
                         <div class="password-input-wrap">
-                            <input id="applicantPassword" type="password" value="applicant12345">
+                            <input id="applicantPassword" type="password" placeholder="Create your password">
                             <button class="password-toggle" type="button" data-password-target="applicantPassword" aria-label="Show password" aria-pressed="false">Show</button>
                         </div>
                     </div>
@@ -213,8 +217,8 @@
     const advancedCard = document.getElementById('advanced-card');
     const pageQueryParams = new URLSearchParams(window.location.search);
     const applicantRolesWithDepartment = ['Doctor'];
-    const TEST_MODE_PASSWORD = '12345678';
     const allowRawServerErrors = @json(app()->environment(['local', 'development']) && config('app.debug')) && pageQueryParams.get('showRawErrors') === '1';
+    const showDevTools = @json(app()->environment(['local', 'development']) && config('app.debug')) && pageQueryParams.get('debugTools') === '1';
     const internalErrorPatterns = [
         /secret is not set/i,
         /stack trace/i,
@@ -254,12 +258,6 @@
         if (allowRawServerErrors) return trimmed;
         if (looksLikeInternalError(trimmed)) return fallback;
         return trimmed;
-    }
-
-    function applyTestModePasswords() {
-        document.querySelectorAll('input[type="password"]').forEach((input) => {
-            input.value = TEST_MODE_PASSWORD;
-        });
     }
 
     function call(path, method, body, token = null) {
@@ -308,17 +306,13 @@
         }
     }
 
-    function rememberLastEmail(email) {
-        if (email) localStorage.setItem('LAST_USED_EMAIL', email);
-    }
-
     function clearTransientSession() {
         ['ADMIN_TOKEN', 'ADMIN_USER_ID', 'ADMIN_EMAIL', 'USER_TOKEN', 'CURRENT_USER_ID', 'CURRENT_USER_FULL_NAME', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES']
             .forEach(key => localStorage.removeItem(key));
     }
 
     function clearStorage() {
-        ['ADMIN_TOKEN', 'ADMIN_USER_ID', 'ADMIN_EMAIL', 'USER_TOKEN', 'PATIENT_ID', 'PATIENT_EMAIL', 'CURRENT_USER_ID', 'CURRENT_USER_FULL_NAME', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES', 'LAST_USED_EMAIL']
+        ['ADMIN_TOKEN', 'ADMIN_USER_ID', 'ADMIN_EMAIL', 'USER_TOKEN', 'PATIENT_ID', 'PATIENT_EMAIL', 'CURRENT_USER_ID', 'CURRENT_USER_FULL_NAME', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES']
             .forEach(key => localStorage.removeItem(key));
         refreshSessionCard();
         showMessage('info', 'Stored session cleared.');
@@ -336,9 +330,8 @@
         if (advancedCard) advancedCard.classList.toggle('show');
     }
 
-    function goToLogin(email, source) {
+    function goToLogin(source) {
         const params = new URLSearchParams();
-        if (email) params.set('email', email);
         if (source) params.set('from', source);
         window.location.href = `/ui/login?${params.toString()}`;
     }
@@ -379,7 +372,6 @@
             if (!(result.status >= 200 && result.status < 300 && result.data?.token)) {
                 throw new Error(extractMessage(result, 'Registration failed.'));
             }
-            rememberLastEmail(payload.email);
             return result.data;
         });
     }
@@ -393,7 +385,6 @@
         call('/dev/create-admin', 'POST', payload).then(result => {
             if (result.status >= 200 && result.status < 300 && result.data?.token) {
                 persistLoginContext(result.data, payload.email);
-                rememberLastEmail(payload.email);
                 refreshSessionCard();
                 showMessage('success', 'Admin account created. Redirecting to the admin workspace.');
                 window.location.href = getPrimaryDestination(result.data.user?.roles || []);
@@ -411,7 +402,6 @@
         call('/auth/login', 'POST', payload).then(result => {
             if (result.status >= 200 && result.status < 300 && result.data?.token) {
                 persistLoginContext(result.data, payload.email);
-                rememberLastEmail(payload.email);
                 refreshSessionCard();
                 showMessage('success', 'Login successful. Redirecting to your workspace.');
                 window.location.href = getPrimaryDestination(result.data.user?.roles || []);
@@ -433,7 +423,7 @@
         registerBase(payload).then(() => {
             clearTransientSession();
             showMessage('success', 'Patient account created. Redirecting to login.');
-            goToLogin(payload.email, 'patient');
+            goToLogin('patient');
         }).catch(error => showMessage('error', error.message));
     }
 
@@ -454,7 +444,7 @@
                 }
                 clearTransientSession();
                 showMessage('success', 'Donor account created. Redirecting to login.');
-                goToLogin(payload.email, 'donor');
+                goToLogin('donor');
             });
         }).catch(error => showMessage('error', error.message));
     }
@@ -475,16 +465,14 @@
                 }
                 clearTransientSession();
                 showMessage('success', 'Applicant account created. Redirecting to login.');
-                goToLogin(payload.email, 'applicant');
+                goToLogin('applicant');
             });
         }).catch(error => showMessage('error', error.message));
     }
 
     function hydrateLoginPage() {
         if (currentMode !== 'login') return;
-        const email = pageQueryParams.get('email') || localStorage.getItem('LAST_USED_EMAIL') || '';
         const source = pageQueryParams.get('from');
-        if (email) document.getElementById('loginEmail').value = email;
         const notes = {
             patient: 'Patient account created. Log in to enter the patient flow.',
             donor: 'Donor account created. Log in to continue to donor tools.',
@@ -509,9 +497,15 @@
         });
     }
 
+    function hydrateDevTools() {
+        const devTools = document.getElementById('authDevTools');
+        if (!devTools) return;
+        devTools.hidden = !showDevTools;
+    }
+
     refreshSessionCard();
-    applyTestModePasswords();
     hydrateLoginPage();
+    hydrateDevTools();
     setupPasswordToggles();
     loadApplicantDepartments();
     toggleApplicantDepartmentField();

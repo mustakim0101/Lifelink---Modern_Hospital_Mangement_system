@@ -1256,6 +1256,29 @@ main {
     margin-top: 14px;
 }
 
+.auth-card .field {
+    margin-top: 0;
+    gap: 6px;
+}
+
+.auth-card .field + .field {
+    margin-top: 14px;
+}
+
+.auth-card .button-row {
+    margin-top: 14px;
+}
+
+.auth-card .button,
+.auth-card .auth-submit-btn,
+.auth-card .auth-login-cta,
+.auth-card .auth-register-btn {
+    width: 100%;
+    min-height: 44px;
+    text-align: center;
+    justify-content: center;
+}
+
 .field label {
     font-weight: 700;
     font-size: 0.94rem;
@@ -1756,11 +1779,13 @@ main {
 }
 
 .auth-page--donor .auth-submit-btn {
-    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    background: linear-gradient(135deg, #d14a4a, #b91c1c);
+    color: #ffffff;
 }
 
 .auth-page--donor .auth-submit-btn:hover {
-    background: linear-gradient(135deg, #b91c1c, #991b1b);
+    background: linear-gradient(135deg, #be3c3c, #991b1b);
+    color: #ffffff;
 }
 
 .auth-page--applicant {

@@ -58,6 +58,11 @@
     position: relative;
 }
 
+.app-shell__nav a:hover,
+.app-shell__nav a.is-active {
+    transform: none;
+}
+
 .app-shell__nav a strong {
     font-size: 0.94rem;
     font-weight: 700;
@@ -112,6 +117,33 @@
 
 .ll-section {
     scroll-margin-top: 68px;
+}
+
+.ll-overview-welcome {
+    border: 1px solid rgba(148, 163, 184, 0.26);
+    border-radius: 20px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(241, 249, 255, 0.9));
+    padding: 18px;
+    display: grid;
+    gap: 8px;
+}
+
+.ll-overview-welcome h2 {
+    margin: 0;
+    font-size: clamp(1.6rem, 2.2vw, 2.2rem);
+    line-height: 1.12;
+}
+
+.ll-overview-welcome .ll-welcome-name {
+    font-size: 1.08rem;
+    font-weight: 800;
+    color: var(--ui-text-soft);
+}
+
+.ll-overview-welcome .ll-welcome-meta {
+    color: var(--ui-text-muted);
+    line-height: 1.6;
+    font-size: 0.92rem;
 }
 
 .ll-section-copy,
@@ -402,6 +434,24 @@
     gap: 14px;
 }
 
+.bbops-section-tabs {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.bbops-tab {
+    min-height: 36px;
+    padding: 8px 11px;
+}
+
+.bbops-tab.is-active {
+    background: var(--shell-blood-accent);
+    color: #fff;
+    border-color: transparent;
+}
+
 .bbops-summary {
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -421,6 +471,10 @@
 
 .bbops-section > * + * {
     margin-top: 12px;
+}
+
+.bbops-section-panel {
+    display: none;
 }
 
 .bbops-card {

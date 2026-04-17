@@ -228,6 +228,11 @@
 @section('content')
     <div class="admin-grid">
         <div id="admin-overview-panel" class="ll-section admin-panel" data-display="block">
+            <section class="ll-overview-welcome" style="margin-bottom: 12px;">
+                <h2>Welcome back</h2>
+                <div id="adminWelcomeName" class="ll-welcome-name">Admin</div>
+                <div id="adminWelcomeMeta" class="ll-welcome-meta">Loading admin session context...</div>
+            </section>
             <div class="admin-summary">
                 <div class="admin-stat"><small>Pending applicants</small><strong id="pendingCount">0</strong></div>
                 <div class="admin-stat"><small>Departments loaded</small><strong id="departmentCount">0</strong></div>
@@ -669,10 +674,17 @@ async function statusUser() {
 
 refreshContext();
 if (window.lifeLinkShell) {
+    const adminName = localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Admin';
+    const adminEmail = localStorage.getItem('CURRENT_USER_EMAIL') || '-';
+    const adminId = localStorage.getItem('CURRENT_USER_ID') || '-';
+    const adminWelcomeName = document.getElementById('adminWelcomeName');
+    const adminWelcomeMeta = document.getElementById('adminWelcomeMeta');
+    if (adminWelcomeName) adminWelcomeName.textContent = adminName;
+    if (adminWelcomeMeta) adminWelcomeMeta.textContent = `Role: Admin | Email: ${adminEmail} | ID: ${adminId}`;
     window.lifeLinkShell.updateIdentityContext({
-        name: localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Admin',
-        userId: localStorage.getItem('CURRENT_USER_ID') || '-',
-        email: localStorage.getItem('CURRENT_USER_EMAIL') || '-',
+        name: adminName,
+        userId: adminId,
+        email: adminEmail,
         role: 'Admin',
         hideDepartment: true,
     });
