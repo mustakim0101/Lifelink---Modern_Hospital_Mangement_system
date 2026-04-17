@@ -167,7 +167,10 @@
 
 @section('sidebar_nav')
     <a class="is-active" href="#portal-snapshot">
-        <strong>Snapshot</strong>
+        <strong>Overview</strong>
+    </a>
+    <a href="#portal-profile">
+        <strong>Personal Profile</strong>
     </a>
     <a href="#portal-actions">
         <strong>Book + Request</strong>
@@ -186,12 +189,7 @@
 @section('content')
     <div class="portal-grid">
         <div id="portal-snapshot" class="portal-card ll-section portal-panel" data-display="block">
-            <section class="ll-overview-welcome" style="margin-bottom: 12px;">
-                <h2>Welcome back</h2>
-                <div id="patientWelcomeName" class="ll-welcome-name">Patient</div>
-                <div id="patientWelcomeMeta" class="ll-welcome-meta">Loading account context...</div>
-            </section>
-            <h3>Snapshot</h3>
+            <h3>Overview</h3>
             <p class="portal-hint">Live summary from <code>GET /api/patient/portal</code>.</p>
             <label class="portal-label" for="tokenInput">Patient token</label>
             <input id="tokenInput" class="portal-input" placeholder="Bearer token">
@@ -206,6 +204,10 @@
                 <div class="portal-stat"><div class="portal-num" id="stRoleCount">0</div><div class="portal-lbl">Roles</div></div>
             </div>
             <div class="portal-summary" id="patientSummary"></div>
+        </div>
+
+        <div id="portal-profile" class="portal-card ll-section portal-panel" data-display="block">
+            <div id="patientProfileMount"></div>
         </div>
 
         <div id="portal-actions" class="portal-split ll-section portal-panel" data-display="grid">
@@ -398,7 +400,7 @@ const state = {
     records: [],
     recordSearch: ''
 };
-const portalPanelIds = ['portal-snapshot', 'portal-actions', 'portal-tables', 'portal-records'];
+const portalPanelIds = ['portal-snapshot', 'portal-profile', 'portal-actions', 'portal-tables', 'portal-records'];
 const portalNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[href^="#portal-"]'));
 
 function byId(id) { return document.getElementById(id); }
@@ -764,14 +766,18 @@ async function refreshAll() {
 function boot() {
     setupSidebarPanelNav();
     const patientName = localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Patient';
-    byId('patientWelcomeName').textContent = patientName;
-    byId('patientWelcomeMeta').textContent = `Role: Patient | Email: ${localStorage.getItem('CURRENT_USER_EMAIL') || '-'} | ID: ${localStorage.getItem('CURRENT_USER_ID') || '-'}`;
     if (window.lifeLinkShell) {
         window.lifeLinkShell.updateIdentityContext({
             name: patientName,
             userId: localStorage.getItem('CURRENT_USER_ID') || '-',
             email: localStorage.getItem('CURRENT_USER_EMAIL') || '-',
             role: 'Patient',
+            hideDepartment: true,
+        });
+        window.lifeLinkShell.mountProfileEditor({
+            containerId: 'patientProfileMount',
+            role: 'Patient',
+            userId: localStorage.getItem('CURRENT_USER_ID') || '-',
             hideDepartment: true,
         });
     }

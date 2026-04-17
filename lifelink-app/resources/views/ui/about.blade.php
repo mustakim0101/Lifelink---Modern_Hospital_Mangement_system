@@ -8,7 +8,16 @@
 <style>
     .about-shell {
         display: grid;
-        gap: 14px;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 16px;
+        width: 100%;
+        max-width: 100%;
+        padding: 2px 0 2px;
+        background:
+            radial-gradient(circle at top left, rgba(59, 130, 246, 0.08), transparent 22rem),
+            radial-gradient(circle at top right, rgba(13, 148, 136, 0.1), transparent 22rem),
+            linear-gradient(180deg, rgba(247, 252, 255, 0.94), rgba(239, 248, 252, 0.9));
+        box-sizing: border-box;
     }
 
     .about-card {
@@ -17,6 +26,18 @@
         background: rgba(255, 255, 255, 0.94);
         box-shadow: var(--ui-shadow-sm);
         padding: 16px;
+    }
+
+    .about-card--intro {
+        grid-column: span 12;
+    }
+
+    .about-card--contributors {
+        grid-column: span 7;
+    }
+
+    .about-card--tech {
+        grid-column: span 5;
     }
 
     .about-title {
@@ -55,6 +76,13 @@
         color: var(--ui-text-soft);
     }
 
+    @media (max-width: 1100px) {
+        .about-card--contributors,
+        .about-card--tech {
+            grid-column: span 12;
+        }
+    }
+
     @media (max-width: 900px) {
         .about-grid {
             grid-template-columns: 1fr;
@@ -65,14 +93,14 @@
 
 @section('content')
     <section class="about-shell">
-        <article class="about-card">
+        <article class="about-card about-card--intro">
             <h1 class="about-title">About LifeLink</h1>
             <p class="about-copy">
                 LifeLink is a role-aware hospital management platform that keeps public discovery, patient care, clinical operations, admissions, and blood-bank coordination connected inside one system.
             </p>
         </article>
 
-        <article class="about-card">
+        <article class="about-card about-card--contributors">
             <h2>Project Contributors</h2>
             <div class="about-grid">
                 <section class="about-member">
@@ -90,7 +118,7 @@
             </div>
         </article>
 
-        <article class="about-card">
+        <article class="about-card about-card--tech">
             <h2>Technologies Used</h2>
             <ul class="about-tech">
                 <li>Laravel (Blade + routing + middleware)</li>

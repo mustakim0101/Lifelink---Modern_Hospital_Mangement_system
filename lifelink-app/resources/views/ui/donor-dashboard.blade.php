@@ -235,7 +235,10 @@
 
 @section('sidebar_nav')
     <a class="is-active" href="#donor-access">
-        <strong>Access</strong>
+        <strong>Overview</strong>
+    </a>
+    <a href="#donor-profile">
+        <strong>Personal Profile</strong>
     </a>
     <a href="#donor-availability">
         <strong>Availability</strong>
@@ -254,11 +257,6 @@
 @section('content')
     <div class="donor-grid">
         <div id="donor-access" class="donor-card ll-section donor-panel" data-display="block">
-            <section class="ll-overview-welcome" style="margin-bottom: 12px;">
-                <h2>Welcome back</h2>
-                <div id="donorWelcomeName" class="ll-welcome-name">Donor</div>
-                <div id="donorWelcomeMeta" class="ll-welcome-meta">Loading donor context...</div>
-            </section>
             <div class="donor-stats donor-hero-stats">
                 <div class="donor-stat"><small>Total Donations</small><strong id="stDonations">0</strong></div>
                 <div class="donor-stat"><small>Total Units</small><strong id="stUnits">0</strong></div>
@@ -288,6 +286,10 @@
                 <button id="btnRefresh" class="donor-btn donor-btn-main" type="button" onclick="refreshAll()">Refresh</button>
                 <button id="btnEnroll" class="donor-btn donor-btn-soft" type="button" onclick="enrollDonorRole()">Enable Donor Role</button>
             </div>
+        </div>
+
+        <div id="donor-profile" class="donor-card ll-section donor-panel" data-display="block">
+            <div id="donorProfileMount"></div>
         </div>
 
         <div id="donor-availability" class="donor-card ll-section donor-panel" data-display="block">
@@ -520,7 +522,7 @@ function bootstrapToken() {
 }
 function hasToken() { return !!byId('tokenInput').value.trim(); }
 
-const donorPanelIds = ['donor-access', 'donor-availability', 'donor-requests', 'donor-history'];
+const donorPanelIds = ['donor-access', 'donor-profile', 'donor-availability', 'donor-requests', 'donor-history'];
 const donorNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[href^="#donor-"]'));
 
 function setActivePanel(panelId) {
@@ -746,14 +748,18 @@ async function refreshAll({ silentIfMissingToken = false } = {}) {
 function boot() {
     setupSidebarPanelNav();
     const donorName = localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Donor';
-    byId('donorWelcomeName').textContent = donorName;
-    byId('donorWelcomeMeta').textContent = `Role: Donor | Email: ${localStorage.getItem('CURRENT_USER_EMAIL') || '-'} | ID: ${localStorage.getItem('CURRENT_USER_ID') || '-'}`;
     if (window.lifeLinkShell) {
         window.lifeLinkShell.updateIdentityContext({
             name: donorName,
             userId: localStorage.getItem('CURRENT_USER_ID') || '-',
             email: localStorage.getItem('CURRENT_USER_EMAIL') || '-',
             role: 'Donor',
+            hideDepartment: true,
+        });
+        window.lifeLinkShell.mountProfileEditor({
+            containerId: 'donorProfileMount',
+            role: 'Donor',
+            userId: localStorage.getItem('CURRENT_USER_ID') || '-',
             hideDepartment: true,
         });
     }

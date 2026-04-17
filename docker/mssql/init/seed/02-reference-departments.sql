@@ -42,9 +42,6 @@ IF NOT EXISTS (SELECT 1 FROM dbo.departments WHERE dept_name = N'Nephrology & Ur
     INSERT INTO dbo.departments (dept_name, is_active, created_at, updated_at) VALUES (N'Nephrology & Urology', 1, @now, @now);
 IF NOT EXISTS (SELECT 1 FROM dbo.departments WHERE dept_name = N'Orthopedics & Musculoskeletal Care')
     INSERT INTO dbo.departments (dept_name, is_active, created_at, updated_at) VALUES (N'Orthopedics & Musculoskeletal Care', 1, @now, @now);
-IF NOT EXISTS (SELECT 1 FROM dbo.departments WHERE dept_name = N'Hematology & Lymphatic Care')
-    INSERT INTO dbo.departments (dept_name, is_active, created_at, updated_at) VALUES (N'Hematology & Lymphatic Care', 1, @now, @now);
-
 IF NOT EXISTS (SELECT 1 FROM dbo.departments WHERE dept_name = N'Pediatrics')
     INSERT INTO dbo.departments (dept_name, is_active, created_at, updated_at) VALUES (N'Pediatrics', 1, @now, @now);
 IF NOT EXISTS (SELECT 1 FROM dbo.departments WHERE dept_name = N'General Medicine')
@@ -127,16 +124,10 @@ BEGIN
     WHERE dept_name = N'Orthopedics & Musculoskeletal Care';
 
     UPDATE dbo.departments
-    SET slug = N'hematology-lymphatic-care',
-        short_description = N'Blood and lymphatic-system care including anemia workups and lymphatic symptom evaluation.',
-        banner_title = N'Hematology & Lymphatic Care',
-        banner_description = N'Specialized blood and lymphatic pathways for cell count disorders, clotting concerns, and immune-linked investigations.',
-        organ_coverage_json = N'["Lymph","Lymph nodes"]',
-        services_json = N'["Hematology consultation","Blood disorder screening","Lymph node evaluation","Anemia and clotting follow-up","Laboratory trend review"]',
-        sort_order = 7,
-        icon_key = N'lymph',
+    SET is_active = 0,
         updated_at = @now
-    WHERE dept_name = N'Hematology & Lymphatic Care';
+    WHERE dept_name = N'Hematology & Lymphatic Care'
+       OR slug = N'hematology-lymphatic-care';
 
     UPDATE dbo.departments
     SET slug = N'pediatrics',

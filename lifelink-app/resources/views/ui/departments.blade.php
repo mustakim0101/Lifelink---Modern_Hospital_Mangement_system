@@ -105,7 +105,7 @@
         margin: 8px 0 0;
         color: var(--ui-text-muted);
         line-height: 1.55;
-        min-height: 46px;
+        min-height: 58px;
     }
 
     .dept-meta {
@@ -148,8 +148,7 @@
 
     .dept-actions {
         margin-top: 14px;
-        display: flex;
-        justify-content: flex-end;
+        display: grid;
     }
 
     .dept-link {
@@ -161,8 +160,10 @@
         color: #fff;
         font-weight: 700;
         text-decoration: none;
-        min-height: 38px;
-        padding: 8px 13px;
+        min-height: 42px;
+        width: 100%;
+        padding: 10px 14px;
+        text-align: center;
     }
 
     .dept-link:hover {

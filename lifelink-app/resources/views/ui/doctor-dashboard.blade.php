@@ -273,7 +273,8 @@
 @endpush
 
 @section('sidebar_nav')
-    <a class="is-active" href="#doctor-overview" data-panel="doctor-overview"><strong>Dashboard</strong></a>
+    <a class="is-active" href="#doctor-overview" data-panel="doctor-overview"><strong>Overview</strong></a>
+    <a href="#doctor-profile" data-panel="doctor-profile"><strong>Personal Profile</strong></a>
     <a href="#doctor-schedule" data-panel="doctor-schedule"><strong>Consultation Routine</strong></a>
     <a href="#doctor-load-summary" data-panel="doctor-load-summary"><strong>Daily Load Summary</strong></a>
     <a href="#doctor-appointments-workflow" data-panel="doctor-appointments-workflow"><strong>Appointment Controls</strong></a>
@@ -286,12 +287,6 @@
 @section('content')
     <div class="doctor-shell">
         <div id="doctor-overview" class="doctor-panel ll-section" data-display="block">
-            <section class="ll-overview-welcome">
-                <h2 id="doctorWelcome">Welcome back</h2>
-                <div id="doctorWelcomeName" class="ll-welcome-name">Doctor</div>
-                <div id="doctorMetaLine" class="ll-welcome-meta">Loading doctor profile...</div>
-            </section>
-
             <section class="doctor-stats">
                 <article class="doctor-stat doctor-stat--appointments">
                     <span class="doctor-stat__label">Today's Appointments</span>
@@ -336,6 +331,10 @@
             </section>
 
         </div>
+
+        <section id="doctor-profile" class="doctor-card doctor-workflow ll-section doctor-panel" data-display="block">
+            <div id="doctorProfileMount"></div>
+        </section>
 
         <section id="doctor-schedule" class="doctor-card doctor-workflow ll-section doctor-panel" data-display="block">
             <div class="doctor-card-head">
@@ -487,7 +486,7 @@
 @push('scripts')
 <script>
 const API = '/api';
-const doctorPanelIds = ['doctor-overview', 'doctor-schedule', 'doctor-load-summary', 'doctor-appointments-workflow', 'doctor-request'];
+const doctorPanelIds = ['doctor-overview', 'doctor-profile', 'doctor-schedule', 'doctor-load-summary', 'doctor-appointments-workflow', 'doctor-request'];
 const out = document.getElementById('out');
 const token = localStorage.getItem('USER_TOKEN') || '';
 let doctorPanelControl = null;
@@ -634,16 +633,18 @@ function renderOverview() {
 
     const name = profile.full_name || profile.fullName || localStorage.getItem('CURRENT_USER_FULL_NAME') || 'Doctor';
     const dept = profile.department || profile.dept_name || profile.department_name || 'Department';
-    const spec = profile.specialization || profile.speciality || 'Clinical Operations';
-    document.getElementById('doctorWelcome').textContent = 'Welcome back';
-    document.getElementById('doctorWelcomeName').textContent = name;
-    document.getElementById('doctorMetaLine').textContent = `Role: Doctor | Department: ${dept} | Focus: ${spec} | Email: ${localStorage.getItem('CURRENT_USER_EMAIL') || '-'} | ID: ${localStorage.getItem('CURRENT_USER_ID') || '-'}`;
     if (window.lifeLinkShell) {
         window.lifeLinkShell.updateIdentityContext({
             name,
             userId: localStorage.getItem('CURRENT_USER_ID') || '-',
             email: localStorage.getItem('CURRENT_USER_EMAIL') || '-',
             role: 'Doctor',
+            department: dept,
+        });
+        window.lifeLinkShell.mountProfileEditor({
+            containerId: 'doctorProfileMount',
+            role: 'Doctor',
+            userId: localStorage.getItem('CURRENT_USER_ID') || '-',
             department: dept,
         });
     }

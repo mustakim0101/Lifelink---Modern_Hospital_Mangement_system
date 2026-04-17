@@ -10,7 +10,7 @@
 <body>
     @php($isPublicPage = trim($__env->yieldContent('public_page')) === '1')
     @php($hideSidebar = trim($__env->yieldContent('hide_sidebar')) === '1')
-    <div class="app-shell {{ $hideSidebar ? 'app-shell--no-sidebar' : '' }}" data-role-theme="@yield('role_theme', 'default')">
+    <div class="app-shell {{ $hideSidebar ? 'app-shell--no-sidebar' : '' }} {{ $isPublicPage ? 'app-shell--public-page' : '' }}" data-role-theme="@yield('role_theme', 'default')">
         @if($isPublicPage)
             <header class="topbar topbar--public">
                 <div class="shell topbar-inner">
@@ -67,13 +67,13 @@
                 </aside>
             @endunless
 
-            <main class="app-shell__content">
+            <main class="app-shell__content {{ ($isPublicPage && $hideSidebar) ? 'app-shell__content--public-full' : '' }}">
                 @hasSection('section_nav')
                     <div class="ll-section-nav" role="navigation" aria-label="Section navigation">
                         @yield('section_nav')
                     </div>
                 @endif
-                <div class="app-shell__content-body ui-card ui-card--shell">
+                <div class="app-shell__content-body {{ $isPublicPage ? 'app-shell__content-body--public' : 'ui-card ui-card--shell' }}">
                     @yield('content')
                 </div>
             </main>
@@ -177,6 +177,122 @@
                 metaParts.push(`Department: ${context.department}`);
             }
             userMeta.textContent = metaParts.join(' | ');
+        },
+        profileStorageKey(role, userId) {
+            return `LL_PROFILE_${role || 'User'}_${userId || 'guest'}`;
+        },
+        readProfileDraft(role, userId) {
+            const key = this.profileStorageKey(role, userId);
+            try {
+                const parsed = JSON.parse(localStorage.getItem(key) || '{}');
+                return parsed && typeof parsed === 'object' ? parsed : {};
+            } catch (error) {
+                return {};
+            }
+        },
+        writeProfileDraft(role, userId, payload) {
+            const key = this.profileStorageKey(role, userId);
+            localStorage.setItem(key, JSON.stringify({
+                ...payload,
+                updatedAt: new Date().toISOString(),
+            }));
+        },
+        mountProfileEditor(config = {}) {
+            const container = document.getElementById(config.containerId || '');
+            if (!container) return;
+            const esc = (value) => String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+
+            const role = config.role || this.getPreferredRole(JSON.parse(localStorage.getItem('CURRENT_USER_ROLES') || '[]')) || 'User';
+            const userId = config.userId || localStorage.getItem('CURRENT_USER_ID') || 'guest';
+            const email = localStorage.getItem('CURRENT_USER_EMAIL') || '';
+            const fullName = localStorage.getItem('CURRENT_USER_FULL_NAME') || '';
+            const draft = this.readProfileDraft(role, userId);
+            const initial = {
+                fullName: draft.fullName || fullName || '',
+                email,
+                phone: draft.phone || '',
+                dateOfBirth: draft.dateOfBirth || '',
+                address: draft.address || '',
+                emergencyContact: draft.emergencyContact || '',
+                notes: draft.notes || '',
+                updatedAt: draft.updatedAt || '',
+            };
+
+            container.innerHTML = `
+                <section class="ll-profile-card">
+                    <div class="ll-profile-card__head">
+                        <h2>Personal profile</h2>
+                        <p>Review identity details and keep editable contact information up to date.</p>
+                    </div>
+                    <div class="ll-profile-grid">
+                        <label class="ll-profile-field">
+                            <span>Full name</span>
+                            <input id="${config.containerId}-fullName" type="text" value="${esc(initial.fullName)}">
+                        </label>
+                        <label class="ll-profile-field">
+                            <span>Email</span>
+                            <input type="email" value="${esc(initial.email)}" disabled>
+                        </label>
+                        <label class="ll-profile-field">
+                            <span>Phone</span>
+                            <input id="${config.containerId}-phone" type="text" value="${esc(initial.phone)}" placeholder="Add phone number">
+                        </label>
+                        <label class="ll-profile-field">
+                            <span>Date of birth</span>
+                            <input id="${config.containerId}-dob" type="date" value="${esc(initial.dateOfBirth)}">
+                        </label>
+                        <label class="ll-profile-field ll-profile-field--wide">
+                            <span>Address</span>
+                            <input id="${config.containerId}-address" type="text" value="${esc(initial.address)}" placeholder="Add current address">
+                        </label>
+                        <label class="ll-profile-field ll-profile-field--wide">
+                            <span>Emergency contact</span>
+                            <input id="${config.containerId}-emergency" type="text" value="${esc(initial.emergencyContact)}" placeholder="Name and phone">
+                        </label>
+                        <label class="ll-profile-field ll-profile-field--wide">
+                            <span>Notes</span>
+                            <textarea id="${config.containerId}-notes" rows="3" placeholder="Optional personal notes">${esc(initial.notes)}</textarea>
+                        </label>
+                    </div>
+                    <div class="ll-profile-actions">
+                        <button type="button" class="button primary" id="${config.containerId}-save">Save profile details</button>
+                        <span class="ll-profile-meta" id="${config.containerId}-meta">${initial.updatedAt ? `Last updated: ${new Date(initial.updatedAt).toLocaleString()}` : 'No profile updates saved yet.'}</span>
+                    </div>
+                </section>
+            `;
+
+            const saveButton = document.getElementById(`${config.containerId}-save`);
+            saveButton?.addEventListener('click', () => {
+                const next = {
+                    fullName: document.getElementById(`${config.containerId}-fullName`)?.value?.trim() || '',
+                    phone: document.getElementById(`${config.containerId}-phone`)?.value?.trim() || '',
+                    dateOfBirth: document.getElementById(`${config.containerId}-dob`)?.value || '',
+                    address: document.getElementById(`${config.containerId}-address`)?.value?.trim() || '',
+                    emergencyContact: document.getElementById(`${config.containerId}-emergency`)?.value?.trim() || '',
+                    notes: document.getElementById(`${config.containerId}-notes`)?.value?.trim() || '',
+                };
+                this.writeProfileDraft(role, userId, next);
+                if (next.fullName) {
+                    localStorage.setItem('CURRENT_USER_FULL_NAME', next.fullName);
+                }
+                const meta = document.getElementById(`${config.containerId}-meta`);
+                if (meta) {
+                    meta.textContent = `Last updated: ${new Date().toLocaleString()}`;
+                }
+                this.updateIdentityContext({
+                    name: localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'User',
+                    userId,
+                    email,
+                    role,
+                    department: config.department || null,
+                    hideDepartment: !!config.hideDepartment,
+                });
+            });
         }
     };
 
@@ -186,7 +302,8 @@
             alt: 'General medical anatomy icon',
         },
         rules: [
-            { icon: '/assets/anatomy/human circulatorysystemfor cardiology.jpg', alt: 'Circulatory system icon', keywords: ['cardio', 'vascular', 'circulatory', 'hematology', 'blood bank', 'transfusion'] },
+            { icon: '/assets/anatomy/blood-bag-color-icon.svg', alt: 'Blood Bank icon', keywords: ['blood bank', 'donation', 'transfusion', 'blood request'] },
+            { icon: '/assets/anatomy/human-heart-svgrepo-com.svg', alt: 'Cardiology icon', keywords: ['cardio', 'vascular', 'circulatory'] },
             { icon: '/assets/anatomy/lungs-svgrepo-com.svg', alt: 'Lungs anatomy icon', keywords: ['pulmo', 'respirat', 'lung'] },
             { icon: '/assets/anatomy/skull-svgrepo-com.svg', alt: 'Neurology anatomy icon', keywords: ['neuro', 'brain', 'skull', 'neurosurgery'] },
             { icon: '/assets/anatomy/kidneys-svgrepo-com.svg', alt: 'Kidneys anatomy icon', keywords: ['nephro', 'uro', 'renal', 'kidney'] },

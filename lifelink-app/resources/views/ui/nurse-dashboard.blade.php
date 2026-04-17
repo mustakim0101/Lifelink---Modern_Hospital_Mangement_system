@@ -14,6 +14,9 @@
     <a class="is-active" href="#nurse-overview" data-panel="nurse-overview" data-mode="all">
         <strong>Overview</strong>
     </a>
+    <a href="#nurse-profile" data-panel="nurse-profile" data-mode="all">
+        <strong>Personal Profile</strong>
+    </a>
     <a href="#nurse-monitoring" data-panel="nurse-monitoring" data-mode="regular">
         <strong>Patient Monitoring</strong>
     </a>
@@ -28,14 +31,6 @@
 @section('content')
     <div class="nurse-grid">
         <div id="nurse-overview" class="nurse-split ll-section nurse-panel-switch" data-display="grid">
-            <div class="nurse-panel nurse-col-12">
-                <section class="ll-overview-welcome">
-                    <h2>Welcome back</h2>
-                    <div id="nurseWelcomeName" class="ll-welcome-name">Nurse</div>
-                    <div id="nurseWelcomeMeta" class="ll-welcome-meta">Loading profile and department context...</div>
-                </section>
-            </div>
-
             <div class="nurse-panel nurse-col-4">
                 <h3>Current mode</h3>
                 <p id="nurseModeSummary" class="nurse-note">Load your profile to unlock the correct nurse workspace.</p>
@@ -110,6 +105,10 @@
                     <li>Complete shift handoff notes for unresolved cases.</li>
                 </ul>
             </div>
+        </div>
+
+        <div id="nurse-profile" class="nurse-panel ll-section nurse-panel-switch" data-display="block">
+            <div id="nurseProfileMount"></div>
         </div>
 
         <div id="nurse-monitoring" class="ll-section nurse-panel-switch" data-display="block">
@@ -358,13 +357,14 @@
 <script>
 const API = '/api';
 const out = document.getElementById('out');
-const nursePanelIds = ['nurse-overview', 'nurse-monitoring', 'nurse-blood-bank'];
+const nursePanelIds = ['nurse-overview', 'nurse-profile', 'nurse-monitoring', 'nurse-blood-bank'];
 const nurseNavLinks = Array.from(document.querySelectorAll('.app-shell__nav a[data-panel]'));
 
 const state = {
     activePanel: 'nurse-overview',
     nurse: null,
     nurseProfileLoaded: false,
+    profileMounted: false,
     profileRequested: false,
     patients: [],
     patientsLoaded: false,
@@ -467,19 +467,19 @@ function canUseRegularWorkflow() {
 
 function allowedNursePanels() {
     if (!state.nurseProfileLoaded || !state.nurse) {
-        return ['nurse-overview'];
+        return ['nurse-overview', 'nurse-profile'];
     }
 
     if (isBloodBankNurse()) {
-        return ['nurse-overview', 'nurse-blood-bank'];
+        return ['nurse-overview', 'nurse-profile', 'nurse-blood-bank'];
     }
 
-    return ['nurse-overview', 'nurse-monitoring'];
+    return ['nurse-overview', 'nurse-profile', 'nurse-monitoring'];
 }
 
 function preferredNursePanel() {
     const allowed = allowedNursePanels();
-    return allowed.find((panelId) => panelId !== 'nurse-overview') || allowed[0];
+    return allowed.find((panelId) => panelId !== 'nurse-overview' && panelId !== 'nurse-profile') || allowed[0];
 }
 
 function updateNurseSidebarByMode() {
@@ -978,11 +978,6 @@ function renderBloodBankAccess() {
             : `Regular nurse mode is active for ${resolvedNurseDepartmentLabel() || 'this department'}.`;
     const nurseName = localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Nurse';
     const nurseDepartment = resolvedNurseDepartmentLabel() || '-';
-    setTextById('nurseWelcomeName', nurseName);
-    setTextById(
-        'nurseWelcomeMeta',
-        `Role: Nurse | Department: ${nurseDepartment} | Email: ${localStorage.getItem('CURRENT_USER_EMAIL') || '-'} | ID: ${localStorage.getItem('CURRENT_USER_ID') || '-'}`
-    );
     if (window.lifeLinkShell) {
         window.lifeLinkShell.updateIdentityContext({
             name: nurseName,
@@ -991,6 +986,15 @@ function renderBloodBankAccess() {
             role: 'Nurse',
             department: resolvedNurseDepartmentLabel() || null,
         });
+        if (!state.profileMounted) {
+            window.lifeLinkShell.mountProfileEditor({
+                containerId: 'nurseProfileMount',
+                role: 'Nurse',
+                userId: localStorage.getItem('CURRENT_USER_ID') || '-',
+                department: nurseDepartment,
+            });
+            state.profileMounted = true;
+        }
     }
     updateNurseSidebarByMode();
     updateOverviewQuickActions();
@@ -1140,7 +1144,7 @@ async function loadNurseProfile(options = {}) {
             state.bloodBankDonorsLoaded = false;
         }
         renderBloodBankAccess();
-        if (!allowedNursePanels().includes(state.activePanel) || state.activePanel === 'nurse-overview') {
+        if (!allowedNursePanels().includes(state.activePanel) || state.activePanel === 'nurse-overview' || state.activePanel === 'nurse-profile') {
             const panelId = preferredNursePanel();
             setActivePanel(panelId);
             history.replaceState(null, '', `#${panelId}`);

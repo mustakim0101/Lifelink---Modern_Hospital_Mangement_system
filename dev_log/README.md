@@ -3607,3 +3607,35 @@ Scope:
 - Reduced sidebar first-item top gap by tightening shared sidebar/nav spacing while keeping existing hover/active styles intact.
 - Blood Bank IT workspace now behaves as feature panels (request board, approval/fulfillment, match timeline, donor suggestions/search, donation logging) instead of one long stacked flow.
 - Improved overview welcome presentation for dashboards with clearer hierarchy for name, role, department context, and secondary email/ID metadata.
+
+## Targeted UI Correction Pass (2026-04-17)
+- Fixed public department directory layout to render without dashboard sidebar framing and kept the search/filter toolbar above a responsive full-width department card grid.
+- Updated department anatomy icon mapping: Blood Bank now uses `blood-bag-color-icon.svg`, and Cardiology & Vascular Medicine now uses `human-heart-svgrepo-com.svg`; removed use of the old circulatory JPG mapping.
+- Removed Hematology & Lymphatic Care from the active public directory flow by excluding its slug in public-catalog query and deactivating it in department seed updates.
+- Upgraded welcome hero to presentation-style behavior with smoother slide transitions and alternating caption placement (right/left/right).
+- Refined welcome entry action buttons with role-aware color treatment for patient, donor, applicant, and login actions.
+- Simplified and polished Department Finder right panel by removing the extra supporting note box and improving action-button spacing/clarity.
+- Cleaned admin overview noise and aligned top summary flow with the same profile-first dashboard pattern.
+- Changed doctor sidebar label from `Dashboard` to `Overview` without touching panel IDs.
+- Replaced old welcome-info identity blocks on role dashboards with a reusable personal profile section that supports viewing and updating editable personal details.
+- Tightened sidebar top spacing centrally so the first nav item starts closer to the top of the sidebar container.
+- Standardized shared textbox/select/textarea/button spacing across doctor, nurse, IT, patient, donor, admin, and applicant feature panels via shared CSS overrides.
+
+## Regression Fix Pass - Public Layout + Profile Panel Separation (2026-04-17)
+- Fixed public no-sidebar shell behavior so `/about` and `/ui/departments` render in full public-page width instead of inheriting dashboard-like column constraints.
+- Improved welcome hero caption treatment with presentation-style hierarchy (kicker + headline + supporting line), stronger readability, and preserved alternating right/left/right placement.
+- Fixed public department directory layout path so cards render in the main page content area with no sidebar-column behavior.
+- Renamed patient sidebar label from `Snapshot` to `Overview` without changing panel IDs.
+- Moved `Personal Profile` out of overview/status/access sections into a dedicated sidebar feature panel for admin, applicant, doctor, nurse, IT, patient, and donor dashboards.
+- Kept profile form styling aligned with shared `ll-profile` component styles to match other dashboard panel design language.
+
+## About Page Full-Bleed Follow-up (2026-04-18)
+- Added page-level overrides in `resources/views/ui/about.blade.php` to force full-bleed rendering (`100vw` breakout with controlled side padding), so About content spans edge-to-edge even when parent shell width constraints are present.
+
+## Regression fix pass (2026-04-18)
+- Fixed public no-sidebar shell placement so /about and /ui/departments render in the real main content area instead of the sidebar-width grid track.
+- Refined welcome hero caption treatment to presentation-style hierarchy (kicker + headline + support line) while preserving slide order and right/left/right alternation.
+- Corrected patient sidebar label from Snapshot to Overview.
+- Moved Personal Profile out of overview blocks into dedicated sidebar panels for admin, applicant, doctor, nurse, IT, patient, and donor dashboards.
+- Kept existing panel-switching logic and role/Blood Bank gating, with profile now mounted in separate feature panels.
+- Kept profile editor form styling aligned with existing shared dashboard form styles.
