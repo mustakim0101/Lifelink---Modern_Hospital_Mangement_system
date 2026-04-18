@@ -190,13 +190,7 @@
     <div class="portal-grid">
         <div id="portal-snapshot" class="portal-card ll-section portal-panel" data-display="block">
             <h3>Overview</h3>
-            <p class="portal-hint">Live summary from <code>GET /api/patient/portal</code>.</p>
-            <label class="portal-label" for="tokenInput">Patient token</label>
-            <input id="tokenInput" class="portal-input" placeholder="Bearer token">
-            <div class="portal-btn-row">
-                <button id="btnStored" class="portal-btn portal-btn-soft" onclick="useStoredUserToken()">Use USER_TOKEN</button>
-                <button id="btnRefresh" class="portal-btn portal-btn-main" onclick="refreshAll()">Refresh All</button>
-            </div>
+            <input id="tokenInput" type="hidden">
             <div class="portal-stats">
                 <div class="portal-stat"><div class="portal-num" id="stRecords">0</div><div class="portal-lbl">Records</div></div>
                 <div class="portal-stat"><div class="portal-num" id="stUpcoming">0</div><div class="portal-lbl">Upcoming</div></div>

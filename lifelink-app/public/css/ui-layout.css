@@ -4,6 +4,10 @@
     box-sizing: border-box;
 }
 
+[hidden] {
+    display: none !important;
+}
+
 html {
     scroll-behavior: smooth;
 }
@@ -467,7 +471,7 @@ body > .shell {
 }
 
 .app-shell__sidebar {
-    padding: 8px 10px 14px;
+    padding: 4px 10px 12px;
     align-self: stretch;
     position: sticky;
     top: 74px;
@@ -546,7 +550,7 @@ body > .shell {
 .app-shell__nav {
     display: grid;
     gap: 8px;
-    margin-bottom: 16px;
+    margin: 0 0 16px;
     align-content: start;
     overflow-y: auto;
     overflow-x: visible;

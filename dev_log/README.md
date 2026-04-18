@@ -3621,6 +3621,21 @@ Scope:
 - Tightened sidebar top spacing centrally so the first nav item starts closer to the top of the sidebar container.
 - Standardized shared textbox/select/textarea/button spacing across doctor, nurse, IT, patient, donor, admin, and applicant feature panels via shared CSS overrides.
 
+## Tiny Dashboard Cleanup Pass (2026-04-18)
+- Nurse overview now hides non-essential cards for Blood Bank nurses and keeps only the `Workload snapshot` block visible in Overview for that mode.
+- IT Personal Profile no longer shows the regular-operations locked notice block.
+- Removed the redundant IT sidebar parent item `Blood Bank Operations`; Blood Bank access stays routed through the existing child feature links.
+- Removed the non-Blood-Bank overview mode sentence (`Regular IT mode is active for this account.`) from IT overview summary text.
+
+## Targeted Panel-State + Sidebar Fix Pass (2026-04-18)
+- Fixed public no-sidebar shell behavior for public pages so About and Department directory content render in the true page body instead of a sidebar-like column.
+- Updated welcome hero captions to a stronger mixed-hierarchy presentation style while keeping slideshow behavior and right/left/right placement.
+- Renamed patient sidebar `Snapshot` label to `Overview`.
+- Moved Personal Profile out of overview panels into dedicated sidebar items/panels for admin, applicant, doctor, nurse, IT worker, patient, and donor dashboards.
+- Corrected nurse default panel behavior to stay on `Overview` after profile/department detection unless hash navigation explicitly requests another allowed panel.
+- Corrected IT Blood Bank sidebar activation so only one sidebar item is active at a time (no parent + child double-active state).
+- Tightened shared sidebar top spacing to remove first-item top-gap while preserving hover/active visual styling.
+
 ## Regression Fix Pass - Public Layout + Profile Panel Separation (2026-04-17)
 - Fixed public no-sidebar shell behavior so `/about` and `/ui/departments` render in full public-page width instead of inheriting dashboard-like column constraints.
 - Improved welcome hero caption treatment with presentation-style hierarchy (kicker + headline + supporting line), stronger readability, and preserved alternating right/left/right placement.
@@ -3639,3 +3654,73 @@ Scope:
 - Moved Personal Profile out of overview blocks into dedicated sidebar panels for admin, applicant, doctor, nurse, IT, patient, and donor dashboards.
 - Kept existing panel-switching logic and role/Blood Bank gating, with profile now mounted in separate feature panels.
 - Kept profile editor form styling aligned with existing shared dashboard form styles.
+
+## Blood Bank IT panel cleanup (2026-04-18)
+- Removed the repeated Blood Bank operations intro block from child feature views (Request Board, Approval + Fulfillment, Match Timeline, Donor Suggestions, Donor Search, Donation Logging) by showing it only on the main `Blood Bank Operations` sidebar item.
+- Moved the request stats block (`Requests shown`, `Accepted matches`, `Donors shown`, `Selected request`) into the `Request Board` panel only.
+- Removed the extra explanatory line from the `Donor Suggestions` panel while preserving existing donor suggestion behavior.
+
+## Tiny Blood Bank IT cleanup pass (2026-04-18)
+- Moved the request stats block (`Requests shown`, `Accepted matches`, `Donors shown`, `Selected request`) from `Request Board` into `Overview`.
+- Removed the Overview line `Blood Bank IT mode is active for this account.`
+- Added a short story-style explanation in `Request Board` describing it as the starting desk where IT staff select a request and continue into approval/fulfillment, donor suggestions/search, matching, and donation logging.
+
+## Blood Bank IT workflow consolidation pass (2026-04-18)
+- Standardized control rhythm in Blood Bank `Donor Search` and `Donation Logging` using shared form-grid/control spacing and uniform action-button sizing.
+- Integrated Blood Bank schema tools directly into IT dashboard sidebar/panel workflow (`Schema Snapshot`, `Blood Bank Setup`, `Donor Setup`, `Inventory Setup`) so day-to-day work stays inside `/ui/it-bed-allocation`.
+- Removed the external dependency button from Donation Logging (`Open Blood Bank schema`) after equivalent schema/setup actions were embedded in dashboard panels.
+
+## Blood Bank IT sidebar/workflow cleanup pass (2026-04-18)
+- Moved `Match Timeline`, `Donor Suggestions`, and `Donor Search` out of standalone Blood Bank sidebar pages and into the `Donation Logging` panel as one combined workflow area.
+- Removed `Schema Snapshot` from the Blood Bank IT sidebar while keeping schema functionality available from the Blood Bank workspace panel tabs.
+- Donation Logging now acts as the integrated donor lookup + suggestion + match timeline + donation-entry workflow without backend/API changes.
+
+## Nurse Blood Bank screening targeted fix pass (2026-04-18)
+- Removed the non-functional Blood Bank Screening intro/step block and kept only donor search/list + health-check workflow controls.
+- Fixed donor filter/load behavior so `Load donors` and filter changes reliably refresh the donor list with current query parameters.
+- Added client-side pagination for Blood Bank donor list with previous/next controls.
+- Added explicit `Use Donor` button on each donor card to set selection, auto-fill Donor ID, refresh selected donor summary, and load donor health-check history.
+- Updated selected donor summary flow under health-check entry to show donor identity + latest eligibility/screening context more clearly.
+
+## Nurse Blood Bank eligibility filter fix (2026-04-18)
+- Fixed Blood Bank Screening eligibility filtering in `GET /api/nurse/blood-bank/donors` by replacing unsafe PHP boolean casting on request input with explicit boolean normalization, so `eligible=false` now correctly maps to not-eligible donors.
+- Removed `Filter by request ID` from the Blood Bank Screening UI and deleted its frontend-only query wiring; donor search, eligibility filter, blood-group filter, selection, and health-check workflow remain unchanged.
+
+## Nurse Blood Bank eligibility filter regression fix (2026-04-18)
+- Real root cause: frontend query values (`eligible=true/false`) were URL query strings, while backend used Laravel `boolean` validation for `eligible`; this can reject string forms and return `422`, after which UI cleared donors and looked like a broken filter.
+- Backend fix (`NurseCareController@bloodBankDonors`): replaced direct `boolean`-validated eligibility handling with explicit boolean normalization for `true/false/1/0` and clear `422` only for truly invalid values.
+- Frontend fix (`nurse-dashboard.blade.php`): Eligibility dropdown now sends explicit `eligible=1` or `eligible=0`; `All donors` omits the parameter.
+- UI failure-state fix: donor list now shows a clear load-error message when request fails, and keeps the existing "No Blood Bank donors found for this filter" message only for true empty matches.
+
+## Nurse overview tiny cleanup pass (2026-04-18)
+- Simplified Nurse `Overview` to keep only the `Workload snapshot` block.
+- Applied the same Overview behavior for both nurse types: Blood Bank nurse and non-Blood-Bank nurse.
+- Kept Personal Profile, Patient Monitoring, and Blood Bank Screening in their own separate panels without backend/API workflow changes.
+
+## Nurse Blood Bank screening UI polish pass (2026-04-18)
+- Restyled selected donor info and latest screening status sections into cleaner Blood Bank-themed info cards with clearer label/value separation.
+- Aligned Blood Bank Screening filter controls (`Search donor`, `Blood group`, `Eligibility`) into one unified responsive filter toolbar.
+- Standardized Blood Bank Screening action button sizing (`Load donors`, `Refresh selected donor history`, `Use Donor`, `Save donor health check`) with consistent height and spacing.
+
+## Public nav + department card alignment fix pass (2026-04-18)
+- Public top-nav now reacts to local signed-in session state: logged-out users see `Login`, while signed-in users see `Go to Dashboard` plus `Logout` on public pages.
+- Welcome page session-aware actions now switch login CTAs to workspace-directed actions for signed-in users.
+- Department directory cards now use equal-height flex layout with bottom-pinned action rows, so all `Open Department` buttons align consistently.
+
+## Department detail targeted cleanup pass (2026-04-18)
+- Removed `Availability` from the department-detail sidebar and deleted the separate Availability panel section.
+- Doctors panel continues to auto-show all active doctors for the current department on detail load (no extra action required to see cards).
+- Merged practical availability signal into doctor cards by keeping selected-date availability summary per doctor, alongside consultation window, weekly capacity, and review summary fields.
+
+## Public nav auth-state bug fix (2026-04-18)
+- Fixed public top-nav signed-in toggle where `Login` could appear together with `Go to Dashboard` and `Logout`.
+- Root cause was shared nav link display styling overriding the browser `hidden` behavior.
+- Added a shared `[hidden] { display: none !important; }` rule so public auth-state toggles now hide/show correctly across welcome and layout-based public pages.
+
+## Admin workflow cleanup + seed data pass (2026-04-18)
+- Admin sidebar in `admin-users` was simplified to exactly 4 items: `Overview`, `Personal Profile`, `Pending Queue`, `Staff Setup`.
+- Admin Overview now loads real database-backed totals (patients, doctors, nurses, IT workers, donors, departments, applications, admissions, blood requests, inventory rows, inventory units) via admin applications API payload.
+- Pending Queue now shows DB-backed queue counters (`Loaded`, `Cards shown`, `Pending`, `Waiting for review`) and supports filters for applicant name/email search, application ID, status, and applied role.
+- Staff Setup section was kept focused on doctor/nurse/IT setup handoff from approved applicants; unrelated blocks were removed from admin workspace.
+- Prototype/dev tools were removed from the normal admin UI path (including removing Prototype Directory exposure from admin dashboard top actions and removing dev/prototype-only admin entries).
+- Added broader relational MSSQL seed coverage in `docker/mssql/init/seed/10-system-workflow-demo.sql` for end-to-end testing across identity/RBAC, hiring, staff setup, clinical/admission/bed flow, blood bank, donor lifecycle, matching/notifications, appointments, records, and department review surfaces.
