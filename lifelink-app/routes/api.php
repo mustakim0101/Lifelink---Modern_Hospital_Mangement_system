@@ -45,6 +45,7 @@ Route::prefix('dev')->group(function () {
 });
 
 Route::prefix('admin')->middleware(['auth:api', 'active.user', 'role:Admin'])->group(function () {
+    Route::get('/users/search', [AccountControlController::class, 'searchUsers']);
     Route::post('/users/{user}/freeze', [AccountControlController::class, 'freeze']);
     Route::post('/users/{user}/unfreeze', [AccountControlController::class, 'unfreeze']);
     Route::get('/users/{user}/status', [AccountControlController::class, 'status']);

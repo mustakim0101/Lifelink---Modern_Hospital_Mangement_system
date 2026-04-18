@@ -17,7 +17,15 @@ class ApplicationReviewController extends Controller
     public function index(Request $request): JsonResponse
     {
         $status = $request->query('status');
-        $applications = collect($this->sqlService->listApplications($status))
+        $search = trim((string) $request->query('q', '')) ?: null;
+        $applicationId = $request->query('applicationId');
+        $role = $request->query('role');
+
+        $normalizedApplicationId = is_numeric($applicationId) && (int) $applicationId > 0
+            ? (int) $applicationId
+            : null;
+
+        $applications = collect($this->sqlService->listApplications($status, $search, $normalizedApplicationId, $role))
             ->map(
                 fn ($application) => $this->applicationPayload($application)
         );
@@ -30,7 +38,12 @@ class ApplicationReviewController extends Controller
         return response()->json([
             'applications' => $applications,
             'filter_status' => $status ?: null,
+            'filter_query' => $search,
+            'filter_application_id' => $normalizedApplicationId,
+            'filter_role' => $role ?: null,
             'departments' => $departments,
+            'queue_stats' => $this->sqlService->queueStats($status, $search, $normalizedApplicationId, $role),
+            'overview_totals' => $this->sqlService->overviewTotals(),
         ]);
     }
 

@@ -9,6 +9,92 @@ use Illuminate\Http\Request;
 
 class AccountControlController extends Controller
 {
+    public function searchUsers(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['nullable', 'string', 'max:120'],
+            'role' => ['nullable', 'string', 'max:80'],
+            'department' => ['nullable', 'string', 'max:120'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $nameFilter = trim((string) ($validated['name'] ?? ''));
+        $roleFilter = trim((string) ($validated['role'] ?? ''));
+        $departmentFilter = trim((string) ($validated['department'] ?? ''));
+        $limit = (int) ($validated['limit'] ?? 20);
+
+        $query = User::query()
+            ->select(['users.id', 'users.name', 'users.full_name', 'users.email', 'users.account_status'])
+            ->with([
+                'roles:id,role_name',
+                'doctorProfile:doctor_id,department_id',
+                'doctorProfile.department:id,dept_name',
+                'nurseProfile:nurse_id,department_id',
+                'nurseProfile.department:id,dept_name',
+                'departmentAdminScopes:user_id,department_id',
+                'departmentAdminScopes.department:id,dept_name',
+            ]);
+
+        if ($nameFilter !== '') {
+            $query->where(function ($nameQuery) use ($nameFilter) {
+                $likeName = '%' . $nameFilter . '%';
+                $nameQuery
+                    ->where('users.full_name', 'like', $likeName)
+                    ->orWhere('users.name', 'like', $likeName)
+                    ->orWhere('users.email', 'like', $likeName);
+            });
+        }
+
+        if ($roleFilter !== '') {
+            $query->whereHas('roles', function ($roleQuery) use ($roleFilter) {
+                $roleQuery->where('role_name', 'like', '%' . $roleFilter . '%');
+            });
+        }
+
+        if ($departmentFilter !== '') {
+            $query->where(function ($departmentQuery) use ($departmentFilter) {
+                $likeDepartment = '%' . $departmentFilter . '%';
+                $departmentQuery
+                    ->whereHas('doctorProfile.department', fn ($q) => $q->where('dept_name', 'like', $likeDepartment))
+                    ->orWhereHas('nurseProfile.department', fn ($q) => $q->where('dept_name', 'like', $likeDepartment))
+                    ->orWhereHas('departmentAdminScopes.department', fn ($q) => $q->where('dept_name', 'like', $likeDepartment));
+            });
+        }
+
+        $users = $query
+            ->orderBy('users.id', 'desc')
+            ->limit($limit)
+            ->get();
+
+        return response()->json([
+            'filters' => [
+                'name' => $nameFilter,
+                'role' => $roleFilter,
+                'department' => $departmentFilter,
+                'limit' => $limit,
+            ],
+            'users' => $users->map(function (User $user) {
+                $departmentNames = collect([
+                    optional($user->doctorProfile?->department)->dept_name,
+                    optional($user->nurseProfile?->department)->dept_name,
+                    ...$user->departmentAdminScopes->map(fn ($scope) => optional($scope->department)->dept_name)->all(),
+                ])
+                    ->filter()
+                    ->unique()
+                    ->values();
+
+                return [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                    'full_name' => $user->full_name ?? $user->name,
+                    'account_status' => $user->account_status,
+                    'roles' => $user->roles->pluck('role_name')->filter()->unique()->values(),
+                    'departments' => $departmentNames,
+                ];
+            })->values(),
+        ]);
+    }
+
     public function freeze(Request $request, User $user): JsonResponse
     {
         $admin = auth('api')->user();

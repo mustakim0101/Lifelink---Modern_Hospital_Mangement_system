@@ -6,15 +6,14 @@ use Illuminate\Support\Facades\DB;
 
 class ApplicationReviewSqlService
 {
-    public function listApplications(?string $status = null): array
+    public function listApplications(
+        ?string $status = null,
+        ?string $search = null,
+        ?int $applicationId = null,
+        ?string $role = null
+    ): array
     {
-        $params = [];
-        $statusClause = '';
-
-        if ($status && in_array($status, ['Pending', 'Approved', 'Rejected'], true)) {
-            $statusClause = 'WHERE ja.status = ?';
-            $params[] = $status;
-        }
+        [$filtersSql, $params] = $this->buildApplicationFilters($status, $search, $applicationId, $role);
 
         return DB::select(
             "SELECT TOP 200
@@ -65,10 +64,77 @@ class ApplicationReviewSqlService
              ) it_assign
              LEFT JOIN departments it_department ON it_department.id = it_assign.department_id
              LEFT JOIN users reviewer ON reviewer.id = ja.reviewed_by_user_id
-             {$statusClause}
+             WHERE 1 = 1 {$filtersSql}
              ORDER BY ja.applied_at DESC, ja.id DESC;",
             $params
         );
+    }
+
+    public function queueStats(
+        ?string $status = null,
+        ?string $search = null,
+        ?int $applicationId = null,
+        ?string $role = null
+    ): array {
+        [$filtersSql, $params] = $this->buildApplicationFilters($status, $search, $applicationId, $role);
+
+        $filtered = DB::selectOne(
+            "SELECT
+                COUNT(*) AS loaded,
+                SUM(CASE WHEN ja.status = N'Pending' THEN 1 ELSE 0 END) AS pending
+             FROM job_applications ja
+             INNER JOIN users u ON u.id = ja.user_id
+             INNER JOIN roles r ON r.id = ja.applied_role_id
+             WHERE 1 = 1 {$filtersSql};",
+            $params
+        );
+
+        $pendingGlobal = DB::selectOne(
+            "SELECT COUNT(*) AS pending_total
+             FROM job_applications
+             WHERE status = N'Pending';"
+        );
+
+        return [
+            'loaded' => (int) ($filtered->loaded ?? 0),
+            'pending' => (int) ($filtered->pending ?? 0),
+            'waiting_for_review' => (int) ($pendingGlobal->pending_total ?? 0),
+        ];
+    }
+
+    public function overviewTotals(): array
+    {
+        $totals = DB::selectOne(
+            "SELECT
+                (SELECT COUNT(*) FROM patients WHERE is_active = 1) AS total_patients,
+                (SELECT COUNT(*) FROM doctors WHERE is_active = 1) AS total_doctors,
+                (SELECT COUNT(*) FROM nurses WHERE is_active = 1) AS total_nurses,
+                (SELECT COUNT(DISTINCT ur.user_id)
+                 FROM user_roles ur
+                 INNER JOIN roles r ON r.id = ur.role_id
+                 WHERE r.role_name = N'ITWorker') AS total_it_workers,
+                (SELECT COUNT(*) FROM donor_profiles) AS total_donors,
+                (SELECT COUNT(*) FROM departments WHERE is_active = 1) AS total_departments,
+                (SELECT COUNT(*) FROM job_applications) AS total_applications,
+                (SELECT COUNT(*) FROM admissions) AS total_admissions,
+                (SELECT COUNT(*) FROM blood_requests) AS total_blood_requests,
+                (SELECT COUNT(*) FROM blood_inventory) AS total_inventory_rows,
+                (SELECT ISNULL(SUM(units_available), 0) FROM blood_inventory) AS total_inventory_units;"
+        );
+
+        return [
+            'total_patients' => (int) ($totals->total_patients ?? 0),
+            'total_doctors' => (int) ($totals->total_doctors ?? 0),
+            'total_nurses' => (int) ($totals->total_nurses ?? 0),
+            'total_it_workers' => (int) ($totals->total_it_workers ?? 0),
+            'total_donors' => (int) ($totals->total_donors ?? 0),
+            'total_departments' => (int) ($totals->total_departments ?? 0),
+            'total_applications' => (int) ($totals->total_applications ?? 0),
+            'total_admissions' => (int) ($totals->total_admissions ?? 0),
+            'total_blood_requests' => (int) ($totals->total_blood_requests ?? 0),
+            'total_inventory_rows' => (int) ($totals->total_inventory_rows ?? 0),
+            'total_inventory_units' => (int) ($totals->total_inventory_units ?? 0),
+        ];
     }
 
     public function getApplicationById(int $applicationId): ?object
@@ -274,6 +340,45 @@ class ApplicationReviewSqlService
     private function roleRequiresDepartment(string $roleName): bool
     {
         return in_array($roleName, ['Doctor', 'Nurse', 'ITWorker'], true);
+    }
+
+    private function buildApplicationFilters(
+        ?string $status,
+        ?string $search,
+        ?int $applicationId,
+        ?string $role
+    ): array {
+        $params = [];
+        $filtersSql = '';
+
+        if ($status && in_array($status, ['Pending', 'Approved', 'Rejected'], true)) {
+            $filtersSql .= ' AND ja.status = ?';
+            $params[] = $status;
+        }
+
+        if ($applicationId !== null && $applicationId > 0) {
+            $filtersSql .= ' AND ja.id = ?';
+            $params[] = $applicationId;
+        }
+
+        if ($role && in_array($role, ['Doctor', 'Nurse', 'ITWorker', 'Applicant', 'Donor', 'Patient'], true)) {
+            $filtersSql .= ' AND r.role_name = ?';
+            $params[] = $role;
+        }
+
+        if ($search !== null && $search !== '') {
+            $filtersSql .= ' AND (
+                u.full_name LIKE ?
+                OR u.name LIKE ?
+                OR u.email LIKE ?
+            )';
+            $searchTerm = '%' . $search . '%';
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+        }
+
+        return [$filtersSql, $params];
     }
 
     private function resolveDepartmentId(object $application, ?int $requestedDepartmentId, bool $required): ?int
