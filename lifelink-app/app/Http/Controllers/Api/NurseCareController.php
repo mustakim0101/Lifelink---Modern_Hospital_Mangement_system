@@ -339,17 +339,24 @@ class NurseCareController extends Controller
                 'q' => ['nullable', 'string', 'max:120'],
                 'requestId' => ['nullable', 'integer', 'exists:blood_requests,id'],
                 'bloodGroup' => ['nullable', 'string', Rule::in(self::BLOOD_GROUPS)],
-                'eligible' => ['nullable', 'boolean'],
                 'limit' => ['nullable', 'integer', 'min:1', 'max:80'],
             ]);
             $this->markDuration($marks, 'validate_filters', $timer);
+
+            $eligibleRaw = $request->query('eligible');
+            $eligible = $this->normalizeBooleanFilter($eligibleRaw);
+            if ($request->query->has('eligible') && $eligibleRaw !== '' && $eligible === null) {
+                return response()->json([
+                    'message' => 'Eligibility filter must be one of: true, false, 1, 0.',
+                ], 422);
+            }
 
             $query = DonorProfile::query()
                 ->with(['donor:id,full_name,name,email', 'healthChecks' => fn ($q) => $q->latest('check_datetime')->latest('id')->limit(1)])
                 ->orderBy('donor_id');
 
-            if (array_key_exists('eligible', $validated)) {
-                $query->where('is_eligible', (bool) $validated['eligible']);
+            if ($eligible !== null) {
+                $query->where('is_eligible', $eligible ? 1 : 0);
             }
 
             if (! empty($validated['bloodGroup'])) {
@@ -655,6 +662,40 @@ class NurseCareController extends Controller
         }
 
         return ['is_eligible' => true, 'reason' => 'Eligible based on latest Blood Bank nurse screening.'];
+    }
+
+    private function normalizeBooleanFilter(mixed $value): ?bool
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return match ($value) {
+                1 => true,
+                0 => false,
+                default => null,
+            };
+        }
+
+        $normalized = strtolower(trim((string) $value));
+        if ($normalized === '') {
+            return null;
+        }
+
+        if (in_array($normalized, ['1', 'true', 'yes', 'on'], true)) {
+            return true;
+        }
+
+        if (in_array($normalized, ['0', 'false', 'no', 'off'], true)) {
+            return false;
+        }
+
+        return null;
     }
 
     private function markDuration(array &$marks, string $step, float $startedAt): void
