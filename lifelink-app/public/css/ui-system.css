@@ -73,6 +73,10 @@
     box-sizing: border-box;
 }
 
+[hidden] {
+    display: none !important;
+}
+
 html {
     scroll-behavior: smooth;
 }
@@ -520,7 +524,7 @@ body > .shell {
 }
 
 .app-shell__sidebar {
-    padding: 14px 10px 14px;
+    padding: 4px 10px 12px;
     align-self: stretch;
     position: sticky;
     top: 74px;
@@ -599,7 +603,7 @@ body > .shell {
 .app-shell__nav {
     display: grid;
     gap: 8px;
-    margin-bottom: 16px;
+    margin: 0 0 16px;
     align-content: start;
     overflow-y: auto;
     overflow-x: visible;
@@ -1955,7 +1959,7 @@ main {
 }
 
 .app-shell__sidebar {
-    padding-top: 8px;
+    padding-top: 2px;
 }
 
 .app-shell__nav {
@@ -2484,6 +2488,33 @@ main {
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.bbops-form-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.bbops-form-grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bbops-form-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.bbops-form-grid--4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.bbops-control {
+    display: grid;
+    gap: 6px;
+    align-content: start;
+}
+
+.bbops-control .it-label {
+    margin: 0;
+}
+
 .bbops-card-grid {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
@@ -2527,6 +2558,14 @@ main {
     margin-top: 12px;
 }
 
+.bbops-actions .it-button,
+.bbops-actions a.it-button {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .bbops-empty {
     padding: 16px;
     border: 1px dashed var(--ui-border-strong);
@@ -2557,6 +2596,97 @@ main {
 #nurse-blood-bank .nurse-button.warm {
     background: var(--shell-blood-accent);
     color: #fff;
+}
+
+#nurse-blood-bank .bb-donor-list-panel,
+#nurse-blood-bank .bb-donor-list {
+    min-width: 0;
+}
+
+#nurse-blood-bank .bb-donor-list {
+    max-height: 520px;
+    overflow: auto;
+    align-content: start;
+}
+
+#nurse-blood-bank .nurse-list-item .nurse-actions {
+    margin-top: 8px;
+}
+
+#nurse-blood-bank .bb-screening-filter-grid {
+    margin-top: 12px;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+
+#nurse-blood-bank .bb-screening-filter {
+    display: grid;
+    gap: 6px;
+    align-content: start;
+}
+
+#nurse-blood-bank .bb-screening-filter .nurse-label {
+    margin: 0;
+}
+
+#nurse-blood-bank .bb-screening-actions {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#nurse-blood-bank .bb-screening-action-btn {
+    min-height: 42px;
+    padding: 10px 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#nurse-blood-bank .bb-donor-card-actions .bb-screening-action-btn {
+    width: 100%;
+}
+
+#nurse-blood-bank .bb-selected-grid {
+    margin-top: 10px;
+    align-items: stretch;
+}
+
+#nurse-blood-bank .bb-selected-card {
+    padding: 12px 13px;
+    border: 1px solid var(--shell-blood-accent-border);
+    border-radius: 16px;
+    background: linear-gradient(180deg, #ffffff, var(--shell-blood-accent-soft));
+    box-shadow: var(--ui-shadow-sm);
+    display: grid;
+    gap: 6px;
+}
+
+#nurse-blood-bank .bb-selected-label {
+    color: var(--ui-text-muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 800;
+}
+
+#nurse-blood-bank .bb-selected-value {
+    color: var(--ui-text-soft);
+    font-size: 0.98rem;
+    line-height: 1.45;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+#nurse-blood-bank .bb-selected-empty {
+    grid-column: 1 / -1;
+    padding: 12px 14px;
+    border: 1px dashed var(--shell-blood-accent-border);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.86);
 }
 
 .bbops-shortcut {
@@ -2726,6 +2856,9 @@ main {
 
     .bbops-summary,
     .bbops-filter-grid,
+    .bbops-form-grid--2,
+    .bbops-form-grid--3,
+    .bbops-form-grid--4,
     .bbops-toolbar,
     .bbops-action-grid {
         grid-template-columns: 1fr;
@@ -2733,6 +2866,10 @@ main {
 
     #it-overview .it-summary {
         grid-template-columns: repeat(2, minmax(180px, 1fr));
+    }
+
+    #nurse-blood-bank .bb-screening-filter-grid {
+        grid-template-columns: 1fr;
     }
 }
 
