@@ -69,6 +69,13 @@
         display: grid;
         gap: 12px;
         grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+        align-items: stretch;
+    }
+
+    .dept-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
     }
 
     .dept-card h3 {
@@ -105,6 +112,9 @@
         margin: 8px 0 0;
         color: var(--ui-text-muted);
         line-height: 1.55;
+    }
+
+    .dept-copy {
         min-height: 58px;
     }
 
@@ -147,8 +157,10 @@
     }
 
     .dept-actions {
-        margin-top: 14px;
-        display: grid;
+        margin-top: auto;
+        padding-top: 14px;
+        display: flex;
+        justify-content: center;
     }
 
     .dept-link {
@@ -162,6 +174,7 @@
         text-decoration: none;
         min-height: 42px;
         width: 100%;
+        max-width: 220px;
         padding: 10px 14px;
         text-align: center;
     }
@@ -274,7 +287,7 @@ function renderDepartmentGrid() {
                     <span class="dept-card-icon"><img src="${catalogHtml(anatomy.src)}" alt="${catalogHtml(anatomy.alt)}"></span>
                     <h3>${catalogHtml(department.name)}</h3>
                 </div>
-                <p>${catalogHtml(department.short_description || 'Department profile information is available on the detail page.')}</p>
+                <p class="dept-copy">${catalogHtml(department.short_description || 'Department profile information is available on the detail page.')}</p>
                 <div class="dept-meta">
                     <div class="dept-meta-row">
                         <span>Doctors</span>

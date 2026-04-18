@@ -264,7 +264,9 @@
                 <a href="/ui/departments">Departments</a>
                 <a href="#find-department">Department Finder</a>
                 <a href="/about">About</a>
-                <a class="cta" href="/ui/login">Login</a>
+                <a id="welcomeNavWorkspaceAction" class="cta" href="/ui/dashboard" hidden>Go to Dashboard</a>
+                <a id="welcomeNavLogoutAction" href="#" hidden>Logout</a>
+                <a id="welcomeNavLoginAction" class="cta" href="/ui/login">Login</a>
             </nav>
         </div>
     </header>
@@ -297,7 +299,7 @@
                     <a class="button welcome-role-patient" href="/ui/register/patient">Register as Patient</a>
                     <a class="button welcome-role-donor" href="/ui/register/donor">Register as Donor</a>
                     <a class="button welcome-role-applicant" href="/ui/register/applicant">Join Our Team</a>
-                    <a class="button welcome-role-login" href="/ui/login">Login</a>
+                    <a id="welcomeEntryPrimaryAction" class="button welcome-role-login" href="/ui/login">Login</a>
                 </div>
             </section>
 
@@ -384,7 +386,7 @@
                         <div class="hero-actions">
                             <a id="finder-department-link" class="button primary" href="/ui/departments?from=welcome">View Department</a>
                             <a class="button" href="/ui/departments?from=welcome">Browse All Departments</a>
-                            <a class="button" href="/ui/login">Continue to Login</a>
+                            <a id="welcomeFinderPrimaryAction" class="button" href="/ui/login">Continue to Login</a>
                         </div>
                     </aside>
                 </div>
@@ -491,6 +493,11 @@
     const welcomeMetricPatients = document.getElementById('welcomeMetricPatients');
     const welcomeMetricStaff = document.getElementById('welcomeMetricStaff');
     const welcomeMetricDonors = document.getElementById('welcomeMetricDonors');
+    const welcomeNavLoginAction = document.getElementById('welcomeNavLoginAction');
+    const welcomeNavWorkspaceAction = document.getElementById('welcomeNavWorkspaceAction');
+    const welcomeNavLogoutAction = document.getElementById('welcomeNavLogoutAction');
+    const welcomeEntryPrimaryAction = document.getElementById('welcomeEntryPrimaryAction');
+    const welcomeFinderPrimaryAction = document.getElementById('welcomeFinderPrimaryAction');
     const finderRegions = {
         eyes: {
             name: 'Eyes',
@@ -667,10 +674,84 @@
         }
     }
 
+    function parseStoredRoles() {
+        try {
+            const roles = JSON.parse(localStorage.getItem('CURRENT_USER_ROLES') || '[]');
+            return Array.isArray(roles) ? roles : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    function resolveWorkspaceDestination() {
+        const rolePriority = ['Admin', 'ITWorker', 'Doctor', 'Nurse', 'Donor', 'Applicant', 'Patient'];
+        const roleDestinations = {
+            Admin: '/ui/admin-users',
+            ITWorker: '/ui/it-bed-allocation',
+            Doctor: '/ui/doctor-dashboard',
+            Nurse: '/ui/nurse-dashboard',
+            Patient: '/ui/patient-portal',
+            Donor: '/ui/donor-dashboard',
+            Applicant: '/ui/applications',
+        };
+
+        const roles = parseStoredRoles();
+        const role = rolePriority.find((entry) => roles.includes(entry));
+        return roleDestinations[role] || '/ui/dashboard';
+    }
+
+    function hasActiveSession() {
+        const userToken = localStorage.getItem('USER_TOKEN');
+        const adminToken = localStorage.getItem('ADMIN_TOKEN');
+        return Boolean((userToken || adminToken) && parseStoredRoles().length);
+    }
+
+    function clearSessionAndRedirectToLogin() {
+        [
+            'ADMIN_TOKEN', 'ADMIN_USER_ID', 'ADMIN_EMAIL',
+            'USER_TOKEN', 'PATIENT_ID', 'PATIENT_EMAIL',
+            'CURRENT_USER_ID', 'CURRENT_USER_FULL_NAME', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES',
+            'LAST_USED_EMAIL'
+        ].forEach((key) => localStorage.removeItem(key));
+        window.location.href = '/ui/login';
+    }
+
+    function hydrateWelcomeSessionActions() {
+        if (hasActiveSession()) {
+            const workspacePath = resolveWorkspaceDestination();
+            if (welcomeNavLoginAction) welcomeNavLoginAction.hidden = true;
+            if (welcomeNavWorkspaceAction) {
+                welcomeNavWorkspaceAction.hidden = false;
+                welcomeNavWorkspaceAction.href = workspacePath;
+            }
+            if (welcomeNavLogoutAction) {
+                welcomeNavLogoutAction.hidden = false;
+                welcomeNavLogoutAction.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    clearSessionAndRedirectToLogin();
+                });
+            }
+            if (welcomeEntryPrimaryAction) {
+                welcomeEntryPrimaryAction.href = workspacePath;
+                welcomeEntryPrimaryAction.textContent = 'Go to Dashboard';
+            }
+            if (welcomeFinderPrimaryAction) {
+                welcomeFinderPrimaryAction.href = workspacePath;
+                welcomeFinderPrimaryAction.textContent = 'Continue to Workspace';
+            }
+            return;
+        }
+
+        if (welcomeNavLoginAction) welcomeNavLoginAction.hidden = false;
+        if (welcomeNavWorkspaceAction) welcomeNavWorkspaceAction.hidden = true;
+        if (welcomeNavLogoutAction) welcomeNavLogoutAction.hidden = true;
+    }
+
     setWelcomeSlide(0);
     startWelcomeCarousel();
     renderFinderRegion('brain');
     loadWelcomeMetrics();
+    hydrateWelcomeSessionActions();
 
     </script>
 </body>

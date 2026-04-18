@@ -31,50 +31,7 @@
 @section('content')
     <div class="nurse-grid">
         <div id="nurse-overview" class="nurse-split ll-section nurse-panel-switch" data-display="grid">
-            <div class="nurse-panel nurse-col-4">
-                <h3>Current mode</h3>
-                <p id="nurseModeSummary" class="nurse-note">Load your profile to unlock the correct nurse workspace.</p>
-                <div class="nurse-actions">
-                    <button class="nurse-button soft" type="button" onclick="loadNurseProfile()">Reload profile</button>
-                </div>
-            </div>
-
-            <div class="nurse-panel nurse-col-4">
-                <h3>Department filters</h3>
-                <p class="nurse-note">Filter department admissions by status or search.</p>
-                <div class="nurse-control-grid">
-                    <div>
-                        <label class="nurse-label" for="statusFilter">Admission status</label>
-                        <select id="statusFilter" class="nurse-select">
-                            <option value="">All</option>
-                            <option value="Admitted">Admitted</option>
-                            <option value="Discharged">Discharged</option>
-                            <option value="Transferred">Transferred</option>
-                            <option value="Cancelled">Cancelled</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="nurse-label" for="queryFilter">Search</label>
-                        <input id="queryFilter" class="nurse-input" placeholder="Name, email, diagnosis, bed code">
-                    </div>
-                </div>
-                <div class="nurse-actions">
-                    <button class="nurse-button primary" type="button" onclick="loadPatients()">Refresh patients</button>
-                </div>
-            </div>
-
-            <div class="nurse-panel nurse-col-4">
-                <h3>Shift quick actions</h3>
-                <p id="overviewModeHint" class="nurse-note">Load profile and patient data to see live nurse priorities for this shift.</p>
-                <div class="nurse-actions">
-                    <button id="quickOpenMonitoring" class="nurse-button soft" type="button" onclick="goToNursePanel('nurse-monitoring')">Open monitoring</button>
-                    <button id="quickOpenBloodBank" class="nurse-button soft" type="button" onclick="goToNursePanel('nurse-blood-bank')">Open blood bank</button>
-                    <button id="quickFilterAdmitted" class="nurse-button primary" type="button" onclick="applyQuickPatientFilter('Admitted')">Show admitted only</button>
-                    <button id="quickClearFilters" class="nurse-button soft" type="button" onclick="clearDepartmentFilters()">Clear filters</button>
-                </div>
-            </div>
-
-            <div class="nurse-panel nurse-col-12">
+            <div id="nurseOverviewSnapshotSection" class="nurse-panel nurse-col-12">
                 <h3>Workload snapshot</h3>
                 <div class="nurse-overview-stat-grid">
                     <div class="nurse-stat"><strong id="ovTotal">-</strong><span>Total admissions</span></div>
@@ -84,26 +41,6 @@
                     <div class="nurse-stat"><strong id="ovAlerts">-</strong><span>Alert vitals</span></div>
                     <div class="nurse-stat"><strong id="ovTransfers">-</strong><span>Transfers</span></div>
                 </div>
-            </div>
-
-            <div class="nurse-panel nurse-col-6">
-                <h3>Attention queue</h3>
-                <p class="nurse-note">Top admissions that likely need nurse follow-up first.</p>
-                <div id="overviewAttentionQueue" class="nurse-overview-list">
-                    <div class="nurse-note">Load profile and admissions to generate the queue.</div>
-                </div>
-            </div>
-
-            <div class="nurse-panel nurse-col-6">
-                <h3>Shift checklist</h3>
-                <p class="nurse-note">A quick non-access checklist to keep handoff and bedside tasks on track.</p>
-                <ul class="nurse-overview-checklist">
-                    <li>Review new admissions and verify first-vitals coverage.</li>
-                    <li>Prioritize admissions with no bed assignment.</li>
-                    <li>Flag abnormal temperature, pulse, and SpO2 readings.</li>
-                    <li>Confirm transfer/discharge candidates with records review.</li>
-                    <li>Complete shift handoff notes for unresolved cases.</li>
-                </ul>
             </div>
         </div>
 
@@ -228,28 +165,14 @@
 
         <div id="nurse-blood-bank" class="nurse-panel ll-section nurse-panel-switch" data-display="block">
             <h3>Blood Bank donor screening</h3>
-            <p class="nurse-note">Blood Bank-only donor screening workflow for nurse-owned health checks and eligibility updates.</p>
-
             <div id="bloodBankLocked" class="nurse-note">Load your nurse profile first to see whether Blood Bank donor screening is available for this account.</div>
             <div id="bloodBankSection" hidden>
-                <div class="nurse-summary-grid">
-                    <div class="nurse-summary"><small>Step 1</small><strong>Search and select donor</strong></div>
-                    <div class="nurse-summary"><small>Step 2</small><strong>Review latest screening history</strong></div>
-                    <div class="nurse-summary"><small>Step 3</small><strong>Log current health check</strong></div>
-                    <div class="nurse-summary"><small>Step 4</small><strong>Confirm backend eligibility result</strong></div>
-                </div>
-                <div class="nurse-control-grid">
-                    <div>
+                <div class="bb-screening-filter-grid">
+                    <div class="bb-screening-filter bb-screening-filter--search">
                         <label class="nurse-label" for="bbDonorQuery">Search donor</label>
                         <input id="bbDonorQuery" class="nurse-input" placeholder="Donor name, email, id, blood group">
                     </div>
-                    <div>
-                        <label class="nurse-label" for="bbRequestId">Filter by request ID</label>
-                        <input id="bbRequestId" class="nurse-input" type="number" min="1" placeholder="Optional accepted request id">
-                    </div>
-                </div>
-                <div class="nurse-control-grid">
-                    <div>
+                    <div class="bb-screening-filter">
                         <label class="nurse-label" for="bbBloodGroupFilter">Blood group</label>
                         <select id="bbBloodGroupFilter" class="nurse-select">
                             <option value="">All groups</option>
@@ -263,7 +186,7 @@
                             <option value="O-">O-</option>
                         </select>
                     </div>
-                    <div>
+                    <div class="bb-screening-filter">
                         <label class="nurse-label" for="bbEligibilityFilter">Eligibility</label>
                         <select id="bbEligibilityFilter" class="nurse-select">
                             <option value="">All donors</option>
@@ -272,25 +195,26 @@
                         </select>
                     </div>
                 </div>
-                <div class="nurse-actions">
-                    <button class="nurse-button primary" type="button" onclick="loadBloodBankDonors()">Load donors</button>
-                    <button class="nurse-button soft" type="button" onclick="loadSelectedDonorHealthChecks()">Refresh selected donor history</button>
+                <div class="nurse-actions bb-screening-actions">
+                    <button class="nurse-button primary bb-screening-action-btn" type="button" onclick="loadBloodBankDonors({ force: true })">Load donors</button>
+                    <button class="nurse-button soft bb-screening-action-btn" type="button" onclick="loadSelectedDonorHealthChecks()">Refresh selected donor history</button>
                 </div>
 
                 <div class="nurse-split u-mt-3">
-                    <div class="nurse-panel nurse-col-5">
+                    <div class="nurse-panel nurse-col-5 bb-donor-list-panel">
                         <h3>Blood Bank donor list</h3>
-                        <div id="bloodBankDonorList" class="nurse-list"></div>
+                        <div id="bloodBankDonorList" class="nurse-list ui-list-window bb-donor-list"></div>
+                        <div id="bloodBankDonorPagination" class="ui-list-pagination"></div>
                     </div>
 
                     <div class="nurse-panel nurse-col-7">
                         <h3>Donor health check entry</h3>
-                        <div id="bbSelectedDonor" class="nurse-summary-grid">
-                            <div class="nurse-note">Select a donor card from the left list.</div>
+                        <div id="bbSelectedDonor" class="nurse-summary-grid bb-selected-grid">
+                            <div class="nurse-note bb-selected-empty">Select a donor card from the left list.</div>
                         </div>
                         <div class="nurse-section-title">Latest screening status</div>
-                        <div id="bbSelectedDonorStatus" class="nurse-summary-grid">
-                            <div class="nurse-note">Latest donor eligibility and last screening details will appear here.</div>
+                        <div id="bbSelectedDonorStatus" class="nurse-summary-grid bb-selected-grid">
+                            <div class="nurse-note bb-selected-empty">Latest donor eligibility and last screening details will appear here.</div>
                         </div>
                         <div class="nurse-control-grid">
                             <div>
@@ -325,8 +249,8 @@
                         </div>
                         <label class="nurse-label" for="bbHealthNote">Health check note</label>
                         <textarea id="bbHealthNote" class="nurse-textarea" placeholder="Blood Bank nurse screening note"></textarea>
-                        <div class="nurse-actions">
-                            <button class="nurse-button warm" type="button" onclick="logBloodBankHealthCheck()">Save donor health check</button>
+                        <div class="nurse-actions bb-screening-actions">
+                            <button class="nurse-button warm bb-screening-action-btn" type="button" onclick="logBloodBankHealthCheck()">Save donor health check</button>
                         </div>
 
                         <div class="nurse-section-title">Recent donor health checks</div>
@@ -372,6 +296,8 @@ const state = {
     pagination: {
         patientsPageSize: 8,
         patientsPage: 1,
+        bloodBankDonorsPageSize: 6,
+        bloodBankDonorsPage: 1,
     },
     selectedAdmissionId: null,
     selectedPatientUserId: null,
@@ -379,6 +305,7 @@ const state = {
     bloodBankDonors: [],
     bloodBankDonorsLoaded: false,
     bloodBankDonorsQueryKey: null,
+    bloodBankDonorsErrorMessage: null,
     selectedDonorId: null,
     donorHealthChecksByDonor: {},
     inFlight: {
@@ -478,8 +405,7 @@ function allowedNursePanels() {
 }
 
 function preferredNursePanel() {
-    const allowed = allowedNursePanels();
-    return allowed.find((panelId) => panelId !== 'nurse-overview' && panelId !== 'nurse-profile') || allowed[0];
+    return 'nurse-overview';
 }
 
 function updateNurseSidebarByMode() {
@@ -492,21 +418,14 @@ function updateNurseSidebarByMode() {
     });
 
     if (!allowed.includes(state.activePanel)) {
-        const panelId = preferredNursePanel();
+        const panelId = allowed.includes('nurse-overview') ? 'nurse-overview' : allowed[0];
         setActivePanel(panelId);
         history.replaceState(null, '', `#${panelId}`);
     }
 }
 
 function updateOverviewQuickActions() {
-    const profileLoaded = state.nurseProfileLoaded && !!state.nurse;
-    const bloodMode = canUseBloodBankWorkflow();
-    const regularMode = canUseRegularWorkflow();
-
-    setVisibility('quickOpenMonitoring', profileLoaded && regularMode, 'inline-flex');
-    setVisibility('quickOpenBloodBank', profileLoaded && bloodMode, 'inline-flex');
-    setVisibility('quickFilterAdmitted', profileLoaded && regularMode, 'inline-flex');
-    setVisibility('quickClearFilters', profileLoaded && regularMode, 'inline-flex');
+    // Overview intentionally shows only the workload snapshot in this pass.
 }
 
 function write(data) {
@@ -524,7 +443,7 @@ function setVisibility(elementId, visible, displayValue = 'block') {
 function setActivePanel(panelId) {
     const allowed = allowedNursePanels();
     if (!allowed.includes(panelId)) {
-        panelId = preferredNursePanel();
+        panelId = allowed.includes('nurse-overview') ? 'nurse-overview' : allowed[0];
     }
 
     state.activePanel = panelId;
@@ -558,7 +477,10 @@ function setupSidebarPanelNav() {
 
     const initialHash = (window.location.hash || '').replace('#', '');
     updateNurseSidebarByMode();
-    const initialPanel = nursePanelIds.includes(initialHash) ? initialHash : preferredNursePanel();
+    const allowed = allowedNursePanels();
+    const initialPanel = nursePanelIds.includes(initialHash) && allowed.includes(initialHash)
+        ? initialHash
+        : (allowed.includes('nurse-overview') ? 'nurse-overview' : allowed[0]);
     setActivePanel(initialPanel);
 }
 
@@ -677,10 +599,6 @@ function getAlertReason(patient) {
 }
 
 function renderOverviewInsights() {
-    const hint = document.getElementById('overviewModeHint');
-    const queueRoot = document.getElementById('overviewAttentionQueue');
-    if (!hint || !queueRoot) return;
-
     if (!state.nurseProfileLoaded || !state.nurse) {
         setTextById('ovTotal', '-');
         setTextById('ovAdmitted', '-');
@@ -688,8 +606,6 @@ function renderOverviewInsights() {
         setTextById('ovVitalsDue', '-');
         setTextById('ovAlerts', '-');
         setTextById('ovTransfers', '-');
-        hint.textContent = 'Load profile and patient data to see live nurse priorities for this shift.';
-        queueRoot.innerHTML = '<div class="nurse-note">Load profile and admissions to generate the queue.</div>';
         return;
     }
 
@@ -700,8 +616,6 @@ function renderOverviewInsights() {
         setTextById('ovVitalsDue', '-');
         setTextById('ovAlerts', '-');
         setTextById('ovTransfers', '-');
-        hint.textContent = 'Blood Bank mode is active. Use donor screening from the Blood Bank panel.';
-        queueRoot.innerHTML = '<div class="nurse-note">This account is in Blood Bank mode, so inpatient attention queue is not active.</div>';
         return;
     }
 
@@ -721,57 +635,6 @@ function renderOverviewInsights() {
     setTextById('ovVitalsDue', vitalsDue.length);
     setTextById('ovAlerts', alertVitals.length);
     setTextById('ovTransfers', transfers.length);
-
-    hint.textContent = admissions.length
-        ? `Live priorities generated from ${admissions.length} admissions in the current filter.`
-        : 'No admissions in this filter yet. Update filter or refresh patient data.';
-
-    const queue = [];
-    alertVitals.slice(0, 2).forEach((entry) => {
-        queue.push({ entry, reason: getAlertReason(entry) || 'Vital signs outside preferred range' });
-    });
-    noBed.slice(0, 2).forEach((entry) => {
-        queue.push({ entry, reason: 'Bed assignment missing' });
-    });
-    vitalsDue.slice(0, 2).forEach((entry) => {
-        const hours = hoursSinceTimestamp(entry.latest_vital_sign?.measured_at);
-        const reason = hours === null
-            ? 'No vitals logged yet'
-            : `Vitals overdue by ${Math.floor(hours)}h`;
-        queue.push({ entry, reason });
-    });
-
-    const uniqueQueue = [];
-    const seenAdmissionIds = new Set();
-    queue.forEach((item) => {
-        const admissionId = Number(item.entry?.id || 0);
-        if (!admissionId || seenAdmissionIds.has(admissionId)) return;
-        seenAdmissionIds.add(admissionId);
-        uniqueQueue.push(item);
-    });
-
-    if (!uniqueQueue.length) {
-        queueRoot.innerHTML = '<div class="nurse-note">No urgent admissions detected from the current filter.</div>';
-        return;
-    }
-
-    queueRoot.innerHTML = uniqueQueue.slice(0, 5).map((item) => {
-        const admissionId = Number(item.entry.id || 0);
-        const patientUserId = Number(item.entry.patient_user_id || 0);
-        const openAction = admissionId && patientUserId
-            ? `<button class="nurse-button soft" type="button" onclick="focusAdmissionFromOverview(${admissionId}, ${patientUserId})">Open</button>`
-            : '';
-
-        return `
-            <article class="nurse-overview-item">
-                <div>
-                    <strong>${escapeHtml(item.entry.patient_name || 'Unknown patient')}</strong>
-                    <p class="nurse-note">${escapeHtml(item.reason)}</p>
-                </div>
-                ${openAction}
-            </article>
-        `;
-    }).join('');
 }
 
 function goToNursePanel(panelId) {
@@ -840,6 +703,24 @@ function renderPatientListPagination(pageData) {
     `;
 }
 
+function renderBloodBankDonorPagination(pageData) {
+    const root = document.getElementById('bloodBankDonorPagination');
+    if (!root) return;
+
+    if (pageData.totalRows <= state.pagination.bloodBankDonorsPageSize) {
+        root.innerHTML = '';
+        return;
+    }
+
+    root.innerHTML = `
+        <div class="ui-list-pagination__meta">Page ${pageData.page} of ${pageData.totalPages} (${pageData.totalRows} total)</div>
+        <div class="ui-list-pagination__controls">
+            <button class="nurse-button soft" type="button" ${pageData.page <= 1 ? 'disabled' : ''} onclick="prevBloodBankDonorPage()">Previous</button>
+            <button class="nurse-button soft" type="button" ${pageData.page >= pageData.totalPages ? 'disabled' : ''} onclick="nextBloodBankDonorPage()">Next</button>
+        </div>
+    `;
+}
+
 function prevPatientPage() {
     state.pagination.patientsPage = Math.max(1, state.pagination.patientsPage - 1);
     renderPatients();
@@ -848,6 +729,16 @@ function prevPatientPage() {
 function nextPatientPage() {
     state.pagination.patientsPage += 1;
     renderPatients();
+}
+
+function prevBloodBankDonorPage() {
+    state.pagination.bloodBankDonorsPage = Math.max(1, state.pagination.bloodBankDonorsPage - 1);
+    renderBloodBankDonors();
+}
+
+function nextBloodBankDonorPage() {
+    state.pagination.bloodBankDonorsPage += 1;
+    renderBloodBankDonors();
 }
 
 function renderPatients() {
@@ -954,7 +845,6 @@ function renderBloodBankAccess() {
     const isBloodBank = isBloodBankNurse();
     const hasRegularMode = profileLoaded && state.nurse && !isBloodBank;
     const regularLockedMessage = document.getElementById('regularNurseLockedMessage');
-    const modeSummary = document.getElementById('nurseModeSummary');
     const bloodBankLocked = document.getElementById('bloodBankLocked');
     const bloodBankVisible = profileLoaded && isBloodBank;
 
@@ -963,6 +853,7 @@ function renderBloodBankAccess() {
     setVisibility('regularNurseWorkArea', hasRegularMode, 'grid');
     setVisibility('bloodBankLocked', !bloodBankVisible, 'block');
     setVisibility('bloodBankSection', bloodBankVisible, 'block');
+    setVisibility('nurseOverviewSnapshotSection', true, 'block');
     regularLockedMessage.textContent = !profileLoaded
         ? 'Load your nurse profile to open the correct workflow.'
         : isBloodBank
@@ -971,11 +862,6 @@ function renderBloodBankAccess() {
     bloodBankLocked.textContent = !profileLoaded
         ? 'Load your nurse profile first to see whether Blood Bank donor screening is available for this account.'
         : 'Blood Bank donor screening is available only when the nurse profile belongs to the Blood Bank department.';
-    modeSummary.textContent = !profileLoaded
-        ? 'Load your profile to unlock the correct nurse workspace.'
-        : isBloodBank
-            ? 'Blood Bank nurse mode is active for this account.'
-            : `Regular nurse mode is active for ${resolvedNurseDepartmentLabel() || 'this department'}.`;
     const nurseName = localStorage.getItem('CURRENT_USER_FULL_NAME') || localStorage.getItem('CURRENT_USER_EMAIL') || 'Nurse';
     const nurseDepartment = resolvedNurseDepartmentLabel() || '-';
     if (window.lifeLinkShell) {
@@ -1004,11 +890,22 @@ function renderBloodBankAccess() {
 function renderBloodBankDonors() {
     const holder = document.getElementById('bloodBankDonorList');
     if (!state.bloodBankDonors.length) {
-        holder.innerHTML = '<div class="nurse-note">No Blood Bank donors found for this filter.</div>';
+        const emptyMessage = state.bloodBankDonorsErrorMessage
+            ? `Could not load donors for this filter: ${escapeHtml(state.bloodBankDonorsErrorMessage)}`
+            : 'No Blood Bank donors found for this filter.';
+        holder.innerHTML = `<div class="nurse-note">${emptyMessage}</div>`;
+        renderBloodBankDonorPagination({ page: 1, totalPages: 1, totalRows: 0 });
         return;
     }
 
-    holder.innerHTML = state.bloodBankDonors.map((donor) => `
+    const pageData = paginateRows(
+        state.bloodBankDonors,
+        state.pagination.bloodBankDonorsPage,
+        state.pagination.bloodBankDonorsPageSize
+    );
+    state.pagination.bloodBankDonorsPage = pageData.page;
+
+    holder.innerHTML = pageData.rows.map((donor) => `
         <article class="nurse-list-item ${Number(state.selectedDonorId) === Number(donor.donor_id) ? 'is-active' : ''}" onclick="selectBloodBankDonor(${Number(donor.donor_id)})">
             <div class="nurse-item-head">
                 <strong>${escapeHtml(donor.full_name || 'Unknown donor')}</strong>
@@ -1022,14 +919,18 @@ function renderBloodBankDonors() {
             <div class="nurse-item-meta u-mt-1">
                 <span class="nurse-mini">Latest check: ${donor.latest_health_check?.check_datetime ? new Date(donor.latest_health_check.check_datetime).toLocaleString() : 'None'}</span>
             </div>
+            <div class="nurse-actions u-mt-1 bb-donor-card-actions">
+                <button class="nurse-button primary bb-screening-action-btn" type="button" onclick="useBloodBankDonor(event, ${Number(donor.donor_id)})">Use Donor</button>
+            </div>
         </article>
     `).join('');
+    renderBloodBankDonorPagination(pageData);
 }
 
 function renderSelectedBloodBankDonor(donor = null) {
     const root = document.getElementById('bbSelectedDonor');
     if (!donor) {
-        root.innerHTML = '<div class="nurse-note">Select a donor card from the left list.</div>';
+        root.innerHTML = '<div class="nurse-note bb-selected-empty">Use Donor from the left list to fill health-check entry.</div>';
         document.getElementById('bbDonorId').value = '';
         renderSelectedBloodBankDonorStatus(null);
         resetBloodBankEligibilityFeedback();
@@ -1038,10 +939,12 @@ function renderSelectedBloodBankDonor(donor = null) {
 
     document.getElementById('bbDonorId').value = String(donor.donor_id);
     root.innerHTML = `
-        <div class="nurse-summary"><small>Donor</small><strong>${escapeHtml(donor.full_name || '-')}</strong></div>
-        <div class="nurse-summary"><small>Email</small><strong>${escapeHtml(donor.email || '-')}</strong></div>
-        <div class="nurse-summary"><small>Donor ID</small><strong>#${Number(donor.donor_id)}</strong></div>
-        <div class="nurse-summary"><small>Blood group</small><strong>${escapeHtml(donor.blood_group || '-')}</strong></div>
+        <div class="nurse-summary bb-selected-card"><span class="bb-selected-label">Donor</span><strong class="bb-selected-value">${escapeHtml(donor.full_name || '-')}</strong></div>
+        <div class="nurse-summary bb-selected-card"><span class="bb-selected-label">Email</span><strong class="bb-selected-value">${escapeHtml(donor.email || '-')}</strong></div>
+        <div class="nurse-summary bb-selected-card"><span class="bb-selected-label">Donor ID</span><strong class="bb-selected-value">#${Number(donor.donor_id)}</strong></div>
+        <div class="nurse-summary bb-selected-card"><span class="bb-selected-label">Blood group</span><strong class="bb-selected-value">${escapeHtml(donor.blood_group || '-')}</strong></div>
+        <div class="nurse-summary bb-selected-card"><span class="bb-selected-label">Eligibility</span><strong class="bb-selected-value">${donor.is_eligible ? 'Eligible' : 'Not Eligible'}</strong></div>
+        <div class="nurse-summary bb-selected-card"><span class="bb-selected-label">Latest screening</span><strong class="bb-selected-value">${donor.latest_health_check?.check_datetime ? new Date(donor.latest_health_check.check_datetime).toLocaleString() : 'No screening yet'}</strong></div>
     `;
     renderSelectedBloodBankDonorStatus(donor);
     const latestCheck = donor.latest_health_check || null;
@@ -1079,16 +982,16 @@ function renderSelectedBloodBankDonorStatus(donor = null) {
     if (!root) return;
 
     if (!donor) {
-        root.innerHTML = '<div class="nurse-note">Latest donor eligibility and last screening details will appear here.</div>';
+        root.innerHTML = '<div class="nurse-note bb-selected-empty">Latest donor eligibility and last screening details will appear here.</div>';
         return;
     }
 
     const latestCheck = donor.latest_health_check || null;
     root.innerHTML = `
-        <div class="nurse-summary"><small>Eligibility</small><strong>${donor.is_eligible ? 'Eligible' : 'Not Eligible'}</strong></div>
-        <div class="nurse-summary"><small>Last donation</small><strong>${donor.last_donation_date ? new Date(donor.last_donation_date).toLocaleDateString() : 'No donation logged'}</strong></div>
-        <div class="nurse-summary"><small>Latest check</small><strong>${latestCheck?.check_datetime ? new Date(latestCheck.check_datetime).toLocaleString() : 'No screening yet'}</strong></div>
-        <div class="nurse-summary"><small>Latest note</small><strong>${escapeHtml(latestCheck?.notes || 'No screening note yet')}</strong></div>
+        <div class="nurse-summary bb-selected-card"><span class="bb-selected-label">Eligibility</span><strong class="bb-selected-value">${donor.is_eligible ? 'Eligible' : 'Not Eligible'}</strong></div>
+        <div class="nurse-summary bb-selected-card"><span class="bb-selected-label">Last donation</span><strong class="bb-selected-value">${donor.last_donation_date ? new Date(donor.last_donation_date).toLocaleDateString() : 'No donation logged'}</strong></div>
+        <div class="nurse-summary bb-selected-card"><span class="bb-selected-label">Latest check</span><strong class="bb-selected-value">${latestCheck?.check_datetime ? new Date(latestCheck.check_datetime).toLocaleString() : 'No screening yet'}</strong></div>
+        <div class="nurse-summary bb-selected-card"><span class="bb-selected-label">Latest note</span><strong class="bb-selected-value">${escapeHtml(latestCheck?.notes || 'No screening note yet')}</strong></div>
     `;
 }
 
@@ -1142,12 +1045,20 @@ async function loadNurseProfile(options = {}) {
             state.selectedDonorId = null;
             state.patientsLoaded = false;
             state.bloodBankDonorsLoaded = false;
+            state.pagination.bloodBankDonorsPage = 1;
         }
         renderBloodBankAccess();
-        if (!allowedNursePanels().includes(state.activePanel) || state.activePanel === 'nurse-overview' || state.activePanel === 'nurse-profile') {
-            const panelId = preferredNursePanel();
+        const allowed = allowedNursePanels();
+        if (!allowed.includes(state.activePanel)) {
+            const panelId = allowed.includes('nurse-overview') ? 'nurse-overview' : allowed[0];
             setActivePanel(panelId);
             history.replaceState(null, '', `#${panelId}`);
+        } else {
+            const hashPanel = (window.location.hash || '').replace('#', '');
+            if (hashPanel && nursePanelIds.includes(hashPanel) && allowed.includes(hashPanel) && state.activePanel === 'nurse-overview') {
+                setActivePanel(hashPanel);
+                history.replaceState(null, '', `#${hashPanel}`);
+            }
         }
         write(result);
         return state.nurse;
@@ -1166,8 +1077,10 @@ async function loadPatients(options = {}) {
     }
 
     const force = options.force !== false;
-    const status = document.getElementById('statusFilter').value.trim();
-    const queryValue = document.getElementById('queryFilter').value.trim();
+    const statusFilter = document.getElementById('statusFilter');
+    const queryFilter = document.getElementById('queryFilter');
+    const status = statusFilter ? statusFilter.value.trim() : '';
+    const queryValue = queryFilter ? queryFilter.value.trim() : '';
     const query = {};
     if (status) query.status = status;
     if (queryValue) query.q = queryValue;
@@ -1298,13 +1211,12 @@ async function loadBloodBankDonors(options = {}) {
     const force = options.force !== false;
     const query = {};
     const search = document.getElementById('bbDonorQuery').value.trim();
-    const requestId = document.getElementById('bbRequestId').value.trim();
     const bloodGroup = document.getElementById('bbBloodGroupFilter').value.trim();
-    const eligible = document.getElementById('bbEligibilityFilter').value;
+    const eligible = document.getElementById('bbEligibilityFilter').value.trim();
     if (search) query.q = search;
-    if (requestId) query.requestId = Number(requestId);
     if (bloodGroup) query.bloodGroup = bloodGroup;
-    if (eligible) query.eligible = eligible === 'true';
+    if (eligible === 'true') query.eligible = '1';
+    if (eligible === 'false') query.eligible = '0';
     const queryKey = JSON.stringify(query);
 
     if (!force && state.bloodBankDonorsLoaded && state.bloodBankDonorsQueryKey === queryKey) {
@@ -1319,9 +1231,11 @@ async function loadBloodBankDonors(options = {}) {
     state.inFlight.donors = (async () => {
         const result = await call('/nurse/blood-bank/donors', 'GET', null, 'nurse', query);
         if (result.status < 300) {
+            state.bloodBankDonorsErrorMessage = null;
             state.bloodBankDonors = Array.isArray(result.data?.donors) ? result.data.donors : [];
             state.bloodBankDonorsLoaded = true;
             state.bloodBankDonorsQueryKey = queryKey;
+            state.pagination.bloodBankDonorsPage = 1;
             renderBloodBankDonors();
             const selectedDonor = state.bloodBankDonors.find((entry) => Number(entry.donor_id) === Number(state.selectedDonorId)) || null;
             if (state.selectedDonorId && !selectedDonor) {
@@ -1330,15 +1244,19 @@ async function loadBloodBankDonors(options = {}) {
                 renderBloodBankHealthChecks([]);
             } else if (selectedDonor) {
                 renderSelectedBloodBankDonor(selectedDonor);
-            } else if (!state.selectedDonorId && state.bloodBankDonors.length) {
-                state.selectedDonorId = Number(state.bloodBankDonors[0].donor_id);
-                renderBloodBankDonors();
-                renderSelectedBloodBankDonor(state.bloodBankDonors[0]);
-                await loadSelectedDonorHealthChecks({ force: false });
+                await loadSelectedDonorHealthChecks({ force: true });
+            } else {
+                renderSelectedBloodBankDonor(null);
+                renderBloodBankHealthChecks([]);
             }
         } else {
+            state.bloodBankDonorsErrorMessage = result.data?.message || `Request failed (${result.status})`;
             state.bloodBankDonors = [];
             state.bloodBankDonorsLoaded = false;
+            state.pagination.bloodBankDonorsPage = 1;
+            renderBloodBankDonors();
+            renderSelectedBloodBankDonor(null);
+            renderBloodBankHealthChecks([]);
         }
         renderOverviewInsights();
         write(result);
@@ -1352,13 +1270,19 @@ async function loadBloodBankDonors(options = {}) {
     }
 }
 
-async function selectBloodBankDonor(donorId) {
+async function useBloodBankDonor(event, donorId) {
+    if (event?.stopPropagation) event.stopPropagation();
+    await selectBloodBankDonor(donorId, { forceHistory: true });
+}
+
+async function selectBloodBankDonor(donorId, options = {}) {
     if (!canUseBloodBankWorkflow()) return;
+    const forceHistory = options.forceHistory !== false;
     state.selectedDonorId = Number(donorId);
     renderBloodBankDonors();
     const donor = state.bloodBankDonors.find((entry) => Number(entry.donor_id) === Number(donorId)) || null;
     renderSelectedBloodBankDonor(donor);
-    await loadSelectedDonorHealthChecks({ force: false });
+    await loadSelectedDonorHealthChecks({ force: forceHistory });
 }
 
 async function loadSelectedDonorHealthChecks(options = {}) {
@@ -1484,13 +1408,27 @@ async function bootNurseDashboard() {
 document.getElementById('bbWeightKg').addEventListener('input', previewEligibility);
 document.getElementById('bbTemperatureC').addEventListener('input', previewEligibility);
 document.getElementById('bbHemoglobin').addEventListener('input', previewEligibility);
-document.getElementById('statusFilter').addEventListener('change', () => loadPatients({ force: true }));
-document.getElementById('queryFilter').addEventListener('keydown', (event) => {
+const statusFilter = document.getElementById('statusFilter');
+if (statusFilter) {
+    statusFilter.addEventListener('change', () => loadPatients({ force: true }));
+}
+const queryFilter = document.getElementById('queryFilter');
+if (queryFilter) {
+    queryFilter.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            loadPatients({ force: true });
+        }
+    });
+}
+document.getElementById('bbDonorQuery').addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
         event.preventDefault();
-        loadPatients({ force: true });
+        loadBloodBankDonors({ force: true });
     }
 });
+document.getElementById('bbBloodGroupFilter').addEventListener('change', () => loadBloodBankDonors({ force: true }));
+document.getElementById('bbEligibilityFilter').addEventListener('change', () => loadBloodBankDonors({ force: true }));
 bootNurseDashboard();
 </script>
 @endpush

@@ -20,9 +20,6 @@
     <a href="#department-reviews" data-panel="department-reviews">
         <strong>Reviews</strong>
     </a>
-    <a href="#department-availability" data-panel="department-availability">
-        <strong>Availability</strong>
-    </a>
 @endsection
 
 @section('sidebar')
@@ -91,7 +88,6 @@
     .dept-subtitle { margin: 0 0 9px; font-size: 1.02rem; }
     .dept-list { margin: 0; padding-left: 18px; color: var(--ui-text-muted); display: grid; gap: 7px; line-height: 1.5; }
     .dept-doctor-toolbar,
-    .dept-availability-toolbar,
     .dept-review-toolbar { display: grid; gap: 9px; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: end; }
     .dept-label { display: block; color: var(--ui-text-muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 5px; }
     .dept-input,
@@ -137,7 +133,6 @@
     .dept-empty { border: 1px dashed var(--ui-border-strong); border-radius: 12px; background: rgba(248, 250, 252, 0.9); padding: 15px; color: var(--ui-text-muted); text-align: center; }
     @media (max-width: 1000px) {
         .dept-doctor-toolbar,
-        .dept-availability-toolbar,
         .dept-review-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 760px) {
@@ -175,7 +170,7 @@
 
         <section id="department-doctors" class="dept-panel dept-panel-view" data-display="block">
             <h3 class="dept-subtitle">Doctors in this department</h3>
-            <p class="dept-copy">Book by date with capacity-aware availability. This workflow uses daily capacity, not per-minute slot booking.</p>
+            <p class="dept-copy">Doctor cards auto-load for this department. Pick an appointment date to see practical day-specific availability before booking.</p>
             <div class="dept-doctor-toolbar">
                 <div>
                     <label class="dept-label" for="bookingDate">Appointment date</label>
@@ -211,48 +206,6 @@
             <div id="departmentReviewsList" class="dept-reviews-list"></div>
         </section>
 
-        <section id="department-availability" class="dept-panel dept-panel-view" data-display="block">
-            <h3 class="dept-subtitle">Department Availability</h3>
-            <div class="dept-availability-toolbar">
-                <div>
-                    <label class="dept-label" for="availabilityDoctorSelect">Doctor filter</label>
-                    <select id="availabilityDoctorSelect" class="dept-select"></select>
-                </div>
-                <div>
-                    <label class="dept-label" for="availabilityStartDate">Start date</label>
-                    <input id="availabilityStartDate" class="dept-input" type="date">
-                </div>
-                <div>
-                    <label class="dept-label" for="availabilityDays">Days</label>
-                    <select id="availabilityDays" class="dept-select">
-                        <option value="7" selected>7 days</option>
-                        <option value="10">10 days</option>
-                        <option value="14">14 days</option>
-                    </select>
-                </div>
-                <div style="display: flex; align-items: end;">
-                    <button class="dept-btn dept-btn-primary" onclick="loadAvailability()">Load availability</button>
-                </div>
-            </div>
-
-            <div class="dept-table-wrap">
-                <table class="dept-table">
-                    <thead>
-                        <tr>
-                            <th>Doctor</th>
-                            <th>Date</th>
-                            <th>Weekday</th>
-                            <th>Consultation Window</th>
-                            <th>Daily Capacity</th>
-                            <th>Used</th>
-                            <th>Remaining</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="availabilityBody"></tbody>
-                </table>
-            </div>
-        </section>
     </div>
 
     <div id="departmentToastStack" class="dept-toast-stack"></div>
@@ -268,7 +221,7 @@ const detailState = {
     availabilityPayload: null,
     from: '',
 };
-const detailPanelIds = ['department-hero', 'department-about', 'department-doctors', 'department-reviews', 'department-availability'];
+const detailPanelIds = ['department-hero', 'department-about', 'department-doctors', 'department-reviews'];
 let detailPanelControl = null;
 
 const departmentName = document.getElementById('departmentName');
@@ -280,10 +233,6 @@ const departmentCoverageList = document.getElementById('departmentCoverageList')
 const departmentServicesList = document.getElementById('departmentServicesList');
 const departmentDoctorsGrid = document.getElementById('departmentDoctorsGrid');
 const reviewDoctorSelect = document.getElementById('reviewDoctorSelect');
-const availabilityDoctorSelect = document.getElementById('availabilityDoctorSelect');
-const availabilityStartDate = document.getElementById('availabilityStartDate');
-const availabilityDays = document.getElementById('availabilityDays');
-const availabilityBody = document.getElementById('availabilityBody');
 const departmentReviewsList = document.getElementById('departmentReviewsList');
 const reviewSummaryText = document.getElementById('reviewSummaryText');
 const reviewFormWrapper = document.getElementById('reviewFormWrapper');
@@ -341,10 +290,6 @@ function weekdayCapacityLabel(summary) {
     return items.map((item) => `${item.weekday}: ${item.daily_capacity}`).join(' | ');
 }
 
-function availabilityStatusClass(isAvailable) {
-    return isAvailable ? 'available' : 'unavailable';
-}
-
 function consultationWindowLabel(windowValue) {
     return windowValue?.label || 'No consultation window';
 }
@@ -398,7 +343,6 @@ function renderDoctorSelects() {
     const doctors = detailState.doctors;
     if (!doctors.length) {
         reviewDoctorSelect.innerHTML = '<option value="">No doctors</option>';
-        availabilityDoctorSelect.innerHTML = '<option value="">No doctors</option>';
         return;
     }
 
@@ -408,9 +352,6 @@ function renderDoctorSelects() {
 
     reviewDoctorSelect.innerHTML = doctors.map((doctor) =>
         `<option value="${doctor.doctor_user_id}">${detailHtml(doctor.full_name || 'Doctor')} (${detailHtml(doctor.specialization || 'General')})</option>`
-    ).join('');
-    availabilityDoctorSelect.innerHTML = `<option value="">All doctors</option>` + doctors.map((doctor) =>
-        `<option value="${doctor.doctor_user_id}">${detailHtml(doctor.full_name || 'Doctor')}</option>`
     ).join('');
 
     reviewDoctorSelect.value = String(detailState.selectedDoctorId);
@@ -452,7 +393,7 @@ function renderDoctors() {
                     <strong>${doctor.consultation_fee !== null ? `BDT ${Number(doctor.consultation_fee).toFixed(2)}` : 'Not shared'}</strong>
                 </div>
                 <div>
-                    <small>Rating</small>
+                    <small>Reviews</small>
                     <strong>${detailHtml(formatRating(doctor.average_rating, doctor.review_count))}</strong>
                 </div>
                 <div>
@@ -547,47 +488,9 @@ function renderReviews(payload) {
     `).join('');
 }
 
-function flattenAvailabilityRows(payload) {
-    const doctors = Array.isArray(payload?.doctors) ? payload.doctors : [];
-    const rows = [];
-
-    doctors.forEach((doctor) => {
-        (doctor.availability || []).forEach((row) => {
-            rows.push({
-                doctor_name: doctor.full_name || 'Doctor',
-                doctor_user_id: doctor.doctor_user_id,
-                ...row,
-            });
-        });
-    });
-
-    return rows;
-}
-
-function renderAvailabilityTable(payload) {
-    const rows = flattenAvailabilityRows(payload);
-    if (!rows.length) {
-        availabilityBody.innerHTML = '<tr><td colspan="8">No availability rows for this filter.</td></tr>';
-        return;
-    }
-
-    availabilityBody.innerHTML = rows.map((row) => `
-        <tr>
-            <td>${detailHtml(row.doctor_name)}</td>
-            <td>${detailHtml(row.date)}</td>
-            <td>${detailHtml(row.weekday)}</td>
-            <td>${detailHtml(consultationWindowLabel(row.consultation_window))}</td>
-            <td>${Number(row.daily_capacity || 0)}</td>
-            <td>${Number(row.used_count || 0)}</td>
-            <td>${Number(row.remaining_count || 0)}</td>
-            <td><span class="dept-status ${availabilityStatusClass(Boolean(row.is_available))}">${detailHtml(row.status_label || (row.is_available ? 'Available' : 'Unavailable'))}</span></td>
-        </tr>
-    `).join('');
-}
-
 function updateDoctorSelectedDateSummary(payload) {
     const doctors = Array.isArray(payload?.doctors) ? payload.doctors : [];
-    const selectedDate = availabilityStartDate.value;
+    const selectedDate = bookingDate.value;
 
     detailState.doctors.forEach((doctor) => {
         const node = document.getElementById(`selectedAvailability-${doctor.doctor_user_id}`);
@@ -616,7 +519,6 @@ function renderPageNotFound() {
     departmentCoverageList.innerHTML = '<li>Unavailable</li>';
     departmentServicesList.innerHTML = '<li>Unavailable</li>';
     departmentDoctorsGrid.innerHTML = '<div class="dept-empty">Department detail was not found.</div>';
-    availabilityBody.innerHTML = '<tr><td colspan="8">No availability data.</td></tr>';
     departmentReviewsList.innerHTML = '<div class="dept-empty">No reviews available.</div>';
     reviewSummaryText.textContent = 'No review summary available.';
     reviewFormWrapper.innerHTML = '';
@@ -650,12 +552,10 @@ async function loadSelectedDoctorReviews() {
 async function loadAvailability() {
     if (!detailState.department) return;
 
-    const doctorId = availabilityDoctorSelect.value;
     const params = new URLSearchParams({
-        startDate: availabilityStartDate.value,
-        days: availabilityDays.value || '7',
+        startDate: bookingDate.value,
+        days: '1',
     });
-    if (doctorId) params.set('doctorId', doctorId);
 
     const response = await fetch(`/api/public/departments/${encodeURIComponent(detailState.department.slug)}/availability?${params.toString()}`, {
         headers: { Accept: 'application/json' },
@@ -663,12 +563,12 @@ async function loadAvailability() {
     const payload = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-        availabilityBody.innerHTML = `<tr><td colspan="8">${detailHtml(payload.message || 'Could not load availability')}</td></tr>`;
+        detailState.availabilityPayload = null;
+        updateDoctorSelectedDateSummary({ doctors: [] });
         return;
     }
 
     detailState.availabilityPayload = payload;
-    renderAvailabilityTable(payload);
     updateDoctorSelectedDateSummary(payload);
 }
 
@@ -810,8 +710,6 @@ function initDateDefaults() {
     const today = now.toISOString().slice(0, 10);
     const tomorrow = new Date(now.getTime() + (24 * 60 * 60 * 1000)).toISOString().slice(0, 10);
 
-    availabilityStartDate.value = today;
-    availabilityStartDate.min = today;
     bookingDate.value = tomorrow;
     bookingDate.min = today;
 }
@@ -822,18 +720,7 @@ function bindEvents() {
         loadSelectedDoctorReviews();
     });
 
-    availabilityDoctorSelect.addEventListener('change', () => {
-        loadAvailability();
-    });
-
-    availabilityStartDate.addEventListener('change', () => {
-        if (bookingDate.value < availabilityStartDate.value) {
-            bookingDate.value = availabilityStartDate.value;
-        }
-        loadAvailability();
-    });
-
-    availabilityDays.addEventListener('change', () => {
+    bookingDate.addEventListener('change', () => {
         loadAvailability();
     });
 }

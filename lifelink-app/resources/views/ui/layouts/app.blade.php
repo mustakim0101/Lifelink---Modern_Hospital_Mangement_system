@@ -25,7 +25,9 @@
                         <a href="/ui/departments">Departments</a>
                         <a href="/about">About</a>
                         @yield('top_actions')
-                        <a class="cta" href="/ui/login">Login</a>
+                        <a id="publicNavWorkspace" class="cta" href="/ui/dashboard" hidden>Go to Dashboard</a>
+                        <a id="publicNavLogout" href="#" onclick="window.lifeLinkShell.logout(); return false;" hidden>Logout</a>
+                        <a id="publicNavLogin" class="cta" href="/ui/login">Login</a>
                     </nav>
                 </div>
             </header>
@@ -114,6 +116,24 @@
         },
         getPreferredRole(roles) {
             return this.rolePriority.find(role => roles.includes(role)) || null;
+        },
+        getSessionRoles() {
+            try {
+                const roles = JSON.parse(localStorage.getItem('CURRENT_USER_ROLES') || '[]');
+                return Array.isArray(roles) ? roles : [];
+            } catch (error) {
+                return [];
+            }
+        },
+        hasActiveSession() {
+            const userToken = localStorage.getItem('USER_TOKEN');
+            const adminToken = localStorage.getItem('ADMIN_TOKEN');
+            const roles = this.getSessionRoles();
+            return Boolean((userToken || adminToken) && roles.length);
+        },
+        getWorkspaceDestination() {
+            const role = this.getPreferredRole(this.getSessionRoles());
+            return this.roleDestinations[role] || '/ui/dashboard';
         },
         isDebugEnabled() {
             if (new URLSearchParams(window.location.search).get('debug') === '1') return true;
@@ -344,7 +364,24 @@
 
     (function hydrateShell() {
         const isPublicPage = @json($isPublicPage);
-        if (isPublicPage) return;
+        if (isPublicPage) {
+            const loginLink = document.getElementById('publicNavLogin');
+            const workspaceLink = document.getElementById('publicNavWorkspace');
+            const logoutLink = document.getElementById('publicNavLogout');
+            if (window.lifeLinkShell.hasActiveSession()) {
+                if (loginLink) loginLink.hidden = true;
+                if (workspaceLink) {
+                    workspaceLink.hidden = false;
+                    workspaceLink.href = window.lifeLinkShell.getWorkspaceDestination();
+                }
+                if (logoutLink) logoutLink.hidden = false;
+            } else {
+                if (loginLink) loginLink.hidden = false;
+                if (workspaceLink) workspaceLink.hidden = true;
+                if (logoutLink) logoutLink.hidden = true;
+            }
+            return;
+        }
 
         const fullName = localStorage.getItem('CURRENT_USER_FULL_NAME') || '';
         const userId = localStorage.getItem('CURRENT_USER_ID') || '';
