@@ -1,206 +1,148 @@
-# 🏥 LifeLink - Hospital Management System
+# LifeLink - Modern Hospital Management System
 
-## 📋 Project Overview
-LifeLink is a comprehensive hospital management system built with **Laravel Blade**, **MSSQL**, and **Docker**. It provides role-based access control for hospital staff, patients, blood donors, and applicants with features including bed management, blood bank operations, clinical workflows, and job application processing.
+LifeLink is a role-based hospital operations platform built with Laravel and Microsoft SQL Server.  
+It combines staff onboarding, clinical operations, admissions/bed flow, patient self-service, and blood-bank workflows in one system.
 
----
+## Project Overview
 
-## 👥 Contributors
+LifeLink supports real hospital-style flows for:
+- identity, authentication, and role-based access
+- applicant approval and staff setup
+- doctor/nurse/IT daily operations
+- patient portal actions
+- donor and blood request lifecycle
+- public department browsing and hospital information pages
+
+The project is organized so each user role lands in a dedicated workspace, while core data remains unified in one database.
+
+## Current Build Stack
+
+- Backend: Laravel 10 (PHP 8.1+)
+- UI: Blade-based multi-page UI (`resources/views/ui`)
+- Auth: JWT (`tymon/jwt-auth`) with role + active-account middleware
+- Database: Microsoft SQL Server 2022
+- Runtime: Docker Compose
+- Web serving: Nginx + PHP-FPM containers
+- Data access style:
+  - Eloquent/controllers for many flows
+  - targeted SQL service layer in `lifelink-app/app/Services/Sql` for heavier workflow logic
+
+## Main Roles
+
+- Admin
+- IT Worker
+- Doctor
+- Nurse
+- Patient
+- Donor
+- Applicant
+
+## Main Modules and Workflows
+
+### 1. Authentication and Role Control
+- register/login via API JWT flow
+- role-aware workspace routing
+- account freeze/unfreeze and status control
+
+### 2. Applicant Review and Staff Setup
+- applicant submission and status tracking
+- admin/IT review queue (approve/reject)
+- post-approval staff setup for doctor/nurse/IT department assignment
+
+### 3. IT Operations (Ward, Admission, Bed)
+- department-scoped IT operations
+- care unit and bed setup
+- admission creation support and bed assignment/discharge flow
+
+### 4. Doctor Workflow
+- profile + department-scoped patient access
+- date-based appointment monitoring and rule-driven consultation setup
+- bed/admission request creation
+
+### 5. Nurse Workflow
+- department patient monitoring
+- admission detail + vitals logging
+- Blood Bank nurse screening tools gated by department assignment
+
+### 6. Patient Portal
+- profile and medical-record views
+- appointment booking and history
+- blood request creation and tracking
+
+### 7. Donor Workflow
+- donor enrollment/profile
+- availability updates
+- notification response and donation history
+
+### 8. Blood Bank Operations
+- blood request board and matching
+- donor suggestions/notifications
+- donation logging and request fulfillment
+- inventory and blood-bank setup tooling
+
+### 9. Public Experience
+- welcome pages and role entry
+- department directory + department detail pages
+- public doctor review and availability read paths
+
+## UI and Design State (Current)
+
+- The project uses Blade UI, not a separate SPA frontend.
+- The UI has evolved significantly from earlier prototype/debug-first pages.
+- A shared shell/layout direction is active (`resources/views/ui/layouts/app.blade.php`) with:
+  - public mode and authenticated dashboard mode
+  - role-aware sidebar/panel navigation
+  - shared profile/editor and section patterns across dashboards
+- Some docs/dev notes still include older prototype-era planning text; treat this README + current code as the current state.
+
+## Architecture Notes
+
+- Main Laravel app: `lifelink-app/`
+- UI pages: `lifelink-app/resources/views/ui/`
+- API routes: `lifelink-app/routes/api.php`
+- UI routes: `lifelink-app/routes/web.php`
+- Controllers: `lifelink-app/app/Http/Controllers/Api/`
+- SQL services: `lifelink-app/app/Services/Sql/`
+
+Current SQL services:
+- `JobApplicationSqlService.php`
+- `ApplicationReviewSqlService.php`
+- `BloodMatchingSqlService.php`
+
+## Database and Startup Truth
+
+This project currently starts in a SQL-first runtime mode on fresh environments:
+
+- Docker starts MSSQL, then `mssql-init`
+- `docker/mssql/init/init-db.sh` applies:
+  - `docker/mssql/init/01-init.sql`
+  - all files in `docker/mssql/init/schema/*.sql`
+  - all files in `docker/mssql/init/seed/*.sql`
+
+Operational source of truth for startup schema/data:
+- `docker/mssql/init/schema`
+- `docker/mssql/init/seed`
+
+Laravel migrations still exist in the repo for history/reference, but they are not the primary first-run setup path in current Docker flow.
+
+## How to Run
+
+For project setup/run instructions, read: `dev_log/steps to run project.txt`
+
+## Documentation Map
+
+- `docs/PROJECT_INFO.md` - project summary, scope, and stack notes
+- `docs/FEATURE_WORKFLOWS.md` - role/module workflow narratives and service-layer notes
+- `docs/END_to_END_test_plan.md` - manual end-to-end execution plans and validation paths
+- `docs/DESIGN_IDEAS.md` - UI direction and design-system planning history
+- `docs/EXTRAS.md` - optional enhancements, reporting, and integration ideas
+- `docs/FUTURE_NOTES.md` - backlog, reliability, and long-term planning notes
+- `dev_log/README.md` - detailed implementation history and chronological change log
+
+## Contributors
 
 | Name | Email | GitHub |
 |------|-------|--------|
 | Mustakim Musa | mustakim.official.0101@gmail.com | [mustakim0101](https://github.com/mustakim0101) |
 | Ahbab Hasan | hasan100.official@gmail.com | [tigertech119](https://github.com/tigertech119) |
 | Shadman Muhtasim | nksoag2006@gmail.com | [ShadmanMuhtasim](https://github.com/ShadmanMuhtasim) |
-
----
-
-## 🎯 Features by Role
-
-### 👑 Admin
-- Full system access
-- Approve/reject job applications
-- Freeze/unfreeze user accounts
-- View all users and system data
-- System-wide configuration
-
-### 🛠️ IT Workers (Department Admins)
-- Approve job applications
-- Department-wise bed/ward/ICU management
-- Search admitted patients within their department
-- Blood donor matching based on blood type
-- View blood inventory levels
-- Send notifications to blood donors
-
-### 👨‍⚕️ Doctors
-- View assigned patients
-- Write prescriptions
-- Give diagnoses
-- Manage appointments (cancel/reject)
-- Request bed/ICU admission for patients
-
-### 👩‍⚕️ Nurses
-- View department-wise patient records
-- Monitor bed assignments
-- Track patient vital signs (optional)
-
-### 🧑‍🤝‍🧑 Patients
-- View personal medical records
-- Book appointments
-- View prescriptions
-- Request blood
-- Track blood request status
-
-### 📝 Applicants
-- Submit job applications
-- Track application status
-- View "Admin will contact you" message
-
-### 💉 Blood Donors
-- Register as donor
-- Set weekly availability
-- Track donation history
-- Receive blood request notifications
-- Log health metrics (weight, temperature)
-
----
-
-## 🏥 Departments
-- 🫀 Cardiology
-- 🧠 Neurology
-- 🦴 Orthopedics
-- 👶 Pediatrics
-- 🩺 General Medicine
-- 👁 Ophthalmology
-- 🦷 Dentistry
--etc
-
----
-## 🚀 Getting Started
-
-### Prerequisites
-- Docker & Docker Compose
-- Git
-- PHP 8.2+
-- Composer
-- Node.js & NPM
----
-
-## 📅 Project Milestones/Devepolment Pathway
-
-### ✅ Phase 1: Environment & Setup 
-- [ ] Initial Laravel installation
-- [ ] Docker configuration with MSSQL
-- [ ] Database connectivity testing
-- [ ] Git repository setup
-
-### ✅ Phase 2: Core Identity & RBAC 
-- [ ] JWT authentication setup
-- [ ] User registration/login
-- [ ] Roles and permissions tables
-- [ ] Role middleware implementation
-
-### ✅ Phase 3: Application Flow 
-- [ ] Job applications schema
-- [ ] Applicant submission flow
-- [ ] Admin approval/rejection logic
-- [ ] Role transition (Applicant → Staff)
-
-### ✅ Phase 4: Department & Bed Management 
-- [ ] Departments and CareUnits schema
-- [ ] Bed assignment logic for IT workers
-- [ ] Nurse bed viewing dashboard
-- [ ] Auto-release bed on discharge
-
-### ✅ Phase 5: Clinical Operations 
-- [ ] Patients, Appointments schema
-- [ ] Doctor patient management
-- [ ] Prescription and diagnosis features
-- [ ] Patient portal for records
-
-### ✅ Phase 6: Blood Bank Module 
-- [ ] Blood donors and inventory schema
-- [ ] Donor availability tracking
-- [ ] Blood request matching
-- [ ] IT worker notification system
-
-### ✅ Phase 7: Testing & Deployment 
-- [ ] Feature testing
-- [ ] Performance optimization
-- [ ] Documentation
-- [ ] Deployment
-
----
-
-
-## 🚀 Phase 1: Infrastructure (2 Issues/Commits)
-
-
-| # | Issue Title | Commit Message | Branch |
-|:---:|-------------|----------------|:---:|
-| **1** | **Setup Docker environment with MSSQL** | `chore: dockerize laravel  with mssql 2022` | `main` |
-| **2** | **Configure MSSQL database connection** | `fix: establish mssql connection and test migrations` | `main` |
-
-## 🔐 Phase 2: Identity & RBAC (3 Issues/Commits)
-
-
-| # | Issue Title | Commit Message | Branch |
-|:---:|-------------|----------------|:---:|
-| **3** | **Install JWT & implement authentication** | `feat(auth): install jwt-auth with login/register` | `dev` |
-| **4** | **Create RBAC database schema** | `feat(rbac): migrations for users, roles, permissions` | `dev` |
-| **5** | **Build role middleware & account controls** | `feat(rbac): role middleware with freeze/unfreeze` | `dev` |
-
-## 📝 Phase 3: Hiring Flow (3 Issues/Commits)
-
-
-| # | Issue Title | Commit Message | Branch |
-|:---:|-------------|----------------|:---:|
-| **6** | **Department & application tables** | `feat(hiring): migrations for departments and applications` | `dev` |
-| **7** | **Job application submission feature** | `feat(hiring): applicant submission with status tracking` | `dev` |
-| **8** | **Admin approval workflow** | `feat(hiring): admin/it approval with auto-role assignment` | `dev` |
-
-## 🏥 Phase 4: Bed Management (3 Issues/Commits)
-
-
-| # | Issue Title | Commit Message | Branch |
-|:---:|-------------|----------------|:---:|
-| **9** | **Bed/ICU/Ward schema** | `feat(beds): migrations for care_units and beds` | `dev` |
-| **10** | **IT worker bed assignment** | `feat(beds): it-worker dashboard for bed allocation` | `dev` |
-| **11** | **Discharge & bed release** | `feat(beds): auto-release bed on patient discharge` | `dev` |
-
-## 👨‍⚕️ Phase 5: Clinical Operations (4 Issues/Commits)
-
-
-| # | Issue Title | Commit Message | Branch |
-|:---:|-------------|----------------|:---:|
-| **12** | **Clinical data schema** | `feat(clinical): migrations for patients, appointments, records` | `dev` |
-| **13** | **Doctor dashboard & actions** | `feat(clinical): doctor management of patients and bed requests` | `dev` |
-| **14** | **Nurse care dashboard** | `feat(clinical): nurse view for dept-wise patient monitoring` | `dev` |
-| **15** | **Patient portal** | `feat(clinical): patient portal for records and blood requests` | `dev` |
-
-## 🩸 Phase 6: Blood Bank (3 Issues/Commits)
-
-
-| # | Issue Title | Commit Message | Branch |
-|:---:|-------------|----------------|:---:|
-| **16** | **Blood bank schema** | `feat(blood): migrations for donors, inventory, requests` | `dev` |
-| **17** | **Donor dashboard & tracking** | `feat(blood): donor availability, weight, temp, bag logging` | `dev` |
-| **18** | **Blood matching system** | `feat(blood): it-worker matching with donor notifications` | `dev` |
-
-## ✅ Phase 7: Final Polish (3 Issues/Commits)
-
-
-| # | Issue Title | Commit Message | Branch |
-|:---:|-------------|----------------|:---:|
-| **19** | **Comprehensive testing** | `test: feature tests for all role workflows` | `dev` |
-| **20** | **API documentation** | `docs: swagger/openapi documentation for all endpoints` | `dev` |
-| **21** | **Deployment preparation** | `chore: deployment config and environment setup` | `dev` |
-
----
-
-## ⚠️⚠️⚠️
-###this project is made with RAW SQL Schemas, you may find migration but current step uses :
-- Schema source of truth: raw SQL in docker/mssql/init/schema
-- Startup source of truth: docker compose up
-- Models: active Laravel application layer, keep them
-- Migrations: retained for reference/history, not primary setup path
