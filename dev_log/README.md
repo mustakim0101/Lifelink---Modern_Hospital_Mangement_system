@@ -1,6 +1,65 @@
 # Dev Notes (Q&A)
 
+## 🚀 Phase 1: Infrastructure (2 Issues/Commits)
 
+| # | Issue Title | Commit Message | Branch | Assigned To -->>DONE |
+|:---:|-------------|----------------|:---:|:---:|
+| **1** | **Setup Docker environment with MSSQL** | `chore: dockerize laravel with mssql 2022` | `main` | musa|
+| **2** | **Configure MSSQL database connection** | `fix: establish mssql connection and test migrations` | `main` | musa |
+
+## 🔐 Phase 2: Identity & RBAC (3 Issues/Commits)
+
+| # | Issue Title | Commit Message | Branch | Assigned To |
+|:---:|-------------|----------------|:---:|:---:|
+| **3** | **Install JWT & implement authentication** | `feat(auth): install jwt-auth with login/register` | `dev` | musa|
+| **4** | **Create RBAC database schema** | `feat(rbac): migrations for users, roles, permissions` | `dev` | musa |
+| **5** | **Build role middleware & account controls** | `feat(rbac): role middleware with freeze/unfreeze` | `dev` | musa |
+
+## 📝 Phase 3: Hiring Flow (3 Issues/Commits)
+
+| # | Issue Title | Commit Message | Branch | Assigned To |
+|:---:|-------------|----------------|:---:|:---:|
+| **6** | **Department & application tables** | `feat(hiring): migrations for departments and applications` | `dev` | musa |
+| **7** | **Job application submission feature** | `feat(hiring): applicant submission with status tracking` | `dev` | musa |
+| **8** | **Admin approval workflow** | `feat(hiring): admin/it approval with auto-role assignment` | `dev` | musa |
+
+## 🏥 Phase 4: Bed Management (3 Issues/Commits)
+
+| # | Issue Title | Commit Message | Branch | Assigned To |
+|:---:|-------------|----------------|:---:|:---:|
+| **9** | **Bed/ICU/Ward schema** | `feat(beds): migrations for care_units and beds` | `dev` | Ahbab |
+| **10** | **IT worker bed assignment** | `feat(beds): it-worker dashboard for bed allocation` | `dev` | Ahbab |
+| **11** | **Discharge & bed release** | `feat(beds): auto-release bed on patient discharge` | `dev` | Ahbab |
+
+## 👨‍⚕️ Phase 5: Clinical Operations (4 Issues/Commits)
+
+| # | Issue Title | Commit Message | Branch | Assigned To |
+|:---:|-------------|----------------|:---:|:---:|
+| **12** | **Clinical data schema** | `feat(clinical): migrations for patients, appointments, records` | `dev` | Ahbab |
+| **13** | **Doctor dashboard & actions** | `feat(clinical): doctor management of patients and bed requests` | `dev` | Ahbab |
+| **14** | **Nurse care dashboard** | `feat(clinical): nurse view for dept-wise patient monitoring` | `dev` | Shadman |
+| **15** | **Patient portal** | `feat(clinical): patient portal for records and blood requests` | `dev` | Full Shadman |
+
+## 🩸 Phase 6: Blood Bank (3 Issues/Commits)
+
+| # | Issue Title | Commit Message | Branch | Assigned To |
+|:---:|-------------|----------------|:---:|:---:|
+| **16** | **Blood bank schema** | `feat(blood): migrations for donors, inventory, requests` | `dev` | Shadman |
+| **17** | **Donor dashboard & tracking** | `feat(blood): donor availability, weight, temp, bag logging` | `dev` | Shadman |
+| **18** | **Blood matching system** | `feat(blood): it-worker matching with donor notifications` | `dev` | Shadman |
+
+## ✅ Phase 7: Final Polish (3 Issues/Commits)
+
+| # | Issue Title | Commit Message | Branch | Assigned To |
+|:---:|-------------|----------------|:---:|:---:|
+| **19** | **Comprehensive testing** | `test: feature tests for all role workflows` | `dev` | QA Engineer |
+| **20** | **API documentation** | `docs: swagger/openapi documentation for all endpoints` | `dev` | Technical Writer |
+| **21** | **Deployment preparation** | `chore: deployment config and environment setup` | `dev` | DevOps Engineer |
+
+
+##
+##
+##
 
 ## Phase 1 - Issue 1: Setup Docker environment with MSSQL
 
@@ -16,25 +75,25 @@ This repository now includes Docker scaffolding for Laravel + MSSQL.
 
 ### Quick start
 1. Copy Docker environment variables:
-   - PowerShell: `Copy-Item .env.docker .env`
+- PowerShell: `Copy-Item .env.docker .env`
 2. Bootstrap Laravel app (Laravel 10) into `lifelink-app/`:
-   - PowerShell: `./scripts/setup-laravel.ps1`
+- PowerShell: `./scripts/setup-laravel.ps1`
 3. Start containers:
-   - `docker compose up -d --build`
+- `docker compose up -d --build`
 4. Install PHP dependencies inside app container (if needed):
-   - `docker compose exec app composer install`
+- `docker compose exec app composer install`
 5. Copy Laravel env file and set DB values:
-   - `docker compose exec app cp .env.example .env`
-   - Set in `lifelink-app/.env`:
-     - `DB_CONNECTION=sqlsrv`
-     - `DB_HOST=mssql`
-     - `DB_PORT=1433`
-     - `DB_DATABASE=lifelink`
-     - `DB_USERNAME=sa`
-     - `DB_PASSWORD=<same as MSSQL_SA_PASSWORD>`
+- `docker compose exec app cp .env.example .env`
+- Set in `lifelink-app/.env`:
+- `DB_CONNECTION=sqlsrv`
+- `DB_HOST=mssql`
+- `DB_PORT=1433`
+- `DB_DATABASE=lifelink`
+- `DB_USERNAME=sa`
+- `DB_PASSWORD=<same as MSSQL_SA_PASSWORD>`
 6. Generate app key and run migrations:
-   - `docker compose exec app php artisan key:generate`
-   - `docker compose exec app php artisan migrate`
+- `docker compose exec app php artisan key:generate`
+- `docker compose exec app php artisan migrate`
 
 ### Service endpoints
 - Laravel (nginx): `http://localhost:8000`
@@ -49,8 +108,8 @@ This repository now includes Docker scaffolding for Laravel + MSSQL.
 ### Connection updates
 - Laravel app uses `sqlsrv` in `lifelink-app/.env`.
 - SQL Server TLS options are enabled in `lifelink-app/config/database.php`:
-  - `encrypt`
-  - `trust_server_certificate`
+- `encrypt`
+- `trust_server_certificate`
 - App image includes Microsoft ODBC Driver 18.
 
 ### Verification commands
@@ -114,9 +173,9 @@ Purpose:
 - New commit will simply record file deletion.
 - History still keeps old versions in previous commits.
 - Typical flow:
-  1. `git rm scripts/setup-laravel.ps1`
-  2. `git commit -m "chore: remove setup-laravel bootstrap script"`
-  3. `git push`
+1. `git rm scripts/setup-laravel.ps1`
+2. `git commit -m "chore: remove setup-laravel bootstrap script"`
+3. `git push`
 
 ---
 
@@ -214,9 +273,9 @@ Use base URL:
 - Body:
 ```json
 {
-  "email": "admin@demo.com",
-  "password": "admin12345",
-  "fullName": "Admin Demo"
+"email": "admin@demo.com",
+"password": "admin12345",
+"fullName": "Admin Demo"
 }
 ```
 
@@ -229,8 +288,8 @@ Expected:
 - Body:
 ```json
 {
-  "email": "admin@demo.com",
-  "password": "admin12345"
+"email": "admin@demo.com",
+"password": "admin12345"
 }
 ```
 
@@ -266,3 +325,3402 @@ Expected:
 - If API gives 500: run `docker compose logs app --tail 100`.
 - If DB error: verify `lifelink-app/.env` DB settings (`DB_HOST=mssql`, `DB_PORT=1433`, `DB_DATABASE=lifelink`, `DB_USERNAME=sa`).
 - If token issues: ensure `JWT_SECRET` exists in `lifelink-app/.env`.
+
+---
+
+## Phase 2 Re-run Fix (Clone on another drive: migration timeout)
+
+### Reported problem
+- `php artisan migrate` failed with:
+- `SQLSTATE[HYT00] ... Login timeout expired`
+- In re-runs, setup was unstable after `docker compose down -v` and fresh `up -d`.
+- Risk of env mismatch in fresh clone (`.env.example` defaulted to MySQL settings).
+
+### Root causes found
+1. SQL Server readiness race:
+- Compose only ensured container start order, not DB readiness.
+- Existing `mssql-init` used a fixed `sleep 25`, which can be insufficient on slower startups.
+2. Fresh-clone env mismatch risk:
+- `lifelink-app/.env.example` had MySQL defaults (`mysql`, port `3306`), which conflicts with project MSSQL setup.
+
+### Files changed to fix
+1. `docker-compose.yml`
+- Added MSSQL healthcheck (`tcp 1433`).
+- Changed `app` dependency to wait for MSSQL health.
+- Changed `mssql-init` dependency to wait for MSSQL health.
+2. `docker/mssql/init/init-db.sh` (new)
+- Added robust DB init script with:
+- sqlcmd binary auto-detection (`/opt/mssql-tools18/bin/sqlcmd` fallback `/opt/mssql-tools/bin/sqlcmd`)
+- readiness retries (`SELECT 1`, up to 120 seconds)
+- database creation script execution only after SQL Server is ready
+3. `lifelink-app/.env.example`
+- Switched defaults from MySQL to MSSQL:
+- `DB_CONNECTION=sqlsrv`
+- `DB_HOST=mssql`
+- `DB_PORT=1433`
+- `DB_DATABASE=lifelink`
+- `DB_USERNAME=sa`
+- `DB_PASSWORD=YourStrong!Passw0rd`
+- `DB_ENCRYPT=yes`
+- `DB_TRUST_SERVER_CERTIFICATE=true`
+
+### Why this solves it
+- Migrations no longer race against SQL Server boot time.
+- Init script no longer depends on a fragile single sleep duration.
+- New clones start with SQL Server-compatible app defaults instead of MySQL defaults.
+
+### Re-run commands (clean test)
+1. `docker compose down -v`
+2. `Copy-Item .env.docker .env -Force`
+3. `docker compose up -d --build`
+4. `docker compose exec app cp -n .env.example .env`
+5. `docker compose exec app php artisan key:generate --force`
+6. `docker compose exec app php artisan config:clear`
+7. `docker compose exec app php artisan migrate --force`
+
+---
+
+## Phase 2 - Issue 4 (Implemented)
+
+Issue: Create RBAC database schema
+Commit message target: `feat(rbac): migrations for users, roles, permissions`
+Branch target: `dev`
+
+### Files created/updated
+- Created: `lifelink-app/database/migrations/2026_03_06_000100_add_rbac_fields_to_users_table.php`
+- Created: `lifelink-app/database/migrations/2026_03_06_000110_create_roles_table.php`
+- Created: `lifelink-app/database/migrations/2026_03_06_000120_create_permissions_table.php`
+- Created: `lifelink-app/database/migrations/2026_03_06_000130_create_user_roles_table.php`
+- Created: `lifelink-app/database/migrations/2026_03_06_000140_create_role_permissions_table.php`
+
+### RBAC schema flow
+`users` (base identity)
+-> `roles` (role catalog)
+-> `permissions` (permission catalog)
+-> `user_roles` (many-to-many user-role assignment with `assigned_at`, `assigned_by_user_id`)
+-> `role_permissions` (many-to-many role-permission mapping with `granted_at`)
+
+### Users table extensions added
+- `full_name` (nullable)
+- `phone` (nullable)
+- `date_of_birth` (nullable)
+- `gender` (nullable)
+- `account_status` (default: `Active`, indexed)
+- `frozen_at` (nullable)
+- `frozen_by_user_id` (nullable FK to users)
+
+### MSSQL compatibility note
+- During validation, SQL Server rejected `ON DELETE SET NULL` self/cross-user metadata FKs due to multiple cascade path rules.
+- Fix applied: metadata FKs (`frozen_by_user_id`, `assigned_by_user_id`) use default `NO ACTION` behavior instead of cascading delete actions.
+
+### Verification commands
+1. `docker compose exec app php artisan migrate:fresh --force`
+2. `docker compose exec app php artisan migrate:status`
+
+### Verification result
+- All default Laravel migrations + all Issue 4 RBAC migrations ran successfully on MSSQL.
+- New RBAC tables now exist:
+- `roles`
+- `permissions`
+- `user_roles`
+- `role_permissions`
+
+---
+
+## Phase 2 - Issue 5 (Implemented)
+
+Issue: Build role middleware & account controls
+Commit message target: `feat(rbac): role middleware with freeze/unfreeze`
+Branch target: `dev`
+
+### Files created/updated
+- Created: `lifelink-app/app/Http/Middleware/RoleMiddleware.php`
+- Created: `lifelink-app/app/Http/Middleware/EnsureUserIsActive.php`
+- Created: `lifelink-app/app/Http/Controllers/Api/Admin/AccountControlController.php`
+- Created: `lifelink-app/app/Models/Role.php`
+- Created: `lifelink-app/app/Models/Permission.php`
+- Updated: `lifelink-app/app/Http/Kernel.php`
+- Updated: `lifelink-app/app/Models/User.php`
+- Updated: `lifelink-app/app/Http/Controllers/Api/AuthController.php`
+- Updated: `lifelink-app/routes/api.php`
+
+### Implemented behavior
+1. Role middleware:
+- New route middleware alias: `role`
+- Checks `user_roles` -> `roles.role_name` for authorization
+2. Active-account middleware:
+- New route middleware alias: `active.user`
+- Blocks frozen users from protected API access
+3. Account control endpoints (Admin only):
+- `POST /api/admin/users/{user}/freeze`
+- `POST /api/admin/users/{user}/unfreeze`
+- `GET /api/admin/users/{user}/status`
+4. Auth flow updates:
+- Register assigns `Patient` role automatically
+- Dev create-admin assigns `Admin` role automatically
+- Login denies frozen users (`403`)
+- Token response now includes `roles` and `account_status`
+
+### Access control flow
+JWT auth (`auth:api`)
+-> active user check (`active.user`)
+-> role check (`role:Admin`)
+-> admin controller action (freeze/unfreeze/status)
+
+### Validation evidence
+- `php artisan route:list --path=api` shows admin freeze/unfreeze/status routes.
+- Live API check:
+- Created admin (`/api/dev/create-admin`) -> role assigned `Admin`
+- Registered patient (`/api/auth/register`) -> role assigned `Patient`
+- Admin froze patient (`/api/admin/users/{id}/freeze`) -> `account_status=Frozen`
+- Patient login after freeze -> blocked with `403` and message `Account is frozen. Contact admin.`
+
+## Run + Verify Now (Phase 2 Issue 5)
+
+Use this from project root:
+`S:\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Ensure app is running and migrations are applied
+1. `docker compose ps`
+2. `docker compose exec app php artisan migrate --force`
+3. `docker compose exec app php artisan route:list --path=api`
+
+Expected extra routes for Issue 5:
+- `POST api/admin/users/{user}/freeze`
+- `POST api/admin/users/{user}/unfreeze`
+- `GET api/admin/users/{user}/status`
+
+### 2) Postman verification flow (API-only)
+Base URL:
+`http://localhost:8000/api`
+
+#### A) Create admin (bootstrap)
+- `POST /dev/create-admin`
+- Body:
+```json
+{
+"email": "admin@demo.com",
+"password": "admin12345",
+"fullName": "Admin Demo"
+}
+```
+- Save returned `token` as `ADMIN_TOKEN`.
+
+#### B) Register normal user (patient role auto-assign)
+- `POST /auth/register`
+- Body:
+```json
+{
+"email": "patient1@demo.com",
+"password": "patient12345",
+"fullName": "Patient One"
+}
+```
+- Save returned `user.id` as `PATIENT_ID`.
+
+#### C) Freeze user as admin
+- `POST /admin/users/{{PATIENT_ID}}/freeze`
+- Header: `Authorization: Bearer {{ADMIN_TOKEN}}`
+
+Expected:
+- `200` with `user.account_status = Frozen`.
+
+#### D) Confirm frozen user cannot login
+- `POST /auth/login`
+- Body:
+```json
+{
+"email": "patient1@demo.com",
+"password": "patient12345"
+}
+```
+
+Expected:
+- `403` with message:
+`Account is frozen. Contact admin.`
+
+#### E) Unfreeze user as admin
+- `POST /admin/users/{{PATIENT_ID}}/unfreeze`
+- Header: `Authorization: Bearer {{ADMIN_TOKEN}}`
+
+Expected:
+- `200` with `user.account_status = Active`.
+
+#### F) Check status endpoint
+- `GET /admin/users/{{PATIENT_ID}}/status`
+- Header: `Authorization: Bearer {{ADMIN_TOKEN}}`
+
+Expected:
+- `200` with account status + roles.
+
+### 3) UI status for Issue 5
+- No frontend UI/dashboard screen is implemented yet for freeze/unfreeze.
+- Issue 5 is currently implemented and verified through API endpoints (Postman/cURL).
+
+### 4) If Postman returns Laravel HTML page
+- Cause: request is going to web root (`/`) or wrong method/path.
+- Fix checklist:
+1. Method must be `POST` (not GET).
+2. Full URL must be exactly: `http://localhost:8000/api/dev/create-admin`
+3. Body type: `raw` -> `JSON`
+4. Header: `Content-Type: application/json`
+5. Header: `Accept: application/json`
+6. Restart request tab and send again.
+
+Quick terminal check:
+`curl -X POST http://localhost:8000/api/dev/create-admin -H "Content-Type: application/json" -H "Accept: application/json" -d "{\"email\":\"admin@demo.com\",\"password\":\"admin12345\",\"fullName\":\"Admin Demo\"}"`
+
+---
+
+## Phase 3 - Issue 6 (Implemented)
+
+Issue: Department & application tables
+Commit message target: `feat(hiring): migrations for departments and applications`
+Branch target: `dev`
+
+### Files created/updated
+- Created: `lifelink-app/database/migrations/2026_03_06_000200_create_departments_table.php`
+- Created: `lifelink-app/database/migrations/2026_03_06_000210_create_job_applications_table.php`
+
+### Tables added
+1. `departments`
+- `id` (PK)
+- `dept_name` (unique)
+- `is_active` (default true)
+- `timestamps`
+
+2. `job_applications`
+- `id` (PK)
+- `user_id` (FK -> `users.id`)
+- `applied_role_id` (FK -> `roles.id`)
+- `applied_department_id` (nullable FK -> `departments.id`)
+- `status` (default `Pending`, indexed)
+- `applied_at`
+- `reviewed_by_user_id` (nullable FK -> `users.id`)
+- `reviewed_at` (nullable)
+- `review_notes` (nullable)
+- `timestamps`
+- index: (`user_id`, `status`)
+
+### Hiring flow mapping (Issue 6 scope)
+Applicant user (`users`)
+-> chooses target role (`roles`)
+-> optionally chooses department (`departments`)
+-> submits record in `job_applications` with `Pending` status.
+
+### Verification commands
+1. `docker compose exec app php artisan migrate --force`
+2. `docker compose exec app php artisan migrate:status`
+
+### Verification result
+- Issue 6 migrations ran successfully on MSSQL:
+- `2026_03_06_000200_create_departments_table`
+- `2026_03_06_000210_create_job_applications_table`
+
+---
+## Phase 3 - Issue 7 (Implemented)
+
+
+Issue: Job application submission feature
+Commit message target: `feat(hiring): applicant submission with status tracking`
+Branch target: `dev`
+
+### Files created/updated
+- Created: `lifelink-app/app/Models/Department.php`
+- Created: `lifelink-app/app/Models/JobApplication.php`
+- Created: `lifelink-app/app/Http/Controllers/Api/JobApplicationController.php`
+- Updated: `lifelink-app/routes/api.php`
+- Updated: `lifelink-app/app/Http/Controllers/Api/AuthController.php`
+- Updated: `lifelink-app/routes/web.php`
+- Created: `lifelink-app/resources/views/ui/index.blade.php`
+- Created: `lifelink-app/resources/views/ui/auth.blade.php`
+- Created: `lifelink-app/resources/views/ui/applications.blade.php`
+- Created: `lifelink-app/resources/views/ui/admin-users.blade.php`
+
+### Pages created in this issue
+1. `/ui`
+- UI landing page for completed backend features.
+2. `/ui/auth`
+- Create admin, register patient/user, login.
+- Shows/stores IDs and tokens in a context panel.
+- Stores test keys in localStorage:
+- `ADMIN_TOKEN`, `ADMIN_USER_ID`, `ADMIN_EMAIL`
+- `USER_TOKEN`
+- `PATIENT_ID`, `PATIENT_EMAIL`, `PATIENT_PASSWORD`
+3. `/ui/applications`
+- Submit job application.
+- View `my` and `my/latest`.
+- Saves and shows last application snapshot.
+4. `/ui/admin-users`
+- Admin freeze/unfreeze/status.
+- Auto-loads stored `PATIENT_ID`.
+- Has built-in "Test Patient Login (frozen check)" button.
+
+### Program flow (page to backend)
+#### A) UI route and page load flow
+Browser `GET /ui/*`
+-> `lifelink-app/routes/web.php`
+-> Blade view file in `lifelink-app/resources/views/ui/*.blade.php`
+-> HTML + JS rendered in browser.
+
+#### B) Auth page flow (`/ui/auth`)
+UI button click (Create Admin/Register/Login)
+-> `fetch('/api/...')` from `resources/views/ui/auth.blade.php`
+-> `routes/api.php`
+-> `AuthController` method
+-> DB (`users`, `roles`, `user_roles`)
+-> JSON response shown in page `<pre>` output.
+-> important IDs/tokens saved to localStorage.
+
+#### C) Applications page flow (`/ui/applications`)
+UI button click (Submit / My / My Latest)
+-> `fetch('/api/applications...')` from `resources/views/ui/applications.blade.php`
+-> `routes/api.php`
+-> `JobApplicationController` (`submit`, `myApplications`, `myLatest`)
+-> DB (`job_applications`, `roles`, `departments`, `user_roles`)
+-> JSON response shown in page.
+
+#### D) Admin account control flow (`/ui/admin-users`)
+UI button click (Freeze / Unfreeze / Status)
+-> `fetch('/api/admin/users/{id}/...')` from `resources/views/ui/admin-users.blade.php`
+-> `routes/api.php` + middleware (`auth:api`, `active.user`, `role:Admin`)
+-> `Api\Admin\AccountControlController`
+-> DB update/read on `users`
+-> JSON response shown in page.
+
+#### E) Frozen login verification flow from UI
+UI click "Test Patient Login (frozen check)" on `/ui/admin-users`
+-> reads `PATIENT_EMAIL` + `PATIENT_PASSWORD` from localStorage
+-> `POST /api/auth/login`
+-> if frozen, backend returns `403` with message:
+`Account is frozen. Contact admin.`
+
+### Backend behavior implemented (Issue 7 core)
+- `POST /api/applications`
+- Creates `job_applications` row with status `Pending`
+- Assigns `Applicant` role automatically if missing
+- Accepts `appliedRole`/`applied_role_id` and optional department id
+- `GET /api/applications/my`
+- Returns authenticated user's application history (latest first)
+- `GET /api/applications/my/latest`
+- Returns latest application status
+- Duplicate pending protection:
+- Re-submit while pending -> `409` with message:
+- `You already have a pending application.`
+- Auth response update:
+- `latestApplication` included in auth token response.
+
+### Verification commands
+1. `docker compose exec app php artisan route:list --path=api`
+2. `docker compose exec app php artisan route:list --path=ui`
+
+### Run + Verify Now (Issue 7 with UI + API)
+Use from project root:
+`S:\Lifelink---Modern_Hospital_Mangement_system`
+
+#### 1) Start/verify app
+1. `docker compose up -d --build`
+2. `docker compose ps`
+3. `docker compose exec app php artisan migrate --force`
+4. `docker compose exec app php artisan route:list --path=api`
+5. `docker compose exec app php artisan route:list --path=ui`
+
+#### 2) What you will see in browser
+1. Open `http://localhost:8000/ui`
+- A simple menu page with links to Auth, Applications, Admin Account Control.
+2. Open `http://localhost:8000/ui/auth`
+- Three cards: Create Admin, Register Patient/User, Login.
+- `Stored Test Context` block shows ids/tokens available for test flow.
+3. Open `http://localhost:8000/ui/applications`
+- Submit role + optional department id.
+- Buttons for `Get My Latest` and `Get My Applications`.
+- `Latest Application Snapshot` block updates after submit/status calls.
+4. Open `http://localhost:8000/ui/admin-users`
+- Freeze/unfreeze/status by user id (auto-filled from stored `PATIENT_ID`).
+- Button `Test Patient Login (frozen check)` verifies if freeze is enforced.
+
+#### 3) Full UI test scenario (no manual ID hunting)
+A) Go to `/ui/auth` -> Create admin
+- Use new email
+- Expect token response + admin context stored.
+
+B) Same page `/ui/auth` -> Register patient/user
+- Use new email
+- Expect response includes `user.id`
+- `PATIENT_ID`, `PATIENT_EMAIL`, `PATIENT_PASSWORD`, `USER_TOKEN` stored automatically.
+
+C) Go to `/ui/applications` -> Submit application
+- `appliedRole`: e.g., `Doctor`
+- optional `departmentId`: e.g., `1`
+- Expect: `Application submitted`, status `Pending`.
+
+D) Still on `/ui/applications` -> click `Get My Latest` and `Get My Applications`
+- Expect latest/history to show pending application.
+
+E) Go to `/ui/admin-users` -> click `Use Stored PATIENT_ID` -> click `Freeze`
+- Expect account status changes to `Frozen`.
+
+F) On `/ui/admin-users` -> click `Test Patient Login (frozen check)`
+- Expect `403`, `Account is frozen. Contact admin.`
+
+G) On `/ui/admin-users` -> click `Unfreeze` -> then `Test Patient Login` again
+- Expect login success with token response.
+
+#### 4) Postman steps (optional parallel verification)
+Base URL: `http://localhost:8000/api`
+1. `POST /dev/create-admin`
+2. `POST /auth/register`
+3. `POST /applications` with bearer user token
+4. `GET /applications/my/latest`
+5. `POST /admin/users/{id}/freeze` with bearer admin token
+6. `POST /auth/login` for patient (expect `403`)
+7. `POST /admin/users/{id}/unfreeze`
+
+### Verification result
+- New routes visible:
+- `POST api/applications`
+- `GET api/applications/my`
+- `GET api/applications/my/latest`
+- New UI routes visible:
+- `GET /ui`
+- `GET /ui/auth`
+- `GET /ui/applications`
+- `GET /ui/admin-users`
+- Live verification passed:
+- UI pages load with HTTP `200`
+- UI now exposes/stores patient/admin IDs and tokens for complete manual test flow
+- API submit message: `Application submitted`
+- status tracking works (`Pending`)
+- duplicate pending returns `409` conflict
+
+---
+
+## Phase 3 - Issue 8 (Implemented)
+
+Issue: Admin approval workflow
+Commit message target: `feat(hiring): admin/it approval with auto-role assignment`
+Branch target: `dev`
+
+### New files created (Issue 8)
+- `lifelink-app/app/Http/Controllers/Api/Admin/ApplicationReviewController.php`
+- `lifelink-app/resources/views/ui/application-reviews.blade.php`
+
+### Existing files updated (Issue 8)
+- `lifelink-app/routes/api.php`
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/README.md`
+
+### API endpoints added
+- `GET /api/admin/applications` (Admin/ITWorker)
+- `POST /api/admin/applications/{application}/approve` (Admin/ITWorker)
+- `POST /api/admin/applications/{application}/reject` (Admin/ITWorker)
+
+### Issue 8 behavior implemented
+1. Admin/IT can list applications with optional status filter:
+- `?status=Pending|Approved|Rejected`
+2. Approve workflow:
+- Allowed only when current status is `Pending`
+- Sets `status=Approved`, `reviewed_by_user_id`, `reviewed_at`, optional `review_notes`
+- Auto-assigns the applied role to the applicant in `user_roles` (if not already assigned)
+- Removes `Applicant` role after approval
+3. Reject workflow:
+- Allowed only when current status is `Pending`
+- Sets `status=Rejected`, review metadata, optional notes
+4. Non-pending review protection:
+- Approve/reject on non-pending returns `409`
+
+### UI added for Issue 8 testing
+- New page: `/ui/application-reviews`
+- Uses `ADMIN_TOKEN` from localStorage
+- Load applications by status
+- Approve/reject by application id with optional review notes
+
+### Flowchart (Issue 8)
+Admin/IT login (JWT)
+-> `GET /api/admin/applications` to fetch pending items
+-> Select application id
+-> `POST /api/admin/applications/{id}/approve` or `/reject`
+-> On approve: update `job_applications` + assign role in `user_roles` + remove `Applicant`
+-> Applicant next login shows updated roles
+
+### Live verification evidence (Issue 8)
+- Route verification:
+- `api/admin/applications`
+- `api/admin/applications/{application}/approve`
+- `api/admin/applications/{application}/reject`
+- End-to-end API run result:
+- submitted application id: `4`
+- review status after approve: `Approved`
+- applied role: `Doctor`
+- applicant login roles after approval: `Patient,Doctor`
+
+## Run + Verify Now (Up to Issue 8)
+
+Use this from project root:
+`S:\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start stack
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose ps`
+
+Expected:
+- `lifelink_app`, `lifelink_web`, `lifelink_mssql` are `Up`
+- App responds at `http://localhost:8000`
+
+### 2) Verify migrations/routes
+1. `docker compose exec app php artisan migrate --force`
+2. `docker compose exec app php artisan route:list --path=api/admin/applications`
+3. `docker compose exec app php artisan route:list --path=api/applications`
+
+### 3) Browser verify pages
+1. `http://localhost:8000/ui`
+2. `http://localhost:8000/ui/auth`
+3. `http://localhost:8000/ui/applications`
+4. `http://localhost:8000/ui/admin-users`
+5. `http://localhost:8000/ui/application-reviews`
+
+### 4) End-to-end approval test
+1. On `/ui/auth`: create admin, register/login applicant.
+2. On `/ui/applications`: submit application (`appliedRole=Doctor` for quick test).
+3. On `/ui/application-reviews`: load `Pending`, take application id, click `Approve`.
+4. On `/ui/auth` (login applicant again): check roles now include approved role.
+
+Expected:
+- Application status transitions `Pending -> Approved`
+- Applicant role assignment updates automatically in `user_roles`
+- `Applicant` role is removed after approval
+
+---
+
+## Phase 4 - Issue 9 (Implemented)
+
+Issue: Bed/ICU/Ward schema
+Commit message target: `feat(beds): migrations for care_units and beds`
+Branch target: `dev`
+
+### New files created (Issue 9)
+- `lifelink-app/database/migrations/2026_03_07_000300_create_care_units_table.php`
+- `lifelink-app/database/migrations/2026_03_07_000310_create_beds_table.php`
+- `lifelink-app/app/Models/CareUnit.php`
+- `lifelink-app/app/Models/Bed.php`
+- `lifelink-app/app/Http/Controllers/Api/WardCatalogController.php`
+- `lifelink-app/resources/views/ui/ward-setup.blade.php`
+
+### Existing files updated (Issue 9)
+- `lifelink-app/app/Models/Department.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/postman_codes_testing_apipoints_with_tables.txt` (localhost 5000 -> 8000 updates done before Issue 9 work)
+- `dev_log/README.md`
+
+### Schema implemented
+1. `care_units`
+- `id` (PK)
+- `department_id` (FK -> `departments.id`)
+- `unit_type` (`Ward|ICU|NICU|CCU`)
+- `unit_name` (nullable)
+- `floor` (nullable)
+- `is_active` (default true)
+- `timestamps`
+
+2. `beds`
+- `id` (PK)
+- `care_unit_id` (FK -> `care_units.id`)
+- `bed_code`
+- `status` (`Available|Occupied|Maintenance|Reserved`, default `Available`)
+- `is_active` (default true)
+- `timestamps`
+- unique: (`care_unit_id`, `bed_code`)
+
+### Backend APIs added (Issue 9)
+Protected with `auth:api` + `active.user`:
+- `GET /api/ward/departments`
+- `GET /api/ward/care-units`
+- `GET /api/ward/beds`
+- `GET /api/ward/beds/summary`
+
+Create APIs protected with `role:Admin,ITWorker`:
+- `POST /api/ward/care-units`
+- `POST /api/ward/beds`
+
+### UI added (Issue 9)
+- New page: `GET /ui/ward-setup`
+- Create care unit
+- Create bed
+- List departments/care units/beds
+- View bed summary
+- Reads token from localStorage (`ADMIN_TOKEN`/`USER_TOKEN`)
+
+### Flowchart (Issue 9)
+`/ui/ward-setup` button click
+-> fetch `/api/ward/...`
+-> API route in `routes/api.php`
+-> `WardCatalogController`
+-> `CareUnit` / `Bed` Eloquent + MSSQL tables
+-> JSON response in UI panel
+
+### Verification evidence run
+1. `docker compose exec app php artisan migrate --force`
+- migrated:
+- `2026_03_07_000300_create_care_units_table`
+- `2026_03_07_000310_create_beds_table`
+2. `docker compose exec app php artisan route:list --path=api/ward`
+- shows 6 ward routes (list/create/summary)
+3. `docker compose exec app php artisan route:list --path=ui/ward-setup`
+- shows UI route exists
+
+## Run + Verify Now (Up to Issue 9)
+
+Use from project root:
+`F:\31 projects\db project\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start stack
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose ps`
+
+### 2) Migrate and confirm routes
+1. `docker compose exec app php artisan migrate --force`
+2. `docker compose exec app php artisan route:list --path=api/ward`
+3. `docker compose exec app php artisan route:list --path=ui/ward-setup`
+4. `docker compose exec app php artisan jwt:secret --force`
+5. `docker compose exec app php artisan config:clear`
+
+Expected ward APIs:
+- `GET api/ward/departments`
+- `GET api/ward/care-units`
+- `POST api/ward/care-units`
+- `GET api/ward/beds`
+- `POST api/ward/beds`
+- `GET api/ward/beds/summary`
+
+If you see `Secret is not set.` (JWTException), run step 4 and 5 above, then login again.
+
+### 3) Browser verify
+1. `http://localhost:8000/ui`
+2. `http://localhost:8000/ui/auth`
+3. `http://localhost:8000/ui/ward-setup`
+
+### 4) Quick test data flow
+1. On `/ui/auth`:
+- Create admin and keep `ADMIN_TOKEN` in localStorage.
+2. On `/ui/ward-setup`:
+- Click `Use ADMIN_TOKEN`.
+- Create one care unit (example: `departmentId=1`, `unitType=ICU`, `unitName=Main ICU`, `floor=2`).
+- Create one bed (example: `careUnitId=<created>`, `bedCode=ICU-01`, `status=Available`).
+- Click `GET /ward/beds` and `GET /ward/beds/summary`.
+
+Expected:
+- Care unit create returns `201` and `care_unit.id`
+- Bed create returns `201` and `bed.id`
+- Bed list shows unit + department info
+- Summary returns grouped totals by `department`, `unit_type`, `status`
+
+---
+
+## Phase 4 - Issue 10 (Implemented)
+
+Issue: IT worker bed assignment
+Commit message target: `feat(beds): it-worker dashboard for bed allocation`
+Branch target: `dev`
+
+### New files created (Issue 10)
+- `lifelink-app/database/migrations/2026_03_07_000320_create_department_admins_table.php`
+- `lifelink-app/database/migrations/2026_03_07_000330_create_admissions_table.php`
+- `lifelink-app/database/migrations/2026_03_07_000340_create_bed_assignments_table.php`
+- `lifelink-app/app/Models/DepartmentAdmin.php`
+- `lifelink-app/app/Models/Admission.php`
+- `lifelink-app/app/Models/BedAssignment.php`
+- `lifelink-app/app/Http/Controllers/Api/ItBedAllocationController.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+
+### Existing files updated (Issue 10)
+- `lifelink-app/app/Models/User.php`
+- `lifelink-app/app/Models/Department.php`
+- `lifelink-app/app/Models/Bed.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/README.md`
+
+### Schema implemented
+1. `department_admins`
+- maps IT workers to departments (`user_id`, `department_id`)
+2. `admissions`
+- stores admitted patient records for bed allocation flow
+3. `bed_assignments`
+- stores bed assignment history with active assignment tracked by `released_at = null`
+
+### Backend APIs added (Issue 10)
+Admin/ITWorker:
+- `GET /api/ward/it/departments`
+- `GET /api/ward/it/admissions`
+- `POST /api/ward/it/admissions`
+- `GET /api/ward/it/available-beds?departmentId=...&unitType=...`
+- `POST /api/ward/it/assign-bed`
+
+Admin only:
+- `POST /api/ward/it/department-admins`
+
+### UI added
+- `GET /ui/it-bed-allocation`
+- assign IT worker to department (admin flow)
+- create admission
+- list admissions
+- list available beds
+- assign bed to admission
+
+### Allocation flow (Issue 10)
+IT/Admin token
+-> create admission (`/ward/it/admissions`)
+-> fetch available beds in department (`/ward/it/available-beds`)
+-> assign bed (`/ward/it/assign-bed`)
+-> bed status changes `Available -> Occupied`
+-> admission gets active assignment payload
+
+### Live verification evidence
+Verified by direct API run:
+- created admin
+- registered patient
+- created available NICU bed
+- created admission
+- assigned bed
+- received successful assignment payload with `bed_code` and `unit_type`
+
+---
+
+## Run + Verify Now (Up to Issue 10)
+
+Use from project root:
+`F:\31 projects\db project\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start and prepare
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose exec app php artisan jwt:secret --force`
+4. `docker compose exec app php artisan config:clear`
+5. `docker compose exec app php artisan migrate --force`
+
+### 2) Confirm new routes
+1. `docker compose exec app php artisan route:list --path=api/ward/it`
+2. `docker compose exec app php artisan route:list --path=ui/it-bed-allocation`
+
+Expected API routes:
+- `GET api/ward/it/departments`
+- `GET api/ward/it/admissions`
+- `POST api/ward/it/admissions`
+- `GET api/ward/it/available-beds`
+- `POST api/ward/it/assign-bed`
+- `POST api/ward/it/department-admins`
+
+### 3) Browser flow (recommended)
+1. Open `http://localhost:8000/ui/auth` and login/create admin + create patient user.
+2. Open `http://localhost:8000/ui/ward-setup` and ensure at least one care unit + one available bed exists.
+3. Open `http://localhost:8000/ui/it-bed-allocation`:
+- use `ADMIN_TOKEN`
+- create admission (`patientUserId`, `departmentId`, `careLevelRequested`, `diagnosis`)
+- load available beds for the department
+- assign bed using `admissionId` + `bedId`
+
+### 4) Expected success results
+- Admission create -> `201` with `admission.id`
+- Assign bed -> `200` with message `Bed assigned`
+- Response includes:
+- `admission.active_bed_assignment.bed_code`
+- `admission.active_bed_assignment.unit_type`
+- `GET /api/ward/beds?status=Available` count decreases for that unit/department.
+
+---
+
+## Phase 4 - Issue 11 (Implemented)
+
+Issue: Discharge & bed release
+Commit message target: `feat(beds): auto-release bed on patient discharge`
+Branch target: `dev`
+
+### New files created (Issue 11)
+- No new files required.
+
+### Existing files updated (Issue 11)
+- `lifelink-app/app/Http/Controllers/Api/ItBedAllocationController.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+- `dev_log/README.md`
+
+### Backend behavior implemented
+New API endpoint:
+- `POST /api/ward/it/admissions/{admission}/discharge`
+
+When discharge is called:
+1. Validates department access (Admin or scoped ITWorker)
+2. Checks admission is currently `Admitted`
+3. Finds active bed assignment (`released_at IS NULL`)
+4. Auto-releases assignment:
+- sets `released_at`
+- sets `released_by_user_id`
+- sets `release_reason` (default `Discharge`)
+5. Sets bed status back to `Available`
+6. Sets admission status to `Discharged` with `discharge_date`
+
+### UI behavior implemented
+Updated `/ui/it-bed-allocation`:
+- Added discharge action form:
+- admission id
+- optional release reason
+- `Discharge + Auto Release Bed` button
+
+### Live verification evidence
+Verified by API:
+- `POST /api/ward/it/admissions/3/discharge` returned:
+- `message: Admission discharged and bed released`
+- `admission.status: Discharged`
+- `admission.active_bed_assignment: null`
+- `GET /api/ward/beds/summary` after discharge showed:
+- Pediatrics NICU moved from `Occupied` to `Available`
+
+---
+
+## Run + Verify Now (Up to Issue 11)
+
+Use from project root:
+`F:\31 projects\db project\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start and prepare
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose exec app php artisan jwt:secret --force`
+4. `docker compose exec app php artisan config:clear`
+5. `docker compose exec app php artisan migrate --force`
+
+### 2) Confirm routes
+1. `docker compose exec app php artisan route:list --path=api/ward/it`
+
+Expected additional route for Issue 11:
+- `POST api/ward/it/admissions/{admission}/discharge`
+
+### 3) Browser flow
+1. Open `http://localhost:8000/ui/it-bed-allocation`
+2. Use admin/it token
+3. Ensure you already have:
+- one admitted admission with active bed assignment
+4. In discharge section:
+- set `admission id`
+- optional reason
+- click `Discharge + Auto Release Bed`
+
+Expected response:
+- `message = Admission discharged and bed released`
+- `admission.status = Discharged`
+- `admission.active_bed_assignment = null`
+
+### 4) Verify bed released
+1. Open `http://localhost:8000/ui/ward-setup`
+2. Click `GET /ward/beds/summary`
+
+Expected:
+- previously assigned bed is now counted under `status = Available`
+- occupied count decreases accordingly in that department/unit
+
+---
+
+## Phase 5 - Issue 12 (Implemented)
+
+Issue: Clinical data schema
+Commit message target: `feat(clinical): migrations for patients, appointments, records`
+Branch target: `dev`
+
+### New files created (Issue 12)
+- `lifelink-app/database/migrations/2026_03_07_000350_create_patients_table.php`
+- `lifelink-app/database/migrations/2026_03_07_000360_create_appointments_table.php`
+- `lifelink-app/database/migrations/2026_03_07_000370_create_medical_records_table.php`
+- `lifelink-app/app/Models/Patient.php`
+- `lifelink-app/app/Models/Appointment.php`
+- `lifelink-app/app/Models/MedicalRecord.php`
+
+### Existing files updated (Issue 12)
+- `lifelink-app/app/Models/User.php`
+- `lifelink-app/app/Models/Department.php`
+- `lifelink-app/app/Models/Admission.php`
+- `dev_log/README.md`
+
+### Schema implemented
+1. `patients`
+- `patient_id` (PK + FK -> `users.id`)
+- `blood_group`
+- `emergency_contact_name`
+- `emergency_contact_phone`
+- `is_active`
+- `timestamps`
+
+2. `appointments`
+- `id` (PK)
+- `patient_id` (FK -> `patients.patient_id`)
+- `department_id` (FK -> `departments.id`)
+- `doctor_user_id` (nullable FK -> `users.id`)
+- `appointment_datetime`
+- `status` (default `Booked`)
+- `cancelled_by_user_id` (nullable FK -> `users.id`)
+- `cancel_reason`
+- `timestamps`
+
+3. `medical_records`
+- `id` (PK)
+- `patient_id` (FK -> `patients.patient_id`)
+- `admission_id` (nullable FK -> `admissions.id`)
+- `created_by_user_id` (FK -> `users.id`)
+- `record_datetime`
+- `diagnosis`
+- `treatment_plan`
+- `notes`
+- `timestamps`
+
+### Model wiring added
+- `Patient` model with relations:
+- `user`, `appointments`, `medicalRecords`
+- `Appointment` model with relations:
+- `patient`, `department`, `doctor`, `cancelledBy`
+- `MedicalRecord` model with relations:
+- `patient`, `admission`, `createdBy`
+- `User` model relations:
+- `patientProfile`, `doctorAppointments`, `cancelledAppointments`, `createdMedicalRecords`
+- `Department` model relation:
+- `appointments`
+- `Admission` model relation:
+- `medicalRecords`
+
+### Verification evidence
+Commands run:
+1. `docker compose exec app php artisan migrate --force`
+2. `docker compose exec app php artisan migrate:status`
+3. `docker compose exec app php artisan tinker --execute "echo config('database.default');"`
+
+Results:
+- active DB connection: `sqlsrv`
+- new migrations are applied in batch 5:
+- `2026_03_07_000350_create_patients_table`
+- `2026_03_07_000360_create_appointments_table`
+- `2026_03_07_000370_create_medical_records_table`
+
+---
+
+## Run + Verify Now (Up to Issue 12)
+
+Use from project root:
+`F:\31 projects\db project\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start and prepare
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose exec app php artisan jwt:secret --force`
+4. `docker compose exec app php artisan config:clear`
+5. `docker compose exec app php artisan migrate --force`
+
+### 2) Confirm clinical migrations are applied
+1. `docker compose exec app php artisan migrate:status`
+
+Expected new rows marked `Ran`:
+- `2026_03_07_000350_create_patients_table`
+- `2026_03_07_000360_create_appointments_table`
+- `2026_03_07_000370_create_medical_records_table`
+
+### 3) Optional DB checks through Tinker
+1. `docker compose exec app php artisan tinker --execute "echo config('database.default');"`
+2. `docker compose exec app php artisan tinker --execute "print_r(Schema::hasTable('patients')); print_r(Schema::hasTable('appointments')); print_r(Schema::hasTable('medical_records'));"`
+
+Expected:
+- database default: `sqlsrv`
+- all three table checks return `1` (true)
+
+---
+
+## Phase 5 - Issue 13 (Implemented)
+
+Issue: Doctor dashboard & actions
+Commit message target: `feat(clinical): doctor management of patients and bed requests`
+Branch target: `dev`
+
+### New files created (Issue 13)
+- `lifelink-app/database/migrations/2026_03_07_000380_create_doctors_table.php`
+- `lifelink-app/database/migrations/2026_03_07_000390_add_admitted_by_doctor_to_admissions_table.php`
+- `lifelink-app/app/Models/Doctor.php`
+- `lifelink-app/app/Http/Controllers/Api/DoctorClinicalController.php`
+- `lifelink-app/resources/views/ui/doctor-dashboard.blade.php`
+
+### Existing files updated (Issue 13)
+- `lifelink-app/app/Models/User.php`
+- `lifelink-app/app/Models/Department.php`
+- `lifelink-app/app/Models/Admission.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/README.md`
+
+### Schema updates
+1. `doctors`
+- `doctor_id` (PK + FK -> `users.id`)
+- `department_id` (FK -> `departments.id`)
+- `specialization`, `license_number`, `is_active`, timestamps
+2. `admissions` alteration
+- added nullable `admitted_by_doctor_id` FK -> `users.id`
+
+### API endpoints added
+Admin:
+- `POST /api/admin/doctors/profile` (upsert doctor profile for a Doctor-role user)
+
+Doctor role (`role:Doctor`):
+- `GET /api/doctor/profile`
+- `GET /api/doctor/patients`
+- `GET /api/doctor/appointments`
+- `POST /api/doctor/appointments/{appointment}/cancel`
+- `POST /api/doctor/bed-requests`
+- `GET /api/doctor/bed-requests`
+
+### Doctor actions implemented
+1. Doctor profile view by logged-in doctor
+2. Doctor patients list based on doctor-linked admissions/appointments
+3. Appointment list and cancel action (for doctor-owned appointments)
+4. Bed request creation by doctor (creates admission with doctor linkage)
+5. Bed requests list for current doctor
+
+### UI added
+- `GET /ui/doctor-dashboard`
+- admin doctor-profile setup panel
+- doctor profile/patients/appointments actions
+- doctor bed request create + list actions
+
+### Live verification evidence
+Smoke test completed:
+1. registered a user
+2. submitted Doctor application
+3. admin approved application (Doctor role granted)
+4. admin upserted doctor profile (`department=Cardiology`)
+5. doctor login succeeded
+6. doctor bed request submitted (`message: Bed request submitted`)
+7. doctor bed request list returned records
+8. doctor patients endpoint returned patient count > 0
+
+---
+
+## Run + Verify Now (Up to Issue 13)
+
+Use from project root:
+`F:\31 projects\db project\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start and migrate
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose exec app php artisan jwt:secret --force`
+4. `docker compose exec app php artisan config:clear`
+5. `docker compose exec app php artisan migrate --force`
+
+### 2) Confirm routes
+1. `docker compose exec app php artisan route:list --path=api/doctor`
+2. `docker compose exec app php artisan route:list --path=api/admin/doctors/profile`
+3. `docker compose exec app php artisan route:list --path=ui/doctor-dashboard`
+
+### 3) Browser verification flow
+1. Open `/ui/auth`
+- create/login admin
+- register doctor-candidate user
+2. Use existing Issue 8 flow to approve candidate as `Doctor`
+- `/ui/applications` submit appliedRole=`Doctor`
+- `/ui/application-reviews` approve
+3. Open `/ui/doctor-dashboard`
+- use `ADMIN_TOKEN`
+- upsert doctor profile (doctor user id + department id)
+4. Login as doctor from `/ui/auth` (sets `USER_TOKEN`)
+5. Back to `/ui/doctor-dashboard` use `USER_TOKEN`
+- `GET /doctor/profile`
+- `GET /doctor/patients`
+- create bed request
+- `GET /doctor/bed-requests`
+
+Expected:
+- doctor profile returns configured department/specialization
+- doctor bed request returns `201` with admission payload
+- doctor bed request list includes created request
+- doctor patients list includes linked patient(s)
+
+---
+
+## Phase 5 - Issue 14 (Implemented)
+
+Issue: Nurse care dashboard
+Commit message target: `feat(clinical): nurse view for dept-wise patient monitoring`
+Branch target: `dev`
+
+### New files created (Issue 14)
+- `lifelink-app/database/migrations/2026_03_07_000400_create_nurses_table.php`
+- `lifelink-app/database/migrations/2026_03_07_000410_create_nurse_vital_sign_logs_table.php`
+- `lifelink-app/app/Models/Nurse.php`
+- `lifelink-app/app/Models/NurseVitalSignLog.php`
+- `lifelink-app/app/Http/Controllers/Api/NurseCareController.php`
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+
+### Existing files updated (Issue 14)
+- `lifelink-app/app/Models/User.php`
+- `lifelink-app/app/Models/Department.php`
+- `lifelink-app/app/Models/Patient.php`
+- `lifelink-app/app/Models/Admission.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/README.md`
+
+### Schema updates
+1. `nurses`
+- `nurse_id` (PK + FK -> `users.id`)
+- `department_id` (FK -> `departments.id`)
+- `ward_assignment_note`, `is_active`, timestamps
+2. `nurse_vital_sign_logs`
+- `admission_id` (FK -> `admissions.id`, cascade delete)
+- `patient_id` (FK -> `patients.patient_id`)
+- `nurse_id` (FK -> `nurses.nurse_id`)
+- `measured_at`, `temperature_c`, `pulse_bpm`, `systolic_bp`, `diastolic_bp`, `respiration_rate`, `spo2_percent`, `note`
+- MSSQL-safe FK design used to avoid multiple cascade path error.
+
+### API endpoints added
+Admin (`role:Admin`):
+- `POST /api/admin/nurses/profile` (upsert nurse profile for a Nurse-role user)
+
+Nurse (`role:Nurse`):
+- `GET /api/nurse/profile`
+- `GET /api/nurse/patients`
+- `GET /api/nurse/admissions/{admission}`
+- `GET /api/nurse/admissions/{admission}/vitals`
+- `POST /api/nurse/admissions/{admission}/vitals`
+
+### Nurse actions implemented
+1. Nurse profile view by logged-in nurse.
+2. Department-wise admission/patient monitoring with search and status filters.
+3. Admission detail panel with bed assignment + linked medical record history.
+4. Vital signs logging with validations (including BP consistency and metric presence).
+5. Vital signs history retrieval per admission.
+
+### UI added / modernized
+- `GET /ui/nurse-dashboard`
+- modern interactive dashboard layout (responsive cards + animated gradient surface)
+- token context + admin nurse profile setup panel
+- department patient monitor list with quick status badges
+- selected admission detail summary
+- quick vital-sign entry form and live refresh actions
+- recent vitals + medical records tables
+
+Also updated:
+- `/ui` index page now includes Nurse Dashboard entry and marks progress up to Issue 14.
+
+### Verification evidence
+Executed in Docker app container:
+1. `docker compose exec app php artisan route:list --path=api/admin/nurses/profile`
+2. `docker compose exec app php artisan route:list --path=api/nurse`
+3. `docker compose exec app php artisan route:list --path=ui/nurse-dashboard`
+4. `docker compose exec app php artisan migrate --force`
+5. `docker compose exec app php artisan migrate:status`
+6. `docker compose exec app php artisan test`
+
+Observed results:
+- new nurse routes listed correctly
+- nurse migrations applied (`2026_03_07_000400`, `2026_03_07_000410`)
+- tests passed (`2 passed`)
+
+---
+
+## Run + Verify Now (Up to Issue 14)
+
+Use from project root:
+`J:\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start and migrate
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose exec app php artisan jwt:secret --force`
+4. `docker compose exec app php artisan config:clear`
+5. `docker compose exec app php artisan migrate --force`
+
+### 2) Confirm Issue 14 routes
+1. `docker compose exec app php artisan route:list --path=api/admin/nurses/profile`
+2. `docker compose exec app php artisan route:list --path=api/nurse`
+3. `docker compose exec app php artisan route:list --path=ui/nurse-dashboard`
+
+### 3) Browser verification flow (Nurse)
+1. Open `/ui/auth`
+- register/login admin user
+- register nurse-candidate user
+2. Use existing Issue 8 flow to approve candidate as `Nurse`
+- `/ui/applications` submit `appliedRole=Nurse`
+- `/ui/application-reviews` approve
+3. Open `/ui/nurse-dashboard`
+- use `ADMIN_TOKEN`
+- upsert nurse profile (nurse user id + department id)
+4. Login as nurse from `/ui/auth` (sets `USER_TOKEN`)
+5. Back to `/ui/nurse-dashboard` use `USER_TOKEN`
+- `GET /nurse/profile`
+- `GET /nurse/patients`
+- select one admission from patient list
+- submit vital sign log
+- refresh vitals table
+
+Expected:
+- nurse profile returns configured department and active state
+- patients endpoint returns only nurse department admissions
+- admission details show bed assignment + medical records
+- vital log creation returns `201` and appears in recent vitals list
+
+---
+
+## Phase 5 - Issue 15 (Implemented)
+
+Issue: Patient portal
+Commit message target: `feat(clinical): patient portal for records and blood requests`
+Branch target: `dev`
+
+### New files created (Issue 15)
+- `lifelink-app/database/migrations/2026_03_07_000500_create_blood_requests_table.php`
+- `lifelink-app/app/Models/BloodRequest.php`
+- `lifelink-app/app/Http/Controllers/Api/PatientPortalController.php`
+- `lifelink-app/resources/views/ui/patient-portal.blade.php`
+
+### Existing files updated (Issue 15)
+- `lifelink-app/app/Http/Controllers/Api/AuthController.php`
+- `lifelink-app/app/Models/Patient.php`
+- `lifelink-app/app/Models/Department.php`
+- `lifelink-app/app/Models/Admission.php`
+- `lifelink-app/app/Models/User.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/README.md`
+
+### Schema updates
+1. `blood_requests`
+- `patient_id` (FK -> `patients.patient_id`)
+- `admission_id` (nullable FK -> `admissions.id`)
+- `department_id` (FK -> `departments.id`)
+- `requested_by_user_id` (FK -> `users.id`)
+- `blood_group_needed`, `component_type`, `units_required`, `urgency`, `status`, `request_date`, `notes`
+2. Added model relationships for blood requests in:
+- `Patient`
+- `Admission`
+- `Department`
+- `User`
+
+### API endpoints added
+Patient role (`role:Patient`):
+- `GET /api/patient/portal`
+- `GET /api/patient/profile`
+- `GET /api/patient/medical-records`
+- `GET /api/patient/appointments`
+- `GET /api/patient/booking-options`
+- `POST /api/patient/appointments`
+- `POST /api/patient/appointments/{appointment}/cancel`
+- `POST /api/patient/blood-requests`
+- `GET /api/patient/blood-requests`
+
+### Patient portal actions implemented
+1. Patient dashboard summary with records/appointments/blood-request counts.
+2. Patient profile fetch with role + emergency info.
+3. Medical records list endpoint for current patient.
+4. Appointment booking + listing + cancellation by patient.
+5. Blood request submission + history list by patient.
+6. Automatic patient profile bootstrap during register/login to avoid missing `patients` profile rows.
+7. Booking options endpoint returns active departments + active doctors for patient-side dropdown UX.
+
+### UI added / modernized
+- `GET /ui/patient-portal`
+- modern responsive portal UI
+- token context + one-click refresh
+- patient snapshot and summary stats
+- appointment booking with department-linked doctor dropdown and live list/cancel actions
+- blood request submission and request history
+- medical records table with search filter
+- API response log for debugging
+
+Also updated:
+- `/ui` index page now includes `Patient Portal` entry and progress note up to Issue 15.
+
+### Refinement pass (2026-03-07)
+Files updated in this pass:
+- `lifelink-app/app/Http/Controllers/Api/PatientPortalController.php`
+- `lifelink-app/app/Http/Controllers/Api/AuthController.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/resources/views/ui/patient-portal.blade.php`
+- `dev_log/README.md`
+
+Refinements applied:
+- Added `GET /api/patient/booking-options` for dynamic department/doctor selectors in patient UI.
+- Appointment booking now validates:
+- datetime must be after now
+- selected doctor must be active
+- selected doctor must belong to selected department
+- Patient profile bootstrap was hardened to avoid force-resetting `patients.is_active` on every login.
+- Patient portal UI redesigned for clearer flow:
+- guided doctor dropdown (no manual doctor ID typing)
+- appointment/blood request status chips
+- record search
+- lightweight toast feedback
+
+### Verification evidence
+Executed in Docker app container:
+1. `docker compose exec app php artisan migrate --force`
+2. `docker compose exec app php artisan route:list --path=api/patient`
+3. `docker compose exec app php artisan route:list --path=ui/patient-portal`
+4. `docker compose exec app php artisan migrate:status | Select-String -Pattern "000500_create_blood_requests_table"`
+5. `docker compose exec app php artisan test`
+
+Observed results:
+- new patient routes listed correctly (`9 routes`)
+- patient portal web route listed correctly
+- `2026_03_07_000500_create_blood_requests_table` marked `Ran`
+- tests passed (`2 passed`)
+
+---
+
+## Run + Verify Now (Up to Issue 15)
+
+Use from project root:
+`J:\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start and migrate
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose exec app php artisan jwt:secret --force`
+4. `docker compose exec app php artisan config:clear`
+5. `docker compose exec app php artisan migrate --force`
+
+### 2) Confirm Issue 15 routes
+1. `docker compose exec app php artisan route:list --path=api/patient`
+2. `docker compose exec app php artisan route:list --path=ui/patient-portal`
+
+### 3) Browser verification flow (Patient)
+1. Open `/ui/auth`
+- register/login patient user
+2. Open `/ui/patient-portal`
+- use `USER_TOKEN`
+- click `Refresh All`
+3. Book appointment
+- choose department
+- set datetime
+- submit and verify in appointments list
+4. Submit blood request
+- set blood group + units + urgency
+- submit and verify in blood request list
+5. Load medical records
+- verify records table loads without authorization errors
+
+Expected:
+- portal profile and stats load with `200`
+- appointment booking returns `201`, then appears in list
+- blood request returns `201`, then appears in request history
+- patient-only routes reject non-patient tokens with `403`
+
+---
+
+## Phase 6 - Issue 16 (Implemented)
+
+Issue: Blood bank schema
+Commit message target: `feat(blood): migrations for donors, inventory, requests`
+Branch target: `dev`
+
+### New files created (Issue 16)
+- `lifelink-app/database/migrations/2026_03_08_000600_create_blood_banks_table.php`
+- `lifelink-app/database/migrations/2026_03_08_000610_create_donor_profiles_table.php`
+- `lifelink-app/database/migrations/2026_03_08_000620_create_blood_inventory_table.php`
+- `lifelink-app/database/migrations/2026_03_08_000630_add_blood_bank_id_to_blood_requests_table.php`
+- `lifelink-app/app/Models/BloodBank.php`
+- `lifelink-app/app/Models/BloodInventory.php`
+- `lifelink-app/app/Models/DonorProfile.php`
+- `lifelink-app/app/Http/Controllers/Api/BloodBankSchemaController.php`
+- `lifelink-app/resources/views/ui/blood-bank-schema.blade.php`
+
+### Existing files updated (Issue 16)
+- `lifelink-app/app/Models/User.php`
+- `lifelink-app/app/Models/BloodRequest.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/README.md`
+
+### Schema updates
+1. `blood_banks`
+- `bank_name` (unique), `location`, `is_active`, timestamps
+2. `donor_profiles`
+- `donor_id` (PK + FK -> `users.id`)
+- `blood_group`, `last_donation_date`, `is_eligible`, `notes`, timestamps
+3. `blood_inventory`
+- `blood_bank_id` (FK -> `blood_banks.id`)
+- `blood_group`, `component_type`, `units_available`, `last_updated_at`, timestamps
+- unique key on (`blood_bank_id`, `blood_group`, `component_type`)
+4. `blood_requests` extended
+- added nullable `blood_bank_id` (FK -> `blood_banks.id`) with null-on-delete
+
+### API endpoints added
+Admin/IT role (`role:Admin,ITWorker`):
+- `GET /api/blood/schema/overview`
+- `GET /api/blood/schema/banks`
+- `POST /api/blood/schema/banks`
+- `GET /api/blood/schema/donor-profiles`
+- `POST /api/blood/schema/donor-profiles`
+- `GET /api/blood/schema/inventory`
+- `POST /api/blood/schema/inventory`
+- `GET /api/blood/schema/requests`
+
+### Blood schema actions implemented
+1. Blood bank creation and listing.
+2. Donor profile upsert/list with donor-role auto-attach.
+3. Inventory upsert/list per bank + blood group + component.
+4. Blood request listing with optional bank/status filters.
+5. Overview endpoint with schema-level counts and request status summary.
+
+### UI added / modernized
+- `GET /ui/blood-bank-schema`
+- modern responsive schema dashboard for admin/IT
+- token context (`ADMIN_TOKEN` / `USER_TOKEN`) and one-click refresh
+- quick forms for bank creation, donor profile upsert, inventory upsert
+- live tables for banks, donors, inventory, and blood requests
+- request status chips and API response log
+
+Also updated:
+- `/ui` index page now includes `Blood Bank Schema` entry and progress note up to Issue 16.
+
+### Verification evidence
+Executed in Docker app container:
+1. `docker compose exec app php artisan migrate --force`
+2. `docker compose exec app php artisan route:list --path=api/blood/schema`
+3. `docker compose exec app php artisan route:list --path=ui/blood-bank-schema`
+4. `docker compose exec app php artisan migrate:status`
+5. `docker compose exec app php artisan test`
+
+Observed results:
+- blood schema routes listed correctly
+- blood schema migrations marked `Ran`
+- tests passed
+
+---
+
+## Run + Verify Now (Up to Issue 16)
+
+Use from project root:
+`J:\Lifelink---Modern_Hospital_Mangement_system`
+
+### 1) Start and migrate
+1. `Copy-Item .env.docker .env -Force`
+2. `docker compose up -d --build`
+3. `docker compose exec app php artisan jwt:secret --force`
+4. `docker compose exec app php artisan config:clear`
+5. `docker compose exec app php artisan migrate --force`
+
+### 2) Confirm Issue 16 routes
+1. `docker compose exec app php artisan route:list --path=api/blood/schema`
+2. `docker compose exec app php artisan route:list --path=ui/blood-bank-schema`
+
+### 3) Browser verification flow (Blood schema)
+1. Open `/ui/auth`
+- login admin user (or IT worker)
+2. Open `/ui/blood-bank-schema`
+- use `ADMIN_TOKEN` or `USER_TOKEN`
+- click `Refresh All`
+3. Create one blood bank and verify it appears in banks table
+4. Upsert one donor profile (existing user id + blood group) and verify donor table
+5. Upsert inventory row (bank + blood group + component + units) and verify inventory table
+6. Verify requests table loads existing patient blood requests with `200`
+
+Expected:
+- all schema endpoints respond without authorization errors for Admin/IT tokens
+- create/upsert actions return success and refresh tables
+- schema snapshot counters update after successful writes
+
+### 4) Common Postman pitfalls (Issue 16)
+1. Use `POST /api/blood/schema/banks` to create a bank.
+`GET /api/blood/schema/banks` only lists banks.
+2. If `POST /api/blood/schema/inventory` says `The selected bank id is invalid`, create/list banks first and use a real `id` from `GET /api/blood/schema/banks`.
+3. For GET endpoints (`overview`, `banks`, `donor-profiles`, `inventory`, `requests`), keep request body empty and pass filters in query params.
+
+---
+
+## Phase 6 - Issue 17 (Implemented)
+
+Issue: Donor dashboard & tracking
+Commit message target: `feat(blood): donor availability, weight, temp, bag logging`
+Branch target: `dev`
+
+### New files created (Issue 17)
+- `lifelink-app/database/migrations/2026_03_08_000700_create_donor_availabilities_table.php`
+- `lifelink-app/database/migrations/2026_03_08_000710_create_donor_health_checks_table.php`
+- `lifelink-app/database/migrations/2026_03_08_000720_create_blood_donations_table.php`
+- `lifelink-app/app/Models/DonorAvailability.php`
+- `lifelink-app/app/Models/DonorHealthCheck.php`
+- `lifelink-app/app/Models/BloodDonation.php`
+- `lifelink-app/app/Http/Controllers/Api/DonorDashboardController.php`
+- `lifelink-app/resources/views/ui/donor-dashboard.blade.php`
+
+### Existing files updated (Issue 17)
+- `lifelink-app/app/Models/DonorProfile.php`
+- `lifelink-app/app/Models/BloodBank.php`
+- `lifelink-app/app/Models/BloodRequest.php`
+- `lifelink-app/app/Models/User.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/README.md`
+
+### Schema updates
+1. `donor_availabilities`
+- `donor_id` FK -> `donor_profiles.donor_id`
+- `week_start_date`, `is_available`, `max_bags_possible`, `notes`, timestamps
+- unique key on (`donor_id`, `week_start_date`)
+2. `donor_health_checks`
+- `donor_id` FK -> `donor_profiles.donor_id`
+- `check_datetime`, `weight_kg`, `temperature_c`, `hemoglobin`, `notes`
+- `checked_by_user_id` FK -> `users.id` (nullable)
+3. `blood_donations`
+- `donor_id` FK -> `donor_profiles.donor_id`
+- `blood_bank_id` FK -> `blood_banks.id`
+- `donation_datetime`, `blood_group`, `component_type`, `units_donated`
+- optional links to `blood_requests` and `donor_health_checks`
+- tracks `recorded_by_user_id`
+
+### API endpoints added
+Donor role (`role:Donor`):
+- `GET /api/donor/dashboard`
+- `GET /api/donor/profile`
+- `GET /api/donor/banks`
+- `GET /api/donor/availability`
+- `POST /api/donor/availability`
+- `GET /api/donor/health-checks`
+- `POST /api/donor/health-checks`
+- `GET /api/donor/donations`
+- `POST /api/donor/donations`
+
+Authenticated user bootstrap:
+- `POST /api/donor/enroll` (enables Donor role for current user + creates donor profile)
+
+### Donor tracking actions implemented
+1. Donor weekly availability upsert/list with max bags.
+2. Donor health check logging (weight, temperature, optional hemoglobin).
+3. Donor eligibility flag update from health check vitals.
+4. Donation bag logging per blood bank/component/group.
+5. Inventory auto-increment on successful donation log.
+6. Donor dashboard summary (stats + latest records + request pressure by blood group).
+7. Self-enroll endpoint for authenticated users to enable Donor role and donor profile.
+
+### UI added / modernized
+- `GET /ui/donor-dashboard`
+- modern responsive donor dashboard
+- availability form, health check form, donation logging form
+- live stats + history tables
+- API response panel and token shortcuts
+
+Also updated:
+- `/ui` index page now includes `Donor Dashboard` entry and progress note up to Issue 17.
+
+### Verification flow (Issue 17)
+1. Ensure a user has `Donor` role (use Issue 16 donor profile upsert if needed).
+2. If role is missing, call `POST /api/donor/enroll` using that user's token.
+3. Login as donor and copy token.
+4. `GET /api/donor/dashboard` returns donor summary.
+5. `POST /api/donor/availability` logs weekly availability.
+6. `POST /api/donor/health-checks` logs weight/temp.
+7. `POST /api/donor/donations` logs bag units and updates inventory.
+8. `GET /api/donor/donations` shows donation history with latest record.
+
+---
+
+## Pre-Issue 18 Verification + Fixes (2026-03-08)
+
+### Scope reviewed
+- Re-checked implemented work for Issues **9-17**:
+- bed/ward schema and allocation/discharge
+- doctor/nurse/patient clinical APIs
+- blood bank schema and donor tracking APIs
+
+### Runtime verification executed
+1. `docker compose up -d --build`
+2. `docker compose exec app php artisan migrate --force`
+3. `docker compose exec app php artisan route:list --path=api`
+4. `docker compose exec app php artisan test`
+
+Result:
+- API routes loaded successfully (68 API routes found, including ward/doctor/nurse/patient/donor/blood schema groups).
+- Migrations succeeded for all Issue 9-17 tables.
+- Current test suite passed (`2 passed`).
+
+### Bug found and fixed
+- **Problem:** `mssql-init` failed at startup with:
+- `/init/init-db.sh: line 2: set: pipefail: invalid option name`
+- **Root cause:** `docker/mssql/init/init-db.sh` had Windows line endings (CRLF), which broke `set -euo pipefail` in Linux container.
+- **Fix applied:** normalized script content/line endings in:
+- `docker/mssql/init/init-db.sh`
+- **Verification after fix:**
+- Recreated init service container.
+- `lifelink_mssql_init` now exits cleanly with exit code `0`.
+
+- **Problem:** intermittent `502 Bad Gateway` from Nginx after app container recreation.
+- **Root cause:** Nginx upstream name was not configured for Docker DNS re-resolution.
+- **Fix applied:** updated:
+- `docker/nginx/default.conf`
+- added Docker DNS resolver (`127.0.0.11`)
+- changed `fastcgi_pass` to variable-based upstream (`$php_upstream`)
+- **Verification after fix:**
+- restarted `web` container
+- `GET /` and `POST /api/auth/login` both return `200`
+
+---
+
+## SQL-First Transition (Pre-Issue 18)
+
+### Objective
+- Make raw SQL files the primary table-creation path (instead of `php artisan migrate`).
+- Start converting Eloquent-heavy data-manipulation paths to raw SQL service style.
+
+### New SQL-first structure
+- `docker/mssql/init/01-init.sql` (database bootstrap)
+- `docker/mssql/init/schema/*.sql` (separate table schema files)
+- `docker/mssql/init/seed/*.sql` (reference/dummy data)
+
+### SQL init runner update
+- Updated `docker/mssql/init/init-db.sh` to:
+1. wait for SQL Server readiness
+2. run `01-init.sql` on `master`
+3. run all `schema/*.sql` on `lifelink` in filename order
+4. run all `seed/*.sql` on `lifelink` in filename order
+
+### Raw SQL service layer added
+- New folder: `lifelink-app/app/Services/Sql/`
+- Added:
+- `JobApplicationSqlService.php`
+- `ApplicationReviewSqlService.php`
+
+### Controller integration (raw SQL path)
+- Updated:
+- `lifelink-app/app/Http/Controllers/Api/JobApplicationController.php`
+- `lifelink-app/app/Http/Controllers/Api/Admin/ApplicationReviewController.php`
+- These now use SQL service classes for core fetch/manipulate flows.
+
+### Verification (clean start, no migrate command)
+1. `docker compose down -v`
+2. `docker compose up -d --build`
+3. SQL init logs show schema + seed execution complete.
+4. DB table count check:
+- `SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'`
+- Result: `28`
+5. API smoke checks passed:
+- `POST /api/dev/create-admin`
+- `POST /api/applications`
+- `GET /api/admin/applications?status=Pending`
+- `POST /api/admin/applications/{id}/approve`
+6. `php artisan test` passed (`2 passed`).
+
+---
+
+## Phase 6 - Issue 18 (Implemented)
+
+Issue: Blood matching system
+Commit message target: `feat(blood): it-worker matching with donor notifications`
+Branch target: `dev`
+
+### SQL-first schema files created (no PHP migration)
+- `docker/mssql/init/schema/67_blood_request_matches.sql`
+- `docker/mssql/init/schema/68_donor_notifications.sql`
+
+### New backend files created
+- `lifelink-app/app/Services/Sql/BloodMatchingSqlService.php`
+- `lifelink-app/app/Http/Controllers/Api/BloodMatchingController.php`
+- `lifelink-app/app/Http/Controllers/Api/DonorNotificationController.php`
+
+### Existing backend files updated
+- `lifelink-app/routes/api.php`
+- `lifelink-app/app/Http/Controllers/Api/PatientPortalController.php`
+
+### New UI file created
+- `lifelink-app/resources/views/ui/blood-matching.blade.php`
+
+### Existing UI/routes/docs files updated
+- `lifelink-app/routes/web.php`
+- `lifelink-app/resources/views/ui/index.blade.php`
+- `dev_log/README.md`
+
+### Feature summary (Issue 18)
+1. Added `blood_request_matches` table to store donor matching score, compatibility label, selection actor, notification/response timestamps, and match status lifecycle (`Suggested/Notified/Accepted/Declined/Completed`).
+2. Added `donor_notifications` table to store donor-facing notifications per blood request/match with read and response tracking.
+3. Added SQL service (`BloodMatchingSqlService`) for raw-SQL-only matching operations:
+- IT/Admin blood request list with inventory + match counters
+- compatibility-based donor suggestion query (blood group + eligibility + weekly availability)
+- donor notification dispatch and match upsert
+- match timeline retrieval
+- donor inbox, read, and accept/decline response handling
+- accepted donor lookup map for patient request view
+4. Added IT/Admin matching APIs:
+- `GET /api/blood/matching/requests`
+- `GET /api/blood/matching/requests/{bloodRequest}/suggestions`
+- `POST /api/blood/matching/requests/{bloodRequest}/notify`
+- `GET /api/blood/matching/requests/{bloodRequest}/matches`
+5. Added donor notification APIs:
+- `GET /api/donor/notifications`
+- `POST /api/donor/notifications/{notification}/read`
+- `POST /api/donor/notifications/{notification}/respond`
+6. Updated patient blood request response (`GET /api/patient/blood-requests`) to include `accepted_donors` so patient can see confirmed donor info after donor acceptance.
+7. Added modern interactive IT-worker UI page:
+- `GET /ui/blood-matching`
+- request filtering, donor suggestion cards, selective/auto notify actions, match timeline table, live API response panel.
+
+### Verification performed
+- Syntax checks passed:
+- `php -l lifelink-app/app/Services/Sql/BloodMatchingSqlService.php`
+- `php -l lifelink-app/app/Http/Controllers/Api/BloodMatchingController.php`
+- `php -l lifelink-app/app/Http/Controllers/Api/DonorNotificationController.php`
+- `php -l lifelink-app/app/Http/Controllers/Api/PatientPortalController.php`
+- `php -l lifelink-app/routes/api.php`
+- `php -l lifelink-app/routes/web.php`
+- `php artisan route:list` could not be executed in this local shell because local PHP is `8.2.12` while project dependencies require `>=8.3.0` (run inside project Docker/container PHP to verify route registration).
+
+
+
+##
+##
+##
+---
+
+## UI Update Log - Public Mode Landing Page
+
+### Scope completed
+- Implemented the first part of the UI redesign plan: `Public Mode`
+- Replaced the default Laravel welcome screen with a real public landing page for non-logged-in visitors
+
+### Files changed for this UI step
+- Updated: `lifelink-app/resources/views/welcome.blade.php`
+
+### What this file now holds
+#### `lifelink-app/resources/views/welcome.blade.php`
+This file is now the main public landing page of the project. It is the page shown when someone visits `/` without going directly into a role-specific UI page.
+
+It now contains:
+- top navigation bar
+- hero section
+- short product summary
+- major services overview
+- departments snapshot
+- blood donation call-to-action
+- footer with public links into the prototype UI
+
+### Current UI file responsibility map
+- `lifelink-app/resources/views/welcome.blade.php`
+- public home / landing page for non-logged-in visitors
+- `lifelink-app/resources/views/ui/index.blade.php`
+- internal UI directory / prototype page hub
+- `lifelink-app/resources/views/ui/auth.blade.php`
+- authentication prototype page
+- `lifelink-app/resources/views/ui/applications.blade.php`
+- job application prototype page
+- `lifelink-app/resources/views/ui/admin-users.blade.php`
+- admin account control prototype page
+- `lifelink-app/resources/views/ui/application-reviews.blade.php`
+- admin and IT application review prototype page
+- `lifelink-app/resources/views/ui/ward-setup.blade.php`
+- ward and care-unit setup prototype page
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+- bed allocation prototype page for IT/admin operations
+- `lifelink-app/resources/views/ui/doctor-dashboard.blade.php`
+- doctor workflow prototype page
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+- nurse monitoring prototype page
+- `lifelink-app/resources/views/ui/patient-portal.blade.php`
+- patient portal prototype page
+- `lifelink-app/resources/views/ui/blood-bank-schema.blade.php`
+- blood bank schema and inventory prototype page
+- `lifelink-app/resources/views/ui/donor-dashboard.blade.php`
+- donor workflow prototype page
+- `lifelink-app/resources/views/ui/blood-matching.blade.php`
+- blood matching and donor notification prototype page
+
+### Notes for next UI step
+- next major target should be the auth page redesign
+- after that, add a shared authenticated layout so role dashboards stop feeling like separate isolated pages
+
+
+
+---
+
+## UI Update Log - Authenticated Mode Foundation
+
+### Scope completed
+- Started the `Authenticated Mode` UI work
+- Redesigned the authentication page into a cleaner public-to-auth entry screen
+- Added a role-aware authenticated dashboard page
+- Added a separate advanced tools page for Admin and IT Worker diagnostics
+
+### Files changed for this UI step
+- Updated: `lifelink-app/resources/views/ui/auth.blade.php`
+- Created: `lifelink-app/resources/views/ui/dashboard.blade.php`
+- Created: `lifelink-app/resources/views/ui/dev-tools.blade.php`
+- Updated: `lifelink-app/routes/web.php`
+
+### What each file now holds
+#### `lifelink-app/resources/views/ui/auth.blade.php`
+- cleaned login/register experience
+- session summary card
+- hidden advanced bootstrap area for creating the first admin
+- redirects into authenticated dashboard after successful login/register
+
+#### `lifelink-app/resources/views/ui/dashboard.blade.php`
+- main authenticated landing page after login
+- reads current user roles from stored session data
+- shows role-aware primary destination
+- shows role-specific navigation cards
+- exposes advanced tools entry only for Admin and IT Worker sessions
+
+#### `lifelink-app/resources/views/ui/dev-tools.blade.php`
+- controlled technical verification page
+- intended for Admin and IT Worker use
+- shows stored session context
+- supports `GET /api/auth/me` verification
+- keeps raw technical inspection separate from the normal user flow
+
+#### `lifelink-app/routes/web.php`
+- now includes:
+  - `/ui/dashboard`
+  - `/ui/dev-tools`
+
+### Updated UI file responsibility map
+- `lifelink-app/resources/views/welcome.blade.php`
+  - public landing page for non-logged-in visitors
+- `lifelink-app/resources/views/ui/auth.blade.php`
+  - authentication entry page
+- `lifelink-app/resources/views/ui/dashboard.blade.php`
+  - authenticated home/dashboard page
+- `lifelink-app/resources/views/ui/dev-tools.blade.php`
+  - advanced admin/IT diagnostic page
+- `lifelink-app/resources/views/ui/index.blade.php`
+  - internal prototype page directory
+- `lifelink-app/resources/views/ui/applications.blade.php`
+  - job application page
+- `lifelink-app/resources/views/ui/admin-users.blade.php`
+  - admin account control page
+- `lifelink-app/resources/views/ui/application-reviews.blade.php`
+  - application review page
+- `lifelink-app/resources/views/ui/ward-setup.blade.php`
+  - ward and care-unit setup page
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+  - IT/admin bed allocation page
+- `lifelink-app/resources/views/ui/doctor-dashboard.blade.php`
+  - doctor workflow page
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+  - nurse workflow page
+- `lifelink-app/resources/views/ui/patient-portal.blade.php`
+  - patient workflow page
+- `lifelink-app/resources/views/ui/blood-bank-schema.blade.php`
+  - blood bank schema and inventory page
+- `lifelink-app/resources/views/ui/donor-dashboard.blade.php`
+  - donor workflow page
+- `lifelink-app/resources/views/ui/blood-matching.blade.php`
+  - blood request matching and donor notification page
+
+### Notes for next UI step
+- next likely target is a shared authenticated layout pattern across existing role pages
+- after that, existing dashboards/pages should be refit into the authenticated navigation system
+---
+
+## UI Correction Log - Auth Flow and Session Behavior
+
+### Problems reported
+1. Public registration effectively behaved like patient-only registration in the visible UI.
+2. Registration immediately redirected users into the dashboard because the returned token was being stored and reused as an active login session.
+3. Logged-in users could return to the public landing page and still see the same public login/register prompts, which made the flow confusing for session-aware use.
+4. Sensitive values, especially passwords, were being stored in browser local storage in the prototype auth flow.
+
+### How the problems were solved
+
+#### Problem 1 - registration choices were too narrow
+Updated the auth experience so it now has:
+- one shared login card for all users
+- separate registration cards for:
+  - patient
+  - blood donor
+  - job applicant
+
+Implementation behavior:
+- patient registration -> creates normal user account
+- donor registration -> creates account, then initializes donor profile through donor enroll API
+- applicant registration -> creates account, then submits initial job application through application API
+
+So login remains unified, but registration is now split by purpose.
+
+#### Problem 2 - registration auto-logged the user in
+Changed the registration flow so registration no longer becomes an active session by default.
+
+New behavior:
+- user account is created
+- donor/applicant extra setup is completed if relevant
+- temporary auth state is cleared
+- last used email is remembered
+- user is asked to log in explicitly
+- only successful login sends user to `/ui/dashboard`
+
+This makes the flow cleaner and more realistic:
+register first -> login next -> dashboard after successful login
+
+#### Problem 3 - landing page ignored active session state
+Updated the public landing page so it now checks whether a local authenticated session exists.
+
+New behavior:
+- if not logged in:
+  - landing page shows public login/register entry options
+- if logged in:
+  - landing page switches to a session-aware state
+  - login/register prompts are replaced with:
+    - go to dashboard
+    - logout
+
+This prevents the confusing situation where a logged-in user sees a public registration-first experience as if no session exists.
+
+#### Problem 4 - password stored in local storage
+This was the most important security-related prototype issue.
+
+Old behavior:
+- password values such as patient/admin password were being saved in browser local storage for convenience
+
+Why it was bad:
+- browser local storage is visible through inspect tools
+- any saved password there is exposed to the local browser environment
+- for a cleaner and safer UI flow, passwords should never be intentionally persisted this way
+
+New behavior:
+- passwords are no longer stored in local storage
+- only non-sensitive convenience data such as last used email may be remembered
+- browser storage now keeps:
+  - token
+  - user id
+  - user email
+  - roles
+- password keys were removed from the new auth flow logic
+
+#### Old code snippet that caused the issue
+This is the old auth logic from `lifelink-app/resources/views/ui/auth.blade.php` that persisted passwords into browser local storage:
+
+```js
+function persistLoginContext(responseData, submittedEmail, submittedPassword) {
+    const user = responseData?.user || {};
+    const roles = Array.isArray(user.roles) ? user.roles : [];
+
+    localStorage.setItem('USER_TOKEN', responseData.token || '');
+    localStorage.setItem('CURRENT_USER_ID', String(user.id || ''));
+    localStorage.setItem('CURRENT_USER_EMAIL', user.email || submittedEmail || '');
+    localStorage.setItem('CURRENT_USER_ROLES', JSON.stringify(roles));
+
+    if (roles.includes('Admin')) {
+        localStorage.setItem('ADMIN_TOKEN', responseData.token || '');
+        localStorage.setItem('ADMIN_USER_ID', String(user.id || ''));
+        localStorage.setItem('ADMIN_EMAIL', user.email || submittedEmail || '');
+        localStorage.setItem('ADMIN_PASSWORD', submittedPassword || '');
+    }
+}
+
+async function registerUser() {
+    const payload = {
+        email: document.getElementById('regEmail').value.trim(),
+        password: document.getElementById('regPassword').value.trim(),
+        fullName: document.getElementById('regName').value.trim()
+    };
+    const r = await call('/auth/register', 'POST', payload);
+    if (r.data && r.data.token) {
+        localStorage.setItem('USER_TOKEN', r.data.token);
+        localStorage.setItem('PATIENT_ID', String(r.data.user?.id || ''));
+        localStorage.setItem('PATIENT_EMAIL', payload.email);
+        localStorage.setItem('PATIENT_PASSWORD', payload.password);
+        localStorage.setItem('CURRENT_USER_ID', String(r.data.user?.id || ''));
+        localStorage.setItem('CURRENT_USER_EMAIL', payload.email);
+        localStorage.setItem('CURRENT_USER_ROLES', JSON.stringify(r.data.user?.roles || []));
+    }
+}
+
+function clearStorage() {
+    [
+        'ADMIN_TOKEN', 'ADMIN_USER_ID', 'ADMIN_EMAIL', 'ADMIN_PASSWORD',
+        'USER_TOKEN', 'PATIENT_ID', 'PATIENT_EMAIL', 'PATIENT_PASSWORD',
+        'CURRENT_USER_ID', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES'
+    ].forEach(k => localStorage.removeItem(k));
+}
+```
+
+Why this was the problem:
+- `ADMIN_PASSWORD` was being saved after admin creation/login
+- `PATIENT_PASSWORD` was being saved after patient registration
+- `submittedPassword` was flowing directly into browser storage
+- anyone with local browser access could inspect those values
+
+#### New code snippet after the fix
+This is the new auth logic that removed password persistence while still keeping minimal session metadata:
+
+```js
+function persistLoginContext(responseData, submittedEmail) {
+    const user = responseData?.user || {};
+    const roles = Array.isArray(user.roles) ? user.roles : [];
+
+    localStorage.setItem('USER_TOKEN', responseData.token || '');
+    localStorage.setItem('CURRENT_USER_ID', String(user.id || ''));
+    localStorage.setItem('CURRENT_USER_EMAIL', user.email || submittedEmail || '');
+    localStorage.setItem('CURRENT_USER_ROLES', JSON.stringify(roles));
+
+    if (roles.includes('Admin')) {
+        localStorage.setItem('ADMIN_TOKEN', responseData.token || '');
+        localStorage.setItem('ADMIN_USER_ID', String(user.id || ''));
+        localStorage.setItem('ADMIN_EMAIL', user.email || submittedEmail || '');
+    }
+}
+
+function rememberLastEmail(email) {
+    if (email) {
+        localStorage.setItem('LAST_USED_EMAIL', email);
+    }
+}
+
+async function registerPatient() {
+    clearMessage();
+    const name = document.getElementById('patientName').value.trim();
+    const email = document.getElementById('patientEmail').value.trim();
+    const password = document.getElementById('patientPassword').value.trim();
+
+    try {
+        await registerBase(name, email, password);
+        clearTransientSession();
+        fillLoginEmail(email);
+        showMessage('success', 'Patient account created. Please log in with your new account to continue.');
+    } catch (error) {
+        showMessage('error', error.message);
+    }
+}
+
+function clearStorage() {
+    [
+        'ADMIN_TOKEN', 'ADMIN_USER_ID', 'ADMIN_EMAIL',
+        'USER_TOKEN', 'PATIENT_ID', 'PATIENT_EMAIL',
+        'CURRENT_USER_ID', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES'
+    ].forEach(key => localStorage.removeItem(key));
+}
+```
+
+What changed in the new version:
+- the `submittedPassword` parameter was removed from `persistLoginContext()`
+- `ADMIN_PASSWORD` is no longer written
+- `PATIENT_PASSWORD` is no longer written
+- the login helper only remembers `LAST_USED_EMAIL`
+- registration now clears transient auth state and asks the user to log in properly
+
+### Files changed for these corrections
+- Updated: `lifelink-app/resources/views/ui/auth.blade.php`
+- Updated: `lifelink-app/resources/views/welcome.blade.php`
+- Updated: `lifelink-app/resources/views/ui/dashboard.blade.php`
+- Updated: `lifelink-app/resources/views/ui/dev-tools.blade.php`
+
+### Resulting flow after correction
+1. visitor opens public landing page
+2. visitor chooses one of:
+   - login
+   - register as patient
+   - register as blood donor
+   - register as job applicant
+3. after registration, system completes setup but does not keep the user logged in
+4. user logs in through the single login card
+5. system stores session token and role info
+6. user is redirected to role-aware dashboard
+7. if user returns to landing page while logged in, page now shows dashboard/logout state instead of public registration-first state
+
+---
+
+## UI Progress Log - Dedicated Auth Pages and Shared Patient Workspace
+
+### What changed
+The auth and authenticated UI flow moved one step closer to the design roadmap:
+
+1. Login, patient registration, donor registration, and applicant registration are now separate public pages.
+2. Successful login now redirects users into the correct role workspace instead of always pushing everyone through the same generic auth hub.
+3. The first shared authenticated layout was created and the patient portal was migrated into it.
+
+### Why this change was needed
+The previous public flow still had a prototype limitation:
+- all four entry buttons effectively led into the same combined auth page
+- the page had multiple cards on one screen, but it still felt like one developer tool surface
+- that was not aligned with the intended product flow where each registration path should feel intentional and context-specific
+
+This also blocked the next UI phase:
+- it was difficult to build a real authenticated product shell while login and registration still behaved like one prototype page with hash targets
+
+### New public entry flow
+Public auth entry is now split like this:
+- `/ui/login`
+- `/ui/register/patient`
+- `/ui/register/donor`
+- `/ui/register/applicant`
+
+Behavior now:
+- existing users go to the single login page
+- patient registration opens only patient-related form inputs
+- donor registration opens only donor-related form inputs
+- applicant registration opens only applicant-related form inputs
+
+### Auth redirect behavior
+Login no longer always points users to the same place.
+
+New behavior:
+- Admin -> `/ui/admin-users`
+- IT Worker -> `/ui/it-bed-allocation`
+- Doctor -> `/ui/doctor-dashboard`
+- Nurse -> `/ui/nurse-dashboard`
+- Patient -> `/ui/patient-portal`
+- Donor -> `/ui/donor-dashboard`
+- Applicant -> `/ui/applications`
+
+Registration behavior now:
+- account/profile/application setup completes
+- transient session state is cleared
+- user is redirected back to `/ui/login`
+- login page is prefilled with the recently used email
+- user then signs in and is sent to the correct role workspace
+
+### Shared authenticated layout work started
+The first reusable authenticated app shell was added.
+
+Purpose of the new shell:
+- provide one consistent top bar
+- provide one sidebar area
+- provide one page hero/header pattern
+- provide shared session-aware workspace framing
+- reduce the feeling that each role page is a disconnected prototype
+
+First page migrated into that shell:
+- patient portal
+
+So this marks the start of the authenticated layout phase, not just another isolated page redesign.
+
+### Files changed for this milestone
+- Updated: `lifelink-app/routes/web.php`
+- Updated: `lifelink-app/resources/views/welcome.blade.php`
+- Updated: `lifelink-app/resources/views/ui/auth.blade.php`
+- Updated: `lifelink-app/resources/views/ui/index.blade.php`
+- Updated: `lifelink-app/resources/views/ui/dashboard.blade.php`
+- Updated: `lifelink-app/resources/views/ui/dev-tools.blade.php`
+- Updated: `lifelink-app/resources/views/ui/doctor-dashboard.blade.php`
+- Updated: `lifelink-app/resources/views/ui/applications.blade.php`
+- Updated: `lifelink-app/resources/views/ui/patient-portal.blade.php`
+- Added: `lifelink-app/resources/views/ui/layouts/app.blade.php`
+
+### Result after this milestone
+The UI flow now looks like this:
+1. visitor lands on public home
+2. visitor chooses:
+   - login
+   - patient registration
+   - donor registration
+   - applicant registration
+3. each public path opens its own dedicated page
+4. registration completes without keeping the user logged in
+5. user signs in through `/ui/login`
+6. system detects the user role from session data
+7. user is redirected to the correct role page
+8. patient portal now renders inside a shared authenticated workspace shell
+
+### Next likely UI target
+Continue the same authenticated layout migration for:
+- donor dashboard
+- doctor dashboard
+- nurse dashboard
+- IT worker pages
+- admin utility pages
+
+### Redirect priority correction
+During donor flow testing, a donor account still landed on the patient portal after login.
+
+Cause:
+- base registration currently assigns the `Patient` role first
+- donor registration then adds the `Donor` role
+- redirect priority was checking `Patient` before `Donor`
+
+Effect:
+- accounts with both `Patient` and `Donor` were being routed to `/ui/patient-portal`
+- applicant accounts with both `Patient` and `Applicant` could have the same class of issue
+
+Fix:
+- updated role redirect priority so more specific post-registration roles win over the base patient role
+- new priority order:
+  - Admin
+  - ITWorker
+  - Doctor
+  - Nurse
+  - Donor
+  - Applicant
+  - Patient
+
+Files updated for this correction:
+- `lifelink-app/resources/views/ui/auth.blade.php`
+- `lifelink-app/resources/views/ui/dashboard.blade.php`
+- `lifelink-app/resources/views/ui/layouts/app.blade.php`
+
+### Shared authenticated layout migration continued
+The authenticated shell migration now includes a third role page:
+- doctor dashboard
+
+What changed in this step:
+- `doctor-dashboard` was refit into the shared authenticated layout
+- the old standalone prototype wrapper was removed
+- doctor actions now sit inside the same shell structure already used by:
+  - patient portal
+  - donor dashboard
+
+Doctor page behavior preserved:
+- admin token input for doctor profile setup
+- doctor token input for doctor-facing actions
+- doctor profile fetch
+- doctor patients fetch
+- doctor appointment list and cancellation
+- doctor bed request creation
+- doctor bed request listing
+
+Why this matters:
+- the shared authenticated layout is now proven across:
+  - self-service patient flow
+  - donor workflow
+  - clinical staff workflow
+- this reduces risk before moving into nurse, IT, and admin-heavy screens
+
+Files updated in this step:
+- `lifelink-app/resources/views/ui/doctor-dashboard.blade.php`
+
+Updated next likely UI target:
+- nurse dashboard
+- IT worker pages
+- admin utility pages
+
+### Applicant flow correction and admin landing update
+The applicant flow needed one more correction after testing:
+- typing `Doctor` into the applicant form created the right application record
+- but the UI language around that flow was still too close to a role-selection flow instead of a role-application flow
+
+Clarified intended behavior:
+- applying for `Doctor`, `Nurse`, or `ITWorker` should **not** send the user to that role dashboard immediately
+- after login, the applicant should land in an applicant status workspace
+- only after admin approval assigns the real role should later login redirect the user into the real staff dashboard
+
+What changed in this step:
+1. Applicant role entry on registration changed from free-text input to a dropdown.
+2. Department entry on applicant registration changed from raw numeric input to a department dropdown populated from a public departments endpoint.
+3. The old `Department ID (optional)` applicant input was removed from the visible public form.
+4. The applicant landing page was redesigned as a status-focused applicant workspace instead of a raw prototype submission page.
+5. The admin landing page was redesigned into a clearer admin control center with account-control actions and a direct path to application reviews.
+
+Applicant registration UI behavior now:
+- role is selected from:
+  - Doctor
+  - Nurse
+  - IT Worker
+- department is selected from a user-friendly dropdown
+- department field only appears when the selected role needs a department context
+
+Applicant login behavior now:
+- applicant users land on `/ui/applications`
+- that page now acts as an applicant waiting/status dashboard
+- it shows:
+  - current application status
+  - applied role
+  - applied department
+  - review note if present
+  - application history
+
+Admin flow note:
+- admin approval still remains the point where the actual role is assigned
+- so this UI now matches the backend approval design more closely
+
+Files updated in this step:
+- `lifelink-app/routes/api.php`
+- `lifelink-app/resources/views/ui/auth.blade.php`
+- `lifelink-app/resources/views/ui/applications.blade.php`
+- `lifelink-app/resources/views/ui/admin-users.blade.php`
+
+Updated next likely UI target:
+- application reviews page redesign
+- nurse dashboard migration
+- IT worker pages
+
+### Admin review workflow cleanup and applicant department rule update
+The earlier applicant approval flow was functionally correct, but it was still too operator-heavy for normal admin use.
+
+Reported friction:
+- admin had to open application reviews
+- load pending applications
+- inspect the raw API response to find the application id
+- manually copy that id into a second review form
+- then approve or reject
+
+That made the review step feel like an API testing page instead of an admin workflow.
+
+What changed in this step:
+1. The application review page was redesigned into a card-based queue.
+2. Pending applications now load as visible review cards instead of forcing admins to search inside raw JSON first.
+3. Each card now shows the applicant name, email, applied role, department, status, applied time, and existing review note.
+4. Each card includes direct actions:
+   - select
+   - approve
+   - reject
+5. The manual review form and raw API response panel were kept for debugging and fallback use.
+6. Applicant registration was tightened so only doctor applicants choose a preferred department during public registration.
+7. Nurse and IT worker applicants no longer choose department during registration; that assignment is intended to be handled later by admin review or admin-side setup.
+
+Why this change matches the schema and workflow better:
+- doctor profiles are department-bound and it is reasonable for doctor applicants to express department preference early
+- nurse and IT worker department scope can be assigned more safely by admin after review
+- this reduces unnecessary public-form complexity and keeps control with admin for staff placement
+
+Files updated in this step:
+- `lifelink-app/resources/views/ui/auth.blade.php`
+- `lifelink-app/resources/views/ui/application-reviews.blade.php`
+
+Resulting admin flow now:
+1. admin logs in
+2. admin opens `/ui/application-reviews`
+3. pending applications load as review cards
+4. admin scans visible applicants directly on the page
+5. admin selects, approves, or rejects from the card workflow
+6. raw API output still remains available below for technical verification
+
+### Shared shell migration completed for nurse and IT worker dashboards
+The nurse and IT worker role pages were still using older standalone prototype layouts even after patient, donor, doctor, applicant, and admin pages had started moving into the shared authenticated shell.
+
+What changed in this step:
+1. `nurse-dashboard` was moved into the shared authenticated app shell.
+2. The nurse page kept its existing role behavior:
+   - admin nurse-profile setup
+   - department patient monitoring
+   - admission detail loading
+   - vital-sign logging
+   - recent vitals and medical record display
+3. Nurse profile setup was made friendlier by switching department selection to a dropdown instead of only raw numeric entry.
+4. `it-bed-allocation` was rebuilt into a fuller IT operations workspace inside the shared authenticated shell.
+5. The IT page now combines two earlier prototype responsibilities:
+   - ward setup
+   - bed allocation and admission operations
+6. The IT dashboard now includes:
+   - IT department assignment
+   - care unit creation
+   - bed creation
+   - admission creation
+   - admissions queue cards
+   - available bed cards
+   - discharge and release actions
+   - reference tables for care units and beds
+
+Why this matters:
+- nurse and IT workflows now feel like part of the same product instead of isolated test pages
+- IT work is no longer split awkwardly across two disconnected pages for normal use
+- the shared authenticated shell now covers major patient, donor, doctor, nurse, admin, applicant, and IT-facing flows
+
+Files updated in this step:
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+
+### Admin-only staff setup moved back to admin dashboard
+After reviewing the flow, nurse and IT department assignment did not belong on the nurse or IT worker dashboards.
+
+Corrected workflow:
+1. applicant applies
+2. admin reviews pending application
+3. admin adds review note
+4. admin approves or rejects
+5. if approved as Nurse or IT Worker, admin completes department-linked setup from the admin dashboard
+6. only after that does the staff user work from their own operational dashboard
+
+What changed in this step:
+1. Admin dashboard was expanded to show pending applicant cards directly.
+2. Each pending card now includes:
+   - applicant identity
+   - role
+   - department if present
+   - review note area
+   - approve button
+   - reject button
+3. Admin dashboard now also includes:
+   - nurse department setup
+   - IT worker department assignment
+4. Nurse dashboard no longer presents admin-only nurse setup controls.
+5. IT worker dashboard no longer presents admin-only IT department assignment controls.
+6. Nurse and IT copy was rewritten to explain the order of work more clearly.
+
+Why this is better:
+- admin provisioning now stays on the admin side
+- nurse dashboard is now only for nurse-side patient monitoring and vital logging
+- IT dashboard is now only for IT-side ward/admission/bed operations after admin setup is complete
+
+Files updated in this step:
+- `lifelink-app/resources/views/ui/admin-users.blade.php`
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+
+### IT admission doctor context and simpler doctor setup
+After the workflow review, two more corrections were needed:
+
+1. IT workers should not be forced to memorize doctor ids when creating an admission.
+2. Doctor setup was carrying unnecessary extra fields for this project scope.
+
+What changed in this step:
+1. IT admission creation now supports an optional `admittedByDoctorId`.
+2. The IT dashboard now includes a doctor lookup/search panel so IT can load doctors from the hospital database and pick one directly into the admission form.
+3. The IT dashboard now also includes a patient lookup/search panel so patient ids can be found more easily before creating an admission.
+4. Doctor-facing setup was removed from the doctor dashboard.
+5. Admin dashboard now includes doctor department setup alongside nurse and IT setup.
+6. Doctor setup was simplified so specialization and license inputs are no longer required in the UI.
+
+Important model clarification:
+- doctor id is not a second separate human-managed id
+- the `doctors.doctor_id` value is the same as the existing `users.id` for that account
+- approving an applicant does not create a brand new identity number for the same person
+- admin setup creates the doctor profile row that reuses that same user id
+
+Files updated in this step:
+- `lifelink-app/app/Http/Controllers/Api/ItBedAllocationController.php`
+- `lifelink-app/routes/api.php`
+- `lifelink-app/resources/views/ui/admin-users.blade.php`
+- `lifelink-app/resources/views/ui/doctor-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+
+### Blood workflow decision locked before Issue 19
+Before moving into Issue 19 testing work, the blood donation workflow was reviewed and a clearer operational model was chosen.
+
+Problem identified in the earlier blood prototype:
+- donor dashboard still included donor self-entry for staff-owned tasks
+- the workflow did not clearly separate donor actions from nurse-side or blood-operations-side actions
+- not every nurse or IT worker should automatically get blood-bank responsibilities
+
+Locked decisions:
+1. add or use `Blood Bank` as a real department
+2. do not create brand new special blood-bank roles for now
+3. keep the existing roles `Nurse` and `ITWorker`
+4. use department assignment to gate blood-bank-specific features
+5. donor dashboard should remain donor-owned:
+   - weekly availability
+   - notifications
+   - accept/decline
+   - donation history view
+6. donor self-entry should be removed for:
+   - health checks
+   - actual donation logging
+7. Blood Bank nurse should own donor health checks
+8. Blood Bank IT worker should own:
+   - matching
+   - donor notifications
+   - actual donation logging
+   - request fulfillment
+   - inventory-related handling
+9. donor visit scheduling will stay in notification text for now
+10. no major schema redesign is required for this flow
+
+Why this direction was chosen:
+- it matches the current department-based staff setup model
+- it avoids giving every nurse and every IT worker hospital-wide blood-bank powers
+- it keeps blood operations specialized without introducing more role complexity
+- it fits the existing schema better:
+  - `donor_health_checks.checked_by_user_id`
+  - `blood_donations.recorded_by_user_id`
+  - `donor_profiles.is_eligible`
+
+Locked blood workflow story:
+1. donor registers
+2. donor sets availability
+3. patient creates blood request
+4. Blood Bank IT worker opens blood matching center
+5. system suggests donors
+6. Blood Bank IT worker notifies donors
+7. donor accepts or declines
+8. donor comes physically to hospital
+9. Blood Bank nurse performs actual health check
+10. backend determines donor eligibility from nurse-entered values
+11. Blood Bank IT worker records actual donation
+12. request is fulfilled or inventory is updated depending on the donation path
+
+Additional clarification locked in this planning stage:
+- casual walk-in blood donation must remain supported
+- request-linked donation must also remain supported
+- inventory increases when new blood is collected into the bank
+- inventory decreases when existing stored blood is used to fulfill a request
+
+Documentation updated for this decision:
+- `docs/FEATURE_WORKFLOWS.md`
+- `docs/END_to_END_test_plan.md`
+- `docs/DESIGN_IDEAS.md`
+- `docker/mssql/init/seed/02-reference-departments.sql`
+
+### Blood Bank implementation pass started
+The first implementation pass for the locked Blood Bank workflow is now in code.
+
+Main implementation decisions applied:
+1. donor dashboard is now donor-only
+2. Blood Bank nurse owns donor health screening
+3. Blood Bank IT worker/admin owns blood matching, donation logging, and fulfillment-side actions
+4. Blood Bank access is feature-gated by department assignment instead of introducing brand new user roles
+5. donor eligibility is evaluated from nurse-entered screening data in code
+
+What changed in this implementation pass:
+1. donor dashboard token boot was corrected so it prefers stored `USER_TOKEN` and no longer starts with the old donor-token-only failure behavior
+2. donor-side self-entry for health checks and donation logging was removed from the donor workspace
+3. nurse API and nurse dashboard now include Blood Bank donor search, donor cards with visible ids, donor health-check history, and nurse health-check logging
+4. blood matching API and Blood Matching Center UI now include staff donor search, donor health-check loading, staff donation logging, donor approval, and request fulfillment flow
+5. Blood Bank IT access is now restricted in blood-matching SQL service to admins or IT workers assigned to the `Blood Bank` department
+6. donor suggestions now exclude donors whose last donation is still inside the 56-day cooldown window
+7. after actual donation is recorded, donor profile eligibility is set back to not-eligible so the donor is not immediately recycled into matching
+
+Files changed in this implementation pass:
+- `lifelink-app/routes/api.php`
+- `lifelink-app/app/Http/Controllers/Api/NurseCareController.php`
+- `lifelink-app/app/Http/Controllers/Api/BloodMatchingController.php`
+- `lifelink-app/app/Services/Sql/BloodMatchingSqlService.php`
+- `lifelink-app/resources/views/ui/donor-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/blood-matching.blade.php`
+
+Validation status:
+- implementation was code-reviewed in-repo
+- runtime verification is still needed against the running Docker app and current MSSQL data
+
+Follow-up UI gating completion:
+- shared dashboard navigation now checks actual Blood Bank department assignment before showing Blood Matching entry points to IT workers
+- prototype directory now also hides Blood Bank pages from non-admin users who are not assigned to Blood Bank IT scope
+
+==================================================================================
+
+bassed on my new planblood bank dept you said 
+
+"make the dashboard features conditional by department assignment:
+
+if nurse belongs to Blood Bank, show donor screening tools
+if IT worker belongs to Blood Bank, show blood matching and donation tools
+if not, hide those tools"
+
+show me in code where this condition you applied 
+or maybe you didnt applied ...
+add this part in docs folder file propriet place
+
+
+and should i test the end to end plan for blood donation you made in S:\Lifelink---Modern_Hospital_Mangement_system\docs\END_to_END_test_plan.md
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Here’s the honest status.
+
+The `Nurse -> Blood Bank only` condition is applied in code.
+
+Frontend visibility is here:
+- [nurse-dashboard.blade.php#L762](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/resources/views/ui/nurse-dashboard.blade.php#L762)
+- [nurse-dashboard.blade.php#L763](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/resources/views/ui/nurse-dashboard.blade.php#L763)
+
+That code checks:
+- `state.nurse?.department === 'Blood Bank'`
+
+Backend enforcement is here:
+- [NurseCareController.php#L426](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/app/Http/Controllers/Api/NurseCareController.php#L426)
+
+That `resolveBloodBankNurse()` method blocks non-Blood-Bank nurses from donor screening endpoints.
+
+The `IT Worker -> Blood Bank only` rule is applied mostly at access/enforcement level, not fully at shared-menu hiding level.
+
+Backend enforcement is here:
+- [BloodMatchingSqlService.php#L1103](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/app/Services/Sql/BloodMatchingSqlService.php#L1103)
+
+And it is used in blood operations methods here:
+- [BloodMatchingSqlService.php#L17](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/app/Services/Sql/BloodMatchingSqlService.php#L17)
+- [BloodMatchingSqlService.php#L94](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/app/Services/Sql/BloodMatchingSqlService.php#L94)
+- [BloodMatchingSqlService.php#L417](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/app/Services/Sql/BloodMatchingSqlService.php#L417)
+- [BloodMatchingSqlService.php#L497](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/app/Services/Sql/BloodMatchingSqlService.php#L497)
+- [BloodMatchingSqlService.php#L522](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/app/Services/Sql/BloodMatchingSqlService.php#L522)
+
+What is not fully done yet:
+- the shared navigation still exposes blood matching links in places like:
+  - [dashboard.blade.php#L346](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/resources/views/ui/dashboard.blade.php#L346)
+  - [index.blade.php#L69](/s:/Lifelink---Modern_Hospital_Mangement_system/lifelink-app/resources/views/ui/index.blade.php#L69)
+
+So the real status is:
+- Blood Bank nurse visibility/enforcement: applied
+- Blood Bank IT backend restriction: applied
+- Blood Bank IT shared UI hiding everywhere: not fully applied yet
+
+I also added this clarification to the proper workflow doc:
+- [FEATURE_WORKFLOWS.md#L634](/s:/Lifelink---Modern_Hospital_Mangement_system/docs/FEATURE_WORKFLOWS.md#L634)
+
+About testing the blood end-to-end plan in [END_to_END_test_plan.md](/s:/Lifelink---Modern_Hospital_Mangement_system/docs/END_to_END_test_plan.md):
+- Yes, you should test it.
+- But I recommend doing it in stages, not assuming full pass yet.
+- Best order:
+  1. access/gating checks
+  2. donor dashboard flow
+  3. nurse Blood Bank screening flow
+  4. Blood Bank IT matching and donation flow
+  5. full request-fulfillment story
+
+If you want, next I can finish the missing shared-UI hiding for non-Blood-Bank IT users before you start the full blood E2E test.
+===================================================================================
+
+Blood Bank dashboard visibility correction pass
+
+Files changed in this pass:
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+- `docs/FEATURE_WORKFLOWS.md`
+
+What changed:
+- Blood Bank nurse mode now hides the regular patient-monitoring area after `Load profile` confirms `department === 'Blood Bank'`
+- Blood Bank IT mode now shows a visible Blood Bank operations block on the IT dashboard after `Load my departments` confirms `Blood Bank` scope
+- IT workers scoped only to `Blood Bank` now hide the regular ward/admission/bed workflow area on that page
+
+Blood Bank UX clarity and auto-bootstrap pass
+
+Files changed in this pass:
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+- `lifelink-app/resources/views/ui/blood-matching.blade.php`
+- `lifelink-app/resources/views/ui/blood-bank-schema.blade.php`
+- `docs/FEATURE_WORKFLOWS.md`
+
+What changed:
+- nurse dashboard now auto-loads the logged-in nurse profile from stored `USER_TOKEN` and uses the manual button as a reload action
+- IT dashboard now auto-loads assigned department scope from stored `USER_TOKEN` and uses the manual button as a reload action
+- Blood Matching Center now explains the staff workflow more clearly and shows explicit auth-state messaging when the stored token is missing or rejected
+- Blood Bank Schema page now more clearly reads as a setup/debug page instead of the main Blood Bank daily workflow page
+
+
+## UI Cleanup + Systemization Pass (2026-04-03)
+
+Scope completed:
+- Landing / welcome page
+- Workspace hub (`/ui/dashboard`)
+- Prototype directory (`/ui`)
+- Shared authenticated shell
+- Admin control center
+- Application reviews
+- Doctor dashboard
+- Donor dashboard
+- Patient portal
+- IT dashboard
+- Nurse dashboard
+
+### Goals implemented
+- Reduced visual noise and helper-text verbosity
+- Added section-level navigation for dense authenticated pages
+- Added reusable debug/output containment (`details` + shared debug styles)
+- Kept all existing routes, API calls, IDs, form controls, and JS workflow hooks intact
+- Preserved LifeLink brand identity (teal/blue/orange family)
+
+### New shared UI primitive
+- Added: `lifelink-app/public/css/ui-system.css`
+- Includes:
+  - sticky per-page section nav pattern (`.ll-section-nav`)
+  - section anchor rhythm (`.ll-section`)
+  - reusable debug panel wrapper (`.ll-debug`)
+  - content spacing helper for authenticated shell
+
+### Shared shell updates
+- Updated: `lifelink-app/resources/views/ui/layouts/app.blade.php`
+- Added external shared stylesheet include
+- Added optional `@section('section_nav')` slot before page content
+- Added shared content-body wrapper for spacing consistency
+
+### Page structure updates
+- Updated: `welcome.blade.php`
+  - Rebuilt into calmer, lower-density public landing with clearer entry logic
+  - Kept session-aware login/register vs dashboard/logout switch behavior
+- Updated: `ui/dashboard.blade.php`
+  - Rebuilt as cleaner workspace hub with navigation rail + role shortcuts
+  - Preserved role detection, Blood Bank IT visibility check, and redirect flow
+- Updated: `ui/index.blade.php`
+  - Reorganized into role/workflow grouped prototype directory sections
+  - Preserved Blood Bank link gating logic
+
+### Role page cleanup updates
+- Updated: `ui/admin-users.blade.php`
+  - Added section nav (overview/queue/setup/debug)
+  - Shortened long helper paragraphs
+  - Moved context/API output into contained debug details blocks
+- Updated: `ui/application-reviews.blade.php`
+  - Added section nav (queue/cards/action/debug)
+  - Reduced helper verbosity
+  - Wrapped context/API output in debug details blocks
+- Updated: `ui/doctor-dashboard.blade.php`
+  - Added section nav and clearer grouping
+  - Contained API response in debug details block
+- Updated: `ui/donor-dashboard.blade.php`
+  - Added section nav (access/availability/requests/history/debug)
+  - Contained API response in debug details block
+- Updated: `ui/patient-portal.blade.php`
+  - Added section nav (snapshot/actions/tables/records/debug)
+  - Contained API response in debug details block
+- Updated: `ui/it-bed-allocation.blade.php`
+  - Added section nav for dense operational flow sections
+  - Shortened instructional copy in key control areas
+  - Contained API response in debug details block
+- Updated: `ui/nurse-dashboard.blade.php`
+  - Added section nav (overview/monitoring/blood-bank/debug)
+  - Shortened explanatory copy in high-frequency areas
+  - Contained API response in debug details block
+
+### Notes on behavior safety
+- No route changes
+- No API endpoint changes
+- No form ID / input ID / JS function name changes for operational flows
+- No role workflow logic changes beyond presentation and containment
+
+### Donor dashboard follow-up fixes (2026-04-05)
+
+Additional updates requested and applied:
+
+1. Restored `Refresh Donations` action in donor history panel.
+- File: `lifelink-app/resources/views/ui/donor-dashboard.blade.php`
+- Note: button id `btnDonations` and existing `loadDonations()` hook were preserved.
+
+2. Made authenticated shell brand (logo + `LifeLink Workspace`) clickable to public landing.
+- File: `lifelink-app/resources/views/ui/layouts/app.blade.php`
+- Behavior: clicking top-left brand now routes to `/` (same destination as `Public Home`) without clearing session.
+
+3. Dashboard UI view locations (role pages)
+- Admin: `lifelink-app/resources/views/ui/admin-users.blade.php`
+- Application Reviews: `lifelink-app/resources/views/ui/application-reviews.blade.php`
+- Applicant: `lifelink-app/resources/views/ui/applications.blade.php`
+- Doctor: `lifelink-app/resources/views/ui/doctor-dashboard.blade.php`
+- Nurse: `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+- Patient: `lifelink-app/resources/views/ui/patient-portal.blade.php`
+- Donor: `lifelink-app/resources/views/ui/donor-dashboard.blade.php`
+- IT Operations: `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+- Workspace Hub: `lifelink-app/resources/views/ui/dashboard.blade.php`
+- Shared shell: `lifelink-app/resources/views/ui/layouts/app.blade.php`
+
+
+### IT Blood Bank mode restore + marker cleanup (2026-04-06)
+
+What was fixed:
+1. Removed stray commit-marker comment blocks from:
+- `dev_log/README.md`
+- `lifelink-app/resources/views/ui/applications.blade.php`
+- `lifelink-app/resources/views/ui/doctor-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+- `lifelink-app/resources/views/ui/patient-portal.blade.php`
+
+2. Restored/completed IT dashboard Blood Bank auto-detection behavior in:
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+
+Implementation notes:
+- IT department scope is still loaded from existing `/api/ward/it/departments` flow.
+- Sidebar now changes by detected scope mode:
+  - Regular IT scope -> regular IT nav items
+  - Blood Bank-only scope -> Blood Bank operations nav + shared items
+  - Mixed scope -> both regular + Blood Bank nav items
+- Panel switching remains donor-style and hash-aware.
+- If hash points to an unavailable panel for current scope, safe fallback opens first allowed panel.
+- Existing IDs, actions, API calls, and Blood Bank operation links were preserved.
+
+### UI stabilization pass before full redesign (2026-04-09)
+
+What changed:
+1. Removed prototype-style helper copy from the public landing page, auth pages, workspace hub, nurse dashboard, and IT dashboard.
+2. Adjusted shared layout widths and action-row wrapping so the app uses desktop space better and button groups do not crowd each other.
+3. Changed nurse dashboard first render to a safe neutral state until `/api/nurse/profile` confirms department mode, then show only the allowed sidebar panel set.
+4. Changed IT dashboard first render to a safe neutral state until `/api/ward/it/departments` confirms scope, then show only the allowed sidebar panel set.
+5. Restored Blood Bank IT launch actions inside the IT dashboard for request board, approval/fulfillment, donor search, donation logging, and schema access.
+
+Why this was needed:
+- the CSS extraction pass improved architecture, but it still left noisy prototype text, boxed-in layouts, and incorrect first-render navigation for nurse and IT users
+- Blood Bank users should never see the wrong operational mode first, even for a moment
+- this cleanup prepares the Blade project for the later redesign pass without changing backend workflows
+
+### Blood Bank operational UI restoration pass (2026-04-09)
+
+What changed:
+1. Blood Bank nurse mode in `ui/nurse-dashboard.blade.php` now visibly exposes the full donor screening workflow:
+- donor search text filter
+- request-linked donor filter
+- blood group and eligibility filters
+- donor selection cards
+- selected donor summary with eligibility and latest screening context
+- donor health-check history table
+- nurse-owned health-check form for weight, temperature, optional hemoglobin, and notes
+- visible backend eligibility result and reason after save
+2. Blood Bank IT mode in `ui/it-bed-allocation.blade.php` now presents the operational launch surface more clearly with grouped actions for:
+- Blood Matching Center
+- Request Board
+- Approval + Fulfillment
+- Donor Search
+- Donation Logging
+- Blood Bank Schema
+3. `ui/blood-matching.blade.php` now has section anchors aligned to the real workflow sections:
+- `#request-board`
+- `#approval-fulfillment`
+- `#donor-search`
+- `#donation-logging`
+- legacy hash anchors were kept in place for compatibility
+4. `ui/dashboard.blade.php` now restores Blood Bank IT workspace shortcuts for all current Blood Bank operations, not only the main center and schema page.
+5. Donor-facing UI remains locked to donor-owned actions only:
+- weekly availability
+- notifications
+- accept or decline responses
+- donation history view
+- no donor self-entry for health checks
+- no donor self-entry for actual donation logging
+
+Visibility gating now:
+1. Blood Bank nurse:
+- `/api/nurse/profile` must resolve with `department === Blood Bank`
+- only `Overview`, `Blood Bank Screening`, and `API Response` remain visible
+- regular patient monitoring stays hidden
+2. Non-Blood-Bank nurse:
+- regular monitoring remains visible
+- Blood Bank donor screening stays hidden
+3. Blood-Bank-only IT:
+- `/api/ward/it/departments` must resolve with only `Blood Bank` scope
+- Blood Bank operations launcher panel is visible
+- regular ward/admission/bed workflow stays hidden
+4. Regular IT:
+- regular IT panels remain visible
+- Blood Bank-only launchers stay hidden
+5. Mixed-scope IT:
+- both regular IT panels and Blood Bank launcher panel remain available
+
+Why this was needed:
+- backend Blood Bank operations were already implemented, but the Blade UI was still undersurfacing or ambiguously linking parts of the workflow
+- Blood Bank nurse screening ownership and Blood Bank IT fulfillment ownership had to be reflected more explicitly in the live UI
+- the workspace hub needed to expose the real Blood Bank IT entry points without opening them for non-Blood-Bank staff
+
+### Blood Bank inline workspace correction pass (2026-04-09)
+
+What changed:
+1. `ui/it-bed-allocation.blade.php` no longer uses a launcher-only Blood Bank panel. The Blood Bank Operations panel now renders inline:
+- Request Board filters and request table
+- selected-request approval and fulfillment controls
+- compatible donor suggestion cards
+- match timeline
+- donor search cards
+- donation logging form with donor ID, health check ID, blood bank ID, datetime, blood group, component type, units, linked request, and notes
+2. `ui/nurse-dashboard.blade.php` now suppresses the Blood Bank lock/placeholder note once a Blood Bank nurse profile is confirmed, so the real donor screening controls are the visible focus of the panel.
+3. `ui/donor-dashboard.blade.php` now explicitly documents that health checks and donation logging are staff-owned and keeps donor history read-only.
+4. `ui/dashboard.blade.php` now describes the IT dashboard as the place where inline Blood Bank operations appear, not only bed allocation.
+5. Shared Blood Bank workspace styling was added to:
+- `public/css/ui-dashboard.css`
+- `public/css/ui-components.css`
+
+Why the previous UI still looked wrong:
+1. The Blood Bank nurse backend workflow existed, but the panel still kept a lock-state message mounted above the operational area, which made the rendered workspace still feel like a placeholder until profile gating completed.
+2. The Blood Bank IT dashboard panel literally contained launcher anchors to `/ui/blood-matching` and related hash sections instead of the actual request, donor, approval, fulfillment, and donation controls.
+3. Routes were not the issue; `/ui/nurse-dashboard` and `/ui/it-bed-allocation` were already pointing directly at the current Blade files. The problem was the rendered branch inside those files.
+
+### Blood Bank visibility diagnosis + minimal fix pass (2026-04-09)
+
+What changed:
+1. `ui/nurse-dashboard.blade.php`
+- replaced the nested Blood Bank workspace's CSS-only hidden class with an explicit `hidden`/`display` toggle driven by one helper
+- added a visible marker above the real donor screening controls:
+  - `DEBUG: Blood Bank nurse real panel mounted`
+- added console logs for:
+  - nurse mode decision
+  - active panel selection
+  - Blood Bank section shown/hidden
+
+2. `ui/it-bed-allocation.blade.php`
+- removed the extra `is-initially-hidden` class from the main `#it-blood-bank` panel
+- removed the stale launcher-only shortcut block that still linked out to `/ui/blood-matching`
+- added a visible marker above the inline IT Blood Bank workspace:
+  - `DEBUG: Blood Bank IT inline workspace mounted`
+- added console logs for:
+  - IT scope decision
+  - active panel selection
+  - Blood Bank section shown/hidden
+
+3. `public/css/ui-components.css`
+- added a small reusable `.ll-debug-marker` style for temporary UI verification labels
+
+Why this pass was needed:
+1. the real Blood Bank nurse controls were present in HTML but nested inside a wrapper that started hidden and only became visible after profile gating logic ran
+2. the Blood Bank IT panel also depended on layered panel/scope toggles and still included stale launcher-only markup, which made the branch harder to verify visually
+3. this pass keeps the existing workflows and APIs, but makes the rendered branch much easier to confirm in the browser and console
+
+### Blood Bank nurse + IT hidden-workspace incident note (2026-04-09)
+
+Problem summary:
+1. Blood Bank nurse and Blood Bank IT users had working backend flows and matching route targets, but the real workspace UI still looked missing or locked.
+2. The issue was not route mismatch, missing Blade markup, or missing features.
+3. The actual failure was layered visibility logic in the Blade/CSS render path.
+
+Root cause:
+1. Nurse:
+- the real Blood Bank controls already existed in `resources/views/ui/nurse-dashboard.blade.php`
+- the workspace started hidden through `.is-initially-hidden` in `public/css/ui-utilities.css`
+- dashboard panels also defaulted to hidden through `public/css/ui-dashboard.css`
+- until `renderBloodBankAccess()` confirmed Blood Bank mode, the lock note stayed as the only visible branch
+2. IT:
+- the Blood Bank panel in `resources/views/ui/it-bed-allocation.blade.php` carried an extra hidden state on the container
+- visibility was split across `setActivePanel()` and `renderDepartmentMode()`
+- the panel also still included stale launcher-only shortcut markup linking to `/ui/blood-matching`, so it read like a launcher instead of the inline workspace
+
+Files/functions involved:
+1. Nurse:
+- `lifelink-app/resources/views/ui/nurse-dashboard.blade.php`
+- `lifelink-app/public/css/ui-utilities.css`
+- `lifelink-app/public/css/ui-dashboard.css`
+- `renderBloodBankAccess()`
+2. IT:
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+- `renderDepartmentMode()`
+- `setActivePanel()`
+3. Routing check:
+- `lifelink-app/routes/web.php`
+- route targets were confirmed correct and were not the blocker
+
+Solution applied:
+1. Nurse:
+- replaced the CSS-only hidden wrapper with an explicit helper-driven `hidden`/display toggle
+- updated `renderBloodBankAccess()` so the real donor workspace becomes the visible branch as soon as Blood Bank mode is confirmed
+2. IT:
+- removed the extra hidden class from the main Blood Bank panel
+- removed the stale launcher-only shortcut block
+- updated `renderDepartmentMode()` so the normal IT workspace is hidden while `#it-blood-bank` is active for Blood Bank users
+3. Verification support:
+- added temporary UI debug markers for nurse and IT Blood Bank branches
+- added console logs for active panel and department/scope mode decisions
+- added `.ll-debug-marker` styling in `lifelink-app/public/css/ui-components.css`
+
+Verification status:
+1. Code-level verification completed.
+2. `php artisan view:clear` was run successfully in `lifelink-app`.
+3. Browser verification should confirm:
+- Blood Bank nurse sees donor search, donor list, health-check form, and history table at `/ui/nurse-dashboard#nurse-blood-bank`
+- Blood Bank IT sees inline request board, approval/fulfillment, donor search, and donation logging at `/ui/it-bed-allocation#it-blood-bank`
+- mixed-scope IT users see the regular IT area disappear only while the Blood Bank panel is active
+
+Recommended retest steps:
+1. hard refresh browser after Blade changes
+2. if output still looks stale, run `php artisan optimize:clear` from `lifelink-app`
+3. re-check browser console for the temporary nurse/IT Blood Bank debug logs
+
+## Appointment Workflow Phase 1 Backend Pass (2026-04-11)
+
+Scope of this run:
+- backend/schema/API/documentation foundation for doctor recurring appointment routine + date-only patient booking + IT approval queue
+- no full Blade UI integration in this pass
+
+### New files created
+- `docker/mssql/init/schema/69_doctor_appointment_rules.sql`
+- `lifelink-app/app/Models/DoctorAppointmentRule.php`
+- `lifelink-app/app/Services/AppointmentCapacityService.php`
+- `lifelink-app/app/Http/Controllers/Api/DoctorAppointmentRuleController.php`
+- `lifelink-app/app/Http/Controllers/Api/ItAppointmentQueueController.php`
+- `lifelink-app/database/migrations/2026_04_11_000950_create_doctor_appointment_rules_table.php`
+- `lifelink-app/database/migrations/2026_04_11_000960_add_approval_columns_to_appointments_table.php`
+
+### Existing files changed
+- `lifelink-app/app/Models/Appointment.php`
+- `lifelink-app/app/Models/Doctor.php`
+- `lifelink-app/app/Models/Department.php`
+- `lifelink-app/app/Models/User.php`
+- `lifelink-app/app/Http/Controllers/Api/PatientPortalController.php`
+- `lifelink-app/app/Http/Controllers/Api/DoctorClinicalController.php`
+- `lifelink-app/routes/api.php`
+- `docs/FEATURE_WORKFLOWS.md`
+- `dev_log/README.md`
+
+### What was implemented
+1. Doctor recurring schedule rules
+- doctors can create/list/update/deactivate recurring consultation rules by weekday, time window, and daily capacity
+
+2. Date-only appointment request flow
+- patient booking now supports date-first workflow and creates `PendingApproval`
+- backend validates doctor activity, doctor-department match, weekday routine existence, and daily capacity
+
+3. IT/Admin appointment queue + actions
+- queue endpoint with filters (doctor, department, date, status)
+- approve/reject/cancel actions with role and department scope checks
+- approval re-checks daily capacity before confirming
+
+4. Doctor appointment monitoring by date
+- doctor summary endpoint returns date-wise pending, approved, totals, and remaining capacity
+
+5. Backward compatibility
+- `appointments.appointment_datetime` kept
+- old `Booked` status still accepted in reads and status filters
+- capacity logic includes `Booked` with `PendingApproval` and `Approved` to avoid overbooking legacy rows
+- no blood bank or bed/admission flow changes
+
+### Schema details
+Added table:
+- `doctor_appointment_rules` with doctor, department, weekday, start/end, daily_capacity, active flag, timestamps
+
+Extended table:
+- `appointments.appointment_date`
+- `appointments.approved_by_user_id`
+- `appointments.approved_at`
+- `appointments.rejection_reason`
+
+Data compatibility:
+- migration/sql backfills `appointment_date` from existing `appointment_datetime` where possible
+
+### Endpoint additions/updates
+New doctor endpoints:
+- `GET /api/doctor/appointment-rules`
+- `POST /api/doctor/appointment-rules`
+- `PUT /api/doctor/appointment-rules/{rule}`
+- `POST /api/doctor/appointment-rules/{rule}/deactivate`
+- `GET /api/doctor/appointments/summary`
+
+New IT/Admin endpoints:
+- `GET /api/appointments/it/queue`
+- `POST /api/appointments/it/{appointment}/approve`
+- `POST /api/appointments/it/{appointment}/reject`
+- `POST /api/appointments/it/{appointment}/cancel`
+
+Updated patient endpoints:
+- `GET /api/patient/booking-options` (now includes doctor schedule summary)
+- `POST /api/patient/appointments` (date-first request + PendingApproval flow)
+
+### Validation and verification run
+- PHP syntax checks (`php -l`) passed for all changed PHP files
+- automated `php artisan test` could not run in local shell because installed PHP is `8.2.12` while project dependencies require `>=8.3.0`
+
+## Appointment Workflow Phase 2 UI Pass (2026-04-11)
+
+Scope of this run:
+- Blade UI integration for doctor, patient, and regular non-Blood-Bank IT dashboards
+- aligned to the Phase 1 appointment workflow (recurring doctor routine, date-only patient request, IT approval queue)
+- no workflow change to bed/admission flow or blood-bank flow
+
+### Doctor UI update
+Doctor dashboard now includes:
+- consultation routine management (weekday + start/end + daily capacity)
+- routine edit and deactivate support
+- date-range summary monitor with pending, approved, total, and remaining capacity by day
+- existing appointment list/cancel behavior retained with expanded status handling
+
+### Patient UI update
+Patient portal booking now uses:
+- department
+- doctor
+- appointment date only
+
+Removed from booking:
+- datetime-local exact-time picker
+
+Added patient guidance:
+- consultation window is shown from doctor schedule summary
+- workflow note explains that exact minute selection is not required
+
+Appointments table now surfaces:
+- doctor
+- department
+- appointment date
+- consultation window
+- status
+
+### IT UI update (regular mode)
+Regular IT dashboard now includes an appointment approval queue panel with:
+- filters: doctor, department, date, status
+- actions: approve, reject, cancel
+- queue summary counters
+- capacity context columns (capacity/used/remaining, using backend response where available plus queue-derived used counts)
+
+Blood Bank IT behavior and navigation mode separation were preserved.
+
+### Verification notes for this pass
+- focused Blade/JS integration pass completed for:
+  - `resources/views/ui/doctor-dashboard.blade.php`
+  - `resources/views/ui/patient-portal.blade.php`
+  - `resources/views/ui/it-bed-allocation.blade.php`
+- no backend schema/API contract change was introduced in this phase
+
+## Performance Audit + Slow-Path Removal Pass (2026-04-12)
+
+Scope:
+- targeted speed diagnosis and fixes for login/register/dashboard boot/data loading
+- no UI redesign
+- no route changes
+- no auth contract change
+- no Blood Bank flow removal
+
+### Slowness findings (exact files)
+1. `lifelink-app/resources/views/ui/dashboard.blade.php`
+- Found intentional delay: yes
+- Cause: forced `setTimeout(..., 1200)` delayed redirect from workspace hub to role dashboard.
+
+2. `lifelink-app/resources/views/ui/patient-portal.blade.php`
+- Found intentional delay: no critical-path delay (toast timeout only)
+- Cause: sequential startup and refresh waterfall (`loadBookingOptions -> loadPortal -> loadMedicalRecords -> loadAppointments -> loadBloodRequests`) plus sequential follow-up reloads after actions.
+
+3. `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+- Found intentional delay: no
+- Cause A: duplicate/overlapping Blood Bank workspace auto-load possible via both `setActivePanel()` and `loadDepartmentsScope()` before first load flag settled.
+- Cause B: eager regular IT data boot (`loadDoctors/loadPatients/loadAppointmentQueue`) even when hidden panels were not active.
+
+4. `lifelink-app/app/Http/Controllers/Api/DoctorClinicalController.php`
+- Found intentional delay: no
+- Cause: N+1 query pattern in `patients()` (one extra active-admission query per patient row).
+
+5. `lifelink-app/app/Http/Controllers/Api/AuthController.php`
+- Found intentional delay: no
+- Cause: timing instrumentation always executing and logging per login/register in non-debug paths.
+
+### What was optimized/removed
+1. Removed intentional dashboard redirect delay.
+- File: `resources/views/ui/dashboard.blade.php`
+- Change: removed delayed redirect and switched to immediate `window.location.replace(...)` for `/ui/dashboard`.
+
+2. Parallelized patient portal refresh + post-action reloads.
+- File: `resources/views/ui/patient-portal.blade.php`
+- Change:
+  - `refreshAll()` now runs `loadBookingOptions`, `loadPortal`, `loadMedicalRecords`, `loadAppointments`, `loadBloodRequests` in parallel.
+  - After booking/cancel blood actions, dependent reloads now use `Promise.all(...)` instead of sequential awaits.
+
+3. Removed duplicate hidden auto-load chains in IT dashboard boot.
+- File: `resources/views/ui/it-bed-allocation.blade.php`
+- Change:
+  - Added in-flight lock for Blood Bank workspace bootstrap (`workspaceLoading`) to prevent duplicate concurrent refreshes.
+  - Added lazy regular-workspace loader (`maybeLoadRegularWorkspace`) with in-flight dedupe.
+  - Changed boot behavior: regular IT heavy endpoints are now loaded when regular data panels are actually opened (`it-directory`, `it-appointments`, `it-admission`) instead of always at initial scope load.
+  - Blood Bank refresh path now parallel-loads request board + donor list where safe.
+
+4. Reduced backend query overhead for doctor dashboard patient load.
+- File: `app/Http/Controllers/Api/DoctorClinicalController.php`
+- Change: replaced per-patient active-admission query inside map with one batched admission query keyed by `patient_user_id`.
+
+5. Reduced auth-path overhead outside debug mode.
+- File: `app/Http/Controllers/Api/AuthController.php`
+- Change: `markDuration()` and `logTiming()` now no-op when `app.debug` is false.
+
+### Requests parallelized
+1. Patient portal boot/refresh:
+- `GET /api/patient/booking-options`
+- `GET /api/patient/portal`
+- `GET /api/patient/medical-records`
+- `GET /api/patient/appointments`
+- `GET /api/patient/blood-requests`
+
+2. Patient post-actions:
+- after appointment create/cancel: appointments + portal snapshot reload in parallel
+- after blood request submit: blood requests + portal snapshot reload in parallel
+
+3. IT Blood Bank workspace refresh:
+- request board and donor search refresh now run in parallel within workspace refresh path.
+
+### Hidden/duplicate loads removed
+1. IT Blood Bank workspace duplicate auto-load race removed using in-flight promise lock.
+2. IT regular directory/queue eager load on initial boot removed; now lazy by active panel.
+
+### Edited files
+- `lifelink-app/resources/views/ui/dashboard.blade.php`
+- `lifelink-app/resources/views/ui/patient-portal.blade.php`
+- `lifelink-app/resources/views/ui/it-bed-allocation.blade.php`
+- `lifelink-app/app/Http/Controllers/Api/DoctorClinicalController.php`
+- `lifelink-app/app/Http/Controllers/Api/AuthController.php`
+
+### Verification in this pass
+- `php -l app/Http/Controllers/Api/AuthController.php` -> no syntax errors
+- `php -l app/Http/Controllers/Api/DoctorClinicalController.php` -> no syntax errors
+
+### Manual smoke tests (before/after checklist)
+1. Login
+- Before: workspace hub added visible wait before redirect.
+- After expected: no forced wait; redirect should happen immediately after valid session/role evaluation.
+
+2. Register flows (patient/donor/applicant)
+- Before: no intentional delay found.
+- After expected: unchanged business flow + unchanged redirect targets; no auth/route break.
+
+3. Patient dashboard boot (`/ui/patient-portal`)
+- Before: sequential startup waterfall.
+- After expected: faster first full data paint due to parallel initial loads.
+
+4. IT dashboard boot (`/ui/it-bed-allocation`)
+- Before: eager regular data loads + possible duplicate Blood Bank workspace auto-load overlap.
+- After expected: regular panel data loads on demand; Blood Bank workspace bootstrap de-duplicated.
+
+5. Doctor dashboard patient load (`/ui/doctor-dashboard`)
+- Before: patient list path included N+1 active-admission queries.
+- After expected: single batched admission query for active-admission mapping.
+
+## Regression Fix Pass - Welcome + Public Department + Sidebar (2026-04-13)
+
+### Scope
+- Fixed welcome-page nav regression and restored stronger public top-nav interaction styling.
+- Switched anatomy finder behavior to click-based selection persistence.
+- Made department directory/detail pages render in public-friendly shell mode (no patient-only framing).
+- Added public DB-backed welcome metrics endpoint and wired welcome impact cards to live load values.
+- Fixed shared sidebar first-item clipping/shape issue in shell navigation.
+
+### Changes
+1. Welcome nav/UI
+- Removed `Entry` from the welcome top nav.
+- Added top-nav `Login` button to `/ui/login`.
+- Improved public topbar brand contrast and button hover/active visibility.
+
+2. Welcome metrics (database-backed)
+- Added `GET /api/public/welcome/metrics`.
+- Source counts:
+  - patients: active `patients` rows
+  - medical staff: active `users` with `Doctor` or `Nurse` role
+  - active donors: eligible `donor_profiles` with recent available `donor_availabilities`
+- Removed uptime card from the welcome impact row.
+
+3. Anatomy finder interaction
+- Removed hover/focus-driven panel replacement.
+- Selection now updates on explicit click only (organs + support buttons).
+- Active state and `aria-pressed` are preserved on selected item.
+
+4. Public department page behavior
+- Added a public-page mode in shared shell layout to remove logged-in session framing and logout CTA.
+- Department directory/detail now use public mode and keep public browsing behavior.
+- Booking/review gating remains protected by existing patient token/role checks.
+
+5. Sidebar clipping fix
+- Increased sidebar top spacing and adjusted sidebar nav overflow behavior.
+- Removed upward transform on sidebar nav item active/hover states to prevent top-edge clipping of first item.
+
+### Note
+- Nurse blood-bank / non-blood-bank restoration was intentionally not modified in this pass.
+
+## Nurse Dashboard mode-restore patch (2026-04-13)
+- Restored old nurse behavior split in the current panel system: Blood Bank nurses now stay in donor screening workflow, non-Blood-Bank nurses stay in patient monitoring workflow.
+- Department decision is now enforced via normalized profile department in `isBloodBankNurse()`, with mode guards `canUseBloodBankWorkflow()` and `canUseRegularWorkflow()` used by panel lazy-loading and action handlers.
+- Corrected panel/sidebar behavior using existing helpers (`allowedNursePanels`, `preferredNursePanel`, `updateNurseSidebarByMode`, `setActivePanel`) so hidden mode panels do not remain accessible after profile load or mode changes.
+- Restored missing Blood Bank wiring: donor list auto-selects first donor when none is selected and immediately refreshes donor health-check history.
+- Kept newer shell/design and intentionally did not restore old debug-first UI (API response panel/debug block).
+
+## Regression Fix Pass - Department Icons + Auth Role Colors + Nurse Mode Robustness (2026-04-13)
+- Added shared anatomy icon mapping helper (`window.lifeLinkAnatomy.resolveDepartmentAsset`) in the app shell layout and integrated it into both public department pages.
+- Department directory cards now show compact anatomy icons; department detail hero now shows a compact mapped icon beside the department title.
+- Login register-entry buttons were restored to role-colored treatments:
+  - Patient register button uses patient-blue/teal accent.
+  - Donor register button uses donor-red accent.
+  - Staff/applicant register button uses slate staff accent.
+- Registration surfaces were restored with mode-specific accent backgrounds and card styling for `/ui/register/patient`, `/ui/register/donor`, and `/ui/register/applicant`.
+- Nurse department detection was hardened to normalize multiple possible profile fields and formats (`department`, `department_name`, `dept_name`, nested/object variants, case/spacing/hyphen/underscore differences), then classify Blood Bank by normalized key `bloodbank`.
+- Sidebar visibility + panel fallback now re-check allowed panels after profile mode resolution, so wrong-mode sidebar entries and content panels do not remain active.
+- Current nurse profile API source verified: `/api/nurse/profile` returns `nurse.department` (from backend `dept_name`) and `nurse.department_id`; frontend now robustly supports these and legacy variants.
+
+## Targeted UI/UX Correction Pass (2026-04-17)
+- Unified public top navigation alignment across welcome, auth, and public department pages, and added direct public `Departments` + `About` access.
+- Standardized registration form spacing and control rhythm, improved donor registration CTA contrast, and preserved role-specific patient/donor/applicant accents.
+- Rebuilt welcome top section into an image carousel hero with fading captions, moved primary action buttons below hero, kept anatomy finder, and added a new key-services section after finder.
+- Converted department detail sections (Overview/Services/Doctors/Reviews/Availability) to panel switching via sidebar navigation instead of long scroll anchors.
+- Added public About page with contributor summary, project overview, and technology stack.
+- Removed stale auth autofill behavior: no forced password presets, no automatic last-used email prefill, and dev bootstrap tools are now hidden unless explicit debug query mode.
+- Reduced sidebar first-item top gap by tightening shared sidebar/nav spacing while keeping existing hover/active styles intact.
+- Blood Bank IT workspace now behaves as feature panels (request board, approval/fulfillment, match timeline, donor suggestions/search, donation logging) instead of one long stacked flow.
+- Improved overview welcome presentation for dashboards with clearer hierarchy for name, role, department context, and secondary email/ID metadata.
+
+## Targeted UI Correction Pass (2026-04-17)
+- Fixed public department directory layout to render without dashboard sidebar framing and kept the search/filter toolbar above a responsive full-width department card grid.
+- Updated department anatomy icon mapping: Blood Bank now uses `blood-bag-color-icon.svg`, and Cardiology & Vascular Medicine now uses `human-heart-svgrepo-com.svg`; removed use of the old circulatory JPG mapping.
+- Removed Hematology & Lymphatic Care from the active public directory flow by excluding its slug in public-catalog query and deactivating it in department seed updates.
+- Upgraded welcome hero to presentation-style behavior with smoother slide transitions and alternating caption placement (right/left/right).
+- Refined welcome entry action buttons with role-aware color treatment for patient, donor, applicant, and login actions.
+- Simplified and polished Department Finder right panel by removing the extra supporting note box and improving action-button spacing/clarity.
+- Cleaned admin overview noise and aligned top summary flow with the same profile-first dashboard pattern.
+- Changed doctor sidebar label from `Dashboard` to `Overview` without touching panel IDs.
+- Replaced old welcome-info identity blocks on role dashboards with a reusable personal profile section that supports viewing and updating editable personal details.
+- Tightened sidebar top spacing centrally so the first nav item starts closer to the top of the sidebar container.
+- Standardized shared textbox/select/textarea/button spacing across doctor, nurse, IT, patient, donor, admin, and applicant feature panels via shared CSS overrides.
+
+## Tiny Dashboard Cleanup Pass (2026-04-18)
+- Nurse overview now hides non-essential cards for Blood Bank nurses and keeps only the `Workload snapshot` block visible in Overview for that mode.
+- IT Personal Profile no longer shows the regular-operations locked notice block.
+- Removed the redundant IT sidebar parent item `Blood Bank Operations`; Blood Bank access stays routed through the existing child feature links.
+- Removed the non-Blood-Bank overview mode sentence (`Regular IT mode is active for this account.`) from IT overview summary text.
+
+## Targeted Panel-State + Sidebar Fix Pass (2026-04-18)
+- Fixed public no-sidebar shell behavior for public pages so About and Department directory content render in the true page body instead of a sidebar-like column.
+- Updated welcome hero captions to a stronger mixed-hierarchy presentation style while keeping slideshow behavior and right/left/right placement.
+- Renamed patient sidebar `Snapshot` label to `Overview`.
+- Moved Personal Profile out of overview panels into dedicated sidebar items/panels for admin, applicant, doctor, nurse, IT worker, patient, and donor dashboards.
+- Corrected nurse default panel behavior to stay on `Overview` after profile/department detection unless hash navigation explicitly requests another allowed panel.
+- Corrected IT Blood Bank sidebar activation so only one sidebar item is active at a time (no parent + child double-active state).
+- Tightened shared sidebar top spacing to remove first-item top-gap while preserving hover/active visual styling.
+
+## Regression Fix Pass - Public Layout + Profile Panel Separation (2026-04-17)
+- Fixed public no-sidebar shell behavior so `/about` and `/ui/departments` render in full public-page width instead of inheriting dashboard-like column constraints.
+- Improved welcome hero caption treatment with presentation-style hierarchy (kicker + headline + supporting line), stronger readability, and preserved alternating right/left/right placement.
+- Fixed public department directory layout path so cards render in the main page content area with no sidebar-column behavior.
+- Renamed patient sidebar label from `Snapshot` to `Overview` without changing panel IDs.
+- Moved `Personal Profile` out of overview/status/access sections into a dedicated sidebar feature panel for admin, applicant, doctor, nurse, IT, patient, and donor dashboards.
+- Kept profile form styling aligned with shared `ll-profile` component styles to match other dashboard panel design language.
+
+## About Page Full-Bleed Follow-up (2026-04-18)
+- Added page-level overrides in `resources/views/ui/about.blade.php` to force full-bleed rendering (`100vw` breakout with controlled side padding), so About content spans edge-to-edge even when parent shell width constraints are present.
+
+## Regression fix pass (2026-04-18)
+- Fixed public no-sidebar shell placement so /about and /ui/departments render in the real main content area instead of the sidebar-width grid track.
+- Refined welcome hero caption treatment to presentation-style hierarchy (kicker + headline + support line) while preserving slide order and right/left/right alternation.
+- Corrected patient sidebar label from Snapshot to Overview.
+- Moved Personal Profile out of overview blocks into dedicated sidebar panels for admin, applicant, doctor, nurse, IT, patient, and donor dashboards.
+- Kept existing panel-switching logic and role/Blood Bank gating, with profile now mounted in separate feature panels.
+- Kept profile editor form styling aligned with existing shared dashboard form styles.
+
+## Blood Bank IT panel cleanup (2026-04-18)
+- Removed the repeated Blood Bank operations intro block from child feature views (Request Board, Approval + Fulfillment, Match Timeline, Donor Suggestions, Donor Search, Donation Logging) by showing it only on the main `Blood Bank Operations` sidebar item.
+- Moved the request stats block (`Requests shown`, `Accepted matches`, `Donors shown`, `Selected request`) into the `Request Board` panel only.
+- Removed the extra explanatory line from the `Donor Suggestions` panel while preserving existing donor suggestion behavior.
+
+## Tiny Blood Bank IT cleanup pass (2026-04-18)
+- Moved the request stats block (`Requests shown`, `Accepted matches`, `Donors shown`, `Selected request`) from `Request Board` into `Overview`.
+- Removed the Overview line `Blood Bank IT mode is active for this account.`
+- Added a short story-style explanation in `Request Board` describing it as the starting desk where IT staff select a request and continue into approval/fulfillment, donor suggestions/search, matching, and donation logging.
+
+## Blood Bank IT workflow consolidation pass (2026-04-18)
+- Standardized control rhythm in Blood Bank `Donor Search` and `Donation Logging` using shared form-grid/control spacing and uniform action-button sizing.
+- Integrated Blood Bank schema tools directly into IT dashboard sidebar/panel workflow (`Schema Snapshot`, `Blood Bank Setup`, `Donor Setup`, `Inventory Setup`) so day-to-day work stays inside `/ui/it-bed-allocation`.
+- Removed the external dependency button from Donation Logging (`Open Blood Bank schema`) after equivalent schema/setup actions were embedded in dashboard panels.
+
+## Blood Bank IT sidebar/workflow cleanup pass (2026-04-18)
+- Moved `Match Timeline`, `Donor Suggestions`, and `Donor Search` out of standalone Blood Bank sidebar pages and into the `Donation Logging` panel as one combined workflow area.
+- Removed `Schema Snapshot` from the Blood Bank IT sidebar while keeping schema functionality available from the Blood Bank workspace panel tabs.
+- Donation Logging now acts as the integrated donor lookup + suggestion + match timeline + donation-entry workflow without backend/API changes.
+
+## Nurse Blood Bank screening targeted fix pass (2026-04-18)
+- Removed the non-functional Blood Bank Screening intro/step block and kept only donor search/list + health-check workflow controls.
+- Fixed donor filter/load behavior so `Load donors` and filter changes reliably refresh the donor list with current query parameters.
+- Added client-side pagination for Blood Bank donor list with previous/next controls.
+- Added explicit `Use Donor` button on each donor card to set selection, auto-fill Donor ID, refresh selected donor summary, and load donor health-check history.
+- Updated selected donor summary flow under health-check entry to show donor identity + latest eligibility/screening context more clearly.
+
+## Nurse Blood Bank eligibility filter fix (2026-04-18)
+- Fixed Blood Bank Screening eligibility filtering in `GET /api/nurse/blood-bank/donors` by replacing unsafe PHP boolean casting on request input with explicit boolean normalization, so `eligible=false` now correctly maps to not-eligible donors.
+- Removed `Filter by request ID` from the Blood Bank Screening UI and deleted its frontend-only query wiring; donor search, eligibility filter, blood-group filter, selection, and health-check workflow remain unchanged.
+
+## Nurse Blood Bank eligibility filter regression fix (2026-04-18)
+- Real root cause: frontend query values (`eligible=true/false`) were URL query strings, while backend used Laravel `boolean` validation for `eligible`; this can reject string forms and return `422`, after which UI cleared donors and looked like a broken filter.
+- Backend fix (`NurseCareController@bloodBankDonors`): replaced direct `boolean`-validated eligibility handling with explicit boolean normalization for `true/false/1/0` and clear `422` only for truly invalid values.
+- Frontend fix (`nurse-dashboard.blade.php`): Eligibility dropdown now sends explicit `eligible=1` or `eligible=0`; `All donors` omits the parameter.
+- UI failure-state fix: donor list now shows a clear load-error message when request fails, and keeps the existing "No Blood Bank donors found for this filter" message only for true empty matches.
+
+## Nurse overview tiny cleanup pass (2026-04-18)
+- Simplified Nurse `Overview` to keep only the `Workload snapshot` block.
+- Applied the same Overview behavior for both nurse types: Blood Bank nurse and non-Blood-Bank nurse.
+- Kept Personal Profile, Patient Monitoring, and Blood Bank Screening in their own separate panels without backend/API workflow changes.
+
+## Nurse Blood Bank screening UI polish pass (2026-04-18)
+- Restyled selected donor info and latest screening status sections into cleaner Blood Bank-themed info cards with clearer label/value separation.
+- Aligned Blood Bank Screening filter controls (`Search donor`, `Blood group`, `Eligibility`) into one unified responsive filter toolbar.
+- Standardized Blood Bank Screening action button sizing (`Load donors`, `Refresh selected donor history`, `Use Donor`, `Save donor health check`) with consistent height and spacing.
+
+## Public nav + department card alignment fix pass (2026-04-18)
+- Public top-nav now reacts to local signed-in session state: logged-out users see `Login`, while signed-in users see `Go to Dashboard` plus `Logout` on public pages.
+- Welcome page session-aware actions now switch login CTAs to workspace-directed actions for signed-in users.
+- Department directory cards now use equal-height flex layout with bottom-pinned action rows, so all `Open Department` buttons align consistently.
+
+## Department detail targeted cleanup pass (2026-04-18)
+- Removed `Availability` from the department-detail sidebar and deleted the separate Availability panel section.
+- Doctors panel continues to auto-show all active doctors for the current department on detail load (no extra action required to see cards).
+- Merged practical availability signal into doctor cards by keeping selected-date availability summary per doctor, alongside consultation window, weekly capacity, and review summary fields.
+
+## Public nav auth-state bug fix (2026-04-18)
+- Fixed public top-nav signed-in toggle where `Login` could appear together with `Go to Dashboard` and `Logout`.
+- Root cause was shared nav link display styling overriding the browser `hidden` behavior.
+- Added a shared `[hidden] { display: none !important; }` rule so public auth-state toggles now hide/show correctly across welcome and layout-based public pages.
+
+## Admin workflow cleanup + seed data pass (2026-04-18)
+- Admin sidebar in `admin-users` was simplified to exactly 4 items: `Overview`, `Personal Profile`, `Pending Queue`, `Staff Setup`.
+- Admin Overview now loads real database-backed totals (patients, doctors, nurses, IT workers, donors, departments, applications, admissions, blood requests, inventory rows, inventory units) via admin applications API payload.
+- Pending Queue now shows DB-backed queue counters (`Loaded`, `Cards shown`, `Pending`, `Waiting for review`) and supports filters for applicant name/email search, application ID, status, and applied role.
+- Staff Setup section was kept focused on doctor/nurse/IT setup handoff from approved applicants; unrelated blocks were removed from admin workspace.
+- Prototype/dev tools were removed from the normal admin UI path (including removing Prototype Directory exposure from admin dashboard top actions and removing dev/prototype-only admin entries).
+- Added broader relational MSSQL seed coverage in `docker/mssql/init/seed/10-system-workflow-demo.sql` for end-to-end testing across identity/RBAC, hiring, staff setup, clinical/admission/bed flow, blood bank, donor lifecycle, matching/notifications, appointments, records, and department review surfaces.

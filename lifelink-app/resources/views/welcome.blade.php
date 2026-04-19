@@ -1,133 +1,758 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeLink | Modern Hospital Management</title>
+    <link rel="stylesheet" href="/css/ui-system.css">
+    <style>
+        .welcome-carousel {
+            border: 1px solid var(--ui-border);
+            border-radius: 26px;
+            overflow: hidden;
+            position: relative;
+            min-height: 420px;
+            box-shadow: var(--ui-shadow-lg);
+            background: #0f172a;
+        }
 
-        <title>Laravel</title>
+        .welcome-carousel-track {
+            position: relative;
+            min-height: 420px;
+        }
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
+        .welcome-slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
 
-        <!-- Styles -->
-        <style>
-            /* ! tailwindcss v3.2.4 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:Figtree, sans-serif;font-feature-settings:normal}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-size:100%;font-weight:inherit;line-height:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]{display:none}*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: }::-webkit-backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: }.relative{position:relative}.mx-auto{margin-left:auto;margin-right:auto}.mx-6{margin-left:1.5rem;margin-right:1.5rem}.ml-4{margin-left:1rem}.mt-16{margin-top:4rem}.mt-6{margin-top:1.5rem}.mt-4{margin-top:1rem}.-mt-px{margin-top:-1px}.mr-1{margin-right:0.25rem}.flex{display:flex}.inline-flex{display:inline-flex}.grid{display:grid}.h-16{height:4rem}.h-7{height:1.75rem}.h-6{height:1.5rem}.h-5{height:1.25rem}.min-h-screen{min-height:100vh}.w-auto{width:auto}.w-16{width:4rem}.w-7{width:1.75rem}.w-6{width:1.5rem}.w-5{width:1.25rem}.max-w-7xl{max-width:80rem}.shrink-0{flex-shrink:0}.scale-100{--tw-scale-x:1;--tw-scale-y:1;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.items-center{align-items:center}.justify-center{justify-content:center}.gap-6{gap:1.5rem}.gap-4{gap:1rem}.self-center{align-self:center}.rounded-lg{border-radius:0.5rem}.rounded-full{border-radius:9999px}.bg-gray-100{--tw-bg-opacity:1;background-color:rgb(243 244 246 / var(--tw-bg-opacity))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity))}.bg-red-50{--tw-bg-opacity:1;background-color:rgb(254 242 242 / var(--tw-bg-opacity))}.bg-dots-darker{background-image:url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.22676 0C1.91374 0 2.45351 0.539773 2.45351 1.22676C2.45351 1.91374 1.91374 2.45351 1.22676 2.45351C0.539773 2.45351 0 1.91374 0 1.22676C0 0.539773 0.539773 0 1.22676 0Z' fill='rgba(0,0,0,0.07)'/%3E%3C/svg%3E")}.from-gray-700\/50{--tw-gradient-from:rgb(55 65 81 / 0.5);--tw-gradient-to:rgb(55 65 81 / 0);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.via-transparent{--tw-gradient-to:rgb(0 0 0 / 0);--tw-gradient-stops:var(--tw-gradient-from), transparent, var(--tw-gradient-to)}.bg-center{background-position:center}.stroke-red-500{stroke:#ef4444}.stroke-gray-400{stroke:#9ca3af}.p-6{padding:1.5rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.text-center{text-align:center}.text-right{text-align:right}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.font-semibold{font-weight:600}.leading-relaxed{line-height:1.625}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99 / var(--tw-text-opacity))}.text-gray-900{--tw-text-opacity:1;color:rgb(17 24 39 / var(--tw-text-opacity))}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128 / var(--tw-text-opacity))}.underline{-webkit-text-decoration-line:underline;text-decoration-line:underline}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-gray-500\/20{--tw-shadow-color:rgb(107 114 128 / 0.2);--tw-shadow:var(--tw-shadow-colored)}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.selection\:bg-red-500 *::selection{--tw-bg-opacity:1;background-color:rgb(239 68 68 / var(--tw-bg-opacity))}.selection\:text-white *::selection{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity))}.selection\:bg-red-500::selection{--tw-bg-opacity:1;background-color:rgb(239 68 68 / var(--tw-bg-opacity))}.selection\:text-white::selection{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity))}.hover\:text-gray-900:hover{--tw-text-opacity:1;color:rgb(17 24 39 / var(--tw-text-opacity))}.hover\:text-gray-700:hover{--tw-text-opacity:1;color:rgb(55 65 81 / var(--tw-text-opacity))}.focus\:rounded-sm:focus{border-radius:0.125rem}.focus\:outline:focus{outline-style:solid}.focus\:outline-2:focus{outline-width:2px}.focus\:outline-red-500:focus{outline-color:#ef4444}.group:hover .group-hover\:stroke-gray-600{stroke:#4b5563}.z-10{z-index: 10}@media (prefers-reduced-motion: no-preference){.motion-safe\:hover\:scale-\[1\.01\]:hover{--tw-scale-x:1.01;--tw-scale-y:1.01;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}}@media (prefers-color-scheme: dark){.dark\:bg-gray-900{--tw-bg-opacity:1;background-color:rgb(17 24 39 / var(--tw-bg-opacity))}.dark\:bg-gray-800\/50{background-color:rgb(31 41 55 / 0.5)}.dark\:bg-red-800\/20{background-color:rgb(153 27 27 / 0.2)}.dark\:bg-dots-lighter{background-image:url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.22676 0C1.91374 0 2.45351 0.539773 2.45351 1.22676C2.45351 1.91374 1.91374 2.45351 1.22676 2.45351C0.539773 2.45351 0 1.91374 0 1.22676C0 0.539773 0.539773 0 1.22676 0Z' fill='rgba(255,255,255,0.07)'/%3E%3C/svg%3E")}.dark\:bg-gradient-to-bl{background-image:linear-gradient(to bottom left, var(--tw-gradient-stops))}.dark\:stroke-gray-600{stroke:#4b5563}.dark\:text-gray-400{--tw-text-opacity:1;color:rgb(156 163 175 / var(--tw-text-opacity))}.dark\:text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity))}.dark\:shadow-none{--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.dark\:ring-1{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.dark\:ring-inset{--tw-ring-inset:inset}.dark\:ring-white\/5{--tw-ring-color:rgb(255 255 255 / 0.05)}.dark\:hover\:text-white:hover{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity))}.group:hover .dark\:group-hover\:stroke-gray-400{stroke:#9ca3af}}@media (min-width: 640px){.sm\:fixed{position:fixed}.sm\:top-0{top:0px}.sm\:right-0{right:0px}.sm\:ml-0{margin-left:0px}.sm\:flex{display:flex}.sm\:items-center{align-items:center}.sm\:justify-center{justify-content:center}.sm\:justify-between{justify-content:space-between}.sm\:text-left{text-align:left}.sm\:text-right{text-align:right}}@media (min-width: 768px){.md\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}}@media (min-width: 1024px){.lg\:gap-8{gap:2rem}.lg\:p-8{padding:2rem}}
-        </style>
-    </head>
-    <body class="antialiased">
-        <div class="relative sm:flex sm:justify-center sm:items-center min-h-screen bg-dots-darker bg-center bg-gray-100 dark:bg-dots-lighter dark:bg-gray-900 selection:bg-red-500 selection:text-white">
-            @if (Route::has('login'))
-                <div class="sm:fixed sm:top-0 sm:right-0 p-6 text-right z-10">
-                    @auth
-                        <a href="{{ url('/home') }}" class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Home</a>
-                    @else
-                        <a href="{{ route('login') }}" class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Log in</a>
+        .welcome-slide.is-active {
+            opacity: 1;
+            pointer-events: auto;
+        }
 
-                        @if (Route::has('register'))
-                            <a href="{{ route('register') }}" class="ml-4 font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Register</a>
-                        @endif
-                    @endauth
-                </div>
-            @endif
+        .welcome-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            min-height: 420px;
+            filter: saturate(1.02);
+        }
 
-            <div class="max-w-7xl mx-auto p-6 lg:p-8">
-                <div class="flex justify-center">
-                    <svg viewBox="0 0 62 65" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-16 w-auto bg-gray-100 dark:bg-gray-900">
-                        <path d="M61.8548 14.6253C61.8778 14.7102 61.8895 14.7978 61.8897 14.8858V28.5615C61.8898 28.737 61.8434 28.9095 61.7554 29.0614C61.6675 29.2132 61.5409 29.3392 61.3887 29.4265L49.9104 36.0351V49.1337C49.9104 49.4902 49.7209 49.8192 49.4118 49.9987L25.4519 63.7916C25.3971 63.8227 25.3372 63.8427 25.2774 63.8639C25.255 63.8714 25.2338 63.8851 25.2101 63.8913C25.0426 63.9354 24.8666 63.9354 24.6991 63.8913C24.6716 63.8838 24.6467 63.8689 24.6205 63.8589C24.5657 63.8389 24.5084 63.8215 24.456 63.7916L0.501061 49.9987C0.348882 49.9113 0.222437 49.7853 0.134469 49.6334C0.0465019 49.4816 0.000120578 49.3092 0 49.1337L0 8.10652C0 8.01678 0.0124642 7.92953 0.0348998 7.84477C0.0423783 7.8161 0.0598282 7.78993 0.0697995 7.76126C0.0884958 7.70891 0.105946 7.65531 0.133367 7.6067C0.152063 7.5743 0.179485 7.54812 0.20192 7.51821C0.230588 7.47832 0.256763 7.43719 0.290416 7.40229C0.319084 7.37362 0.356476 7.35243 0.388883 7.32751C0.425029 7.29759 0.457436 7.26518 0.498568 7.2415L12.4779 0.345059C12.6296 0.257786 12.8015 0.211853 12.9765 0.211853C13.1515 0.211853 13.3234 0.257786 13.475 0.345059L25.4531 7.2415H25.4556C25.4955 7.26643 25.5292 7.29759 25.5653 7.32626C25.5977 7.35119 25.6339 7.37362 25.6625 7.40104C25.6974 7.43719 25.7224 7.47832 25.7523 7.51821C25.7735 7.54812 25.8021 7.5743 25.8196 7.6067C25.8483 7.65656 25.8645 7.70891 25.8844 7.76126C25.8944 7.78993 25.9118 7.8161 25.9193 7.84602C25.9423 7.93096 25.954 8.01853 25.9542 8.10652V33.7317L35.9355 27.9844V14.8846C35.9355 14.7973 35.948 14.7088 35.9704 14.6253C35.9792 14.5954 35.9954 14.5692 36.0053 14.5405C36.0253 14.4882 36.0427 14.4346 36.0702 14.386C36.0888 14.3536 36.1163 14.3274 36.1375 14.2975C36.1674 14.2576 36.1923 14.2165 36.2272 14.1816C36.2559 14.1529 36.292 14.1317 36.3244 14.1068C36.3618 14.0769 36.3942 14.0445 36.4341 14.0208L48.4147 7.12434C48.5663 7.03694 48.7383 6.99094 48.9133 6.99094C49.0883 6.99094 49.2602 7.03694 49.4118 7.12434L61.3899 14.0208C61.4323 14.0457 61.4647 14.0769 61.5021 14.1055C61.5333 14.1305 61.5694 14.1529 61.5981 14.1803C61.633 14.2165 61.6579 14.2576 61.6878 14.2975C61.7103 14.3274 61.7377 14.3536 61.7551 14.386C61.7838 14.4346 61.8 14.4882 61.8199 14.5405C61.8312 14.5692 61.8474 14.5954 61.8548 14.6253ZM59.893 27.9844V16.6121L55.7013 19.0252L49.9104 22.3593V33.7317L59.8942 27.9844H59.893ZM47.9149 48.5566V37.1768L42.2187 40.4299L25.953 49.7133V61.2003L47.9149 48.5566ZM1.99677 9.83281V48.5566L23.9562 61.199V49.7145L12.4841 43.2219L12.4804 43.2194L12.4754 43.2169C12.4368 43.1945 12.4044 43.1621 12.3682 43.1347C12.3371 43.1097 12.3009 43.0898 12.2735 43.0624L12.271 43.0586C12.2386 43.0275 12.2162 42.9888 12.1887 42.9539C12.1638 42.9203 12.1339 42.8916 12.114 42.8567L12.1127 42.853C12.0903 42.8156 12.0766 42.7707 12.0604 42.7283C12.0442 42.6909 12.023 42.656 12.013 42.6161C12.0005 42.5688 11.998 42.5177 11.9931 42.4691C11.9881 42.4317 11.9781 42.3943 11.9781 42.3569V15.5801L6.18848 12.2446L1.99677 9.83281ZM12.9777 2.36177L2.99764 8.10652L12.9752 13.8513L22.9541 8.10527L12.9752 2.36177H12.9777ZM18.1678 38.2138L23.9574 34.8809V9.83281L19.7657 12.2459L13.9749 15.5801V40.6281L18.1678 38.2138ZM48.9133 9.14105L38.9344 14.8858L48.9133 20.6305L58.8909 14.8846L48.9133 9.14105ZM47.9149 22.3593L42.124 19.0252L37.9323 16.6121V27.9844L43.7219 31.3174L47.9149 33.7317V22.3593ZM24.9533 47.987L39.59 39.631L46.9065 35.4555L36.9352 29.7145L25.4544 36.3242L14.9907 42.3482L24.9533 47.987Z" fill="#FF2D20"/>
-                    </svg>
-                </div>
+        .welcome-slide::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.18), rgba(15, 23, 42, 0.58));
+        }
 
-                <div class="mt-16">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                        <a href="https://laravel.com/docs" class="scale-100 p-6 bg-white dark:bg-gray-800/50 dark:bg-gradient-to-bl from-gray-700/50 via-transparent dark:ring-1 dark:ring-inset dark:ring-white/5 rounded-lg shadow-2xl shadow-gray-500/20 dark:shadow-none flex motion-safe:hover:scale-[1.01] transition-all duration-250 focus:outline focus:outline-2 focus:outline-red-500">
-                            <div>
-                                <div class="h-16 w-16 bg-red-50 dark:bg-red-800/20 flex items-center justify-center rounded-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="w-7 h-7 stroke-red-500">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-                                    </svg>
-                                </div>
+        .welcome-caption {
+            position: absolute;
+            top: 50%;
+            max-width: min(440px, calc(100% - 52px));
+            z-index: 2;
+            color: #fff;
+            border-radius: 22px;
+            padding: 18px 20px 18px 24px;
+            background:
+                radial-gradient(circle at top right, rgba(125, 211, 252, 0.26), transparent 14rem),
+                linear-gradient(145deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.44));
+            backdrop-filter: blur(9px);
+            opacity: 0;
+            transform: translateY(-50%) translateX(0);
+            transition: opacity 0.45s ease, transform 0.45s ease;
+        }
 
-                                <h2 class="mt-6 text-xl font-semibold text-gray-900 dark:text-white">Documentation</h2>
+        .welcome-caption::before {
+            content: "";
+            position: absolute;
+            left: 10px;
+            top: 14px;
+            bottom: 14px;
+            width: 3px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, rgba(125, 211, 252, 0.95), rgba(45, 212, 191, 0.9));
+        }
 
-                                <p class="mt-4 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                                    Laravel has wonderful documentation covering every aspect of the framework. Whether you are a newcomer or have prior experience with Laravel, we recommend reading our documentation from beginning to end.
-                                </p>
-                            </div>
+        .welcome-caption__kicker {
+            display: block;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            font-weight: 800;
+            color: rgba(224, 242, 254, 0.94);
+        }
 
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="self-center shrink-0 stroke-red-500 w-6 h-6 mx-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />
-                            </svg>
-                        </a>
+        .welcome-caption__headline {
+            margin: 6px 0 0;
+            font-family: "Sora", "Trebuchet MS", sans-serif;
+            font-size: clamp(1.15rem, 2vw, 1.62rem);
+            line-height: 1.22;
+            color: #f8fafc;
+        }
 
-                        <a href="https://laracasts.com" class="scale-100 p-6 bg-white dark:bg-gray-800/50 dark:bg-gradient-to-bl from-gray-700/50 via-transparent dark:ring-1 dark:ring-inset dark:ring-white/5 rounded-lg shadow-2xl shadow-gray-500/20 dark:shadow-none flex motion-safe:hover:scale-[1.01] transition-all duration-250 focus:outline focus:outline-2 focus:outline-red-500">
-                            <div>
-                                <div class="h-16 w-16 bg-red-50 dark:bg-red-800/20 flex items-center justify-center rounded-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="w-7 h-7 stroke-red-500">
-                                        <path stroke-linecap="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
-                                    </svg>
-                                </div>
+        .welcome-caption__detail {
+            margin: 8px 0 0;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: rgba(226, 232, 240, 0.92);
+        }
 
-                                <h2 class="mt-6 text-xl font-semibold text-gray-900 dark:text-white">Laracasts</h2>
+        .welcome-caption.is-right {
+            right: 26px;
+            left: auto;
+            text-align: left;
+        }
 
-                                <p class="mt-4 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                                    Laracasts offers thousands of video tutorials on Laravel, PHP, and JavaScript development. Check them out, see for yourself, and massively level up your development skills in the process.
-                                </p>
-                            </div>
+        .welcome-caption.is-left {
+            left: 26px;
+            right: auto;
+            text-align: left;
+        }
 
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="self-center shrink-0 stroke-red-500 w-6 h-6 mx-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />
-                            </svg>
-                        </a>
+        .welcome-caption.is-active {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
-                        <a href="https://laravel-news.com" class="scale-100 p-6 bg-white dark:bg-gray-800/50 dark:bg-gradient-to-bl from-gray-700/50 via-transparent dark:ring-1 dark:ring-inset dark:ring-white/5 rounded-lg shadow-2xl shadow-gray-500/20 dark:shadow-none flex motion-safe:hover:scale-[1.01] transition-all duration-250 focus:outline focus:outline-2 focus:outline-red-500">
-                            <div>
-                                <div class="h-16 w-16 bg-red-50 dark:bg-red-800/20 flex items-center justify-center rounded-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="w-7 h-7 stroke-red-500">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" />
-                                    </svg>
-                                </div>
+        .welcome-actions-card,
+        .welcome-services {
+            border: 1px solid var(--ui-border);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: var(--ui-shadow-md);
+            padding: 18px;
+        }
 
-                                <h2 class="mt-6 text-xl font-semibold text-gray-900 dark:text-white">Laravel News</h2>
+        .welcome-actions-card h2,
+        .welcome-services h2 {
+            margin: 0;
+        }
 
-                                <p class="mt-4 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                                    Laravel News is a community driven portal and newsletter aggregating all of the latest and most important news in the Laravel ecosystem, including new package releases and tutorials.
-                                </p>
-                            </div>
+        .welcome-actions-card p {
+            margin: 8px 0 14px;
+            color: var(--ui-text-muted);
+        }
 
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="self-center shrink-0 stroke-red-500 w-6 h-6 mx-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />
-                            </svg>
-                        </a>
+        .welcome-actions-card .hero-actions {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
 
-                        <div class="scale-100 p-6 bg-white dark:bg-gray-800/50 dark:bg-gradient-to-bl from-gray-700/50 via-transparent dark:ring-1 dark:ring-inset dark:ring-white/5 rounded-lg shadow-2xl shadow-gray-500/20 dark:shadow-none flex motion-safe:hover:scale-[1.01] transition-all duration-250 focus:outline focus:outline-2 focus:outline-red-500">
-                            <div>
-                                <div class="h-16 w-16 bg-red-50 dark:bg-red-800/20 flex items-center justify-center rounded-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="w-7 h-7 stroke-red-500">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.115 5.19l.319 1.913A6 6 0 008.11 10.36L9.75 12l-.387.775c-.217.433-.132.956.21 1.298l1.348 1.348c.21.21.329.497.329.795v1.089c0 .426.24.815.622 1.006l.153.076c.433.217.956.132 1.298-.21l.723-.723a8.7 8.7 0 002.288-4.042 1.087 1.087 0 00-.358-1.099l-1.33-1.108c-.251-.21-.582-.299-.905-.245l-1.17.195a1.125 1.125 0 01-.98-.314l-.295-.295a1.125 1.125 0 010-1.591l.13-.132a1.125 1.125 0 011.3-.21l.603.302a.809.809 0 001.086-1.086L14.25 7.5l1.256-.837a4.5 4.5 0 001.528-1.732l.146-.292M6.115 5.19A9 9 0 1017.18 4.64M6.115 5.19A8.965 8.965 0 0112 3c1.929 0 3.716.607 5.18 1.64" />
-                                    </svg>
-                                </div>
+        .welcome-actions-card .button {
+            min-height: 46px;
+            width: 100%;
+            text-align: center;
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
 
-                                <h2 class="mt-6 text-xl font-semibold text-gray-900 dark:text-white">Vibrant Ecosystem</h2>
+        .welcome-actions-card .button.welcome-role-patient {
+            background: linear-gradient(135deg, #0284c7, #0f766e);
+            color: #fff;
+            border-color: transparent;
+        }
 
-                                <p class="mt-4 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                                    Laravel's robust library of first-party tools and libraries, such as <a href="https://forge.laravel.com" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Forge</a>, <a href="https://vapor.laravel.com" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Vapor</a>, <a href="https://nova.laravel.com" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Nova</a>, and <a href="https://envoyer.io" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Envoyer</a> help you take your projects to the next level. Pair them with powerful open source libraries like <a href="https://laravel.com/docs/billing" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Cashier</a>, <a href="https://laravel.com/docs/dusk" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Dusk</a>, <a href="https://laravel.com/docs/broadcasting" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Echo</a>, <a href="https://laravel.com/docs/horizon" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Horizon</a>, <a href="https://laravel.com/docs/sanctum" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Sanctum</a>, <a href="https://laravel.com/docs/telescope" class="underline hover:text-gray-700 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Telescope</a>, and more.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        .welcome-actions-card .button.welcome-role-donor {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: #fff;
+            border-color: transparent;
+        }
 
-                <div class="flex justify-center mt-16 px-0 sm:items-center sm:justify-between">
-                    <div class="text-center text-sm sm:text-left">
-                        &nbsp;
-                    </div>
+        .welcome-actions-card .button.welcome-role-applicant {
+            background: linear-gradient(135deg, #475569, #334155);
+            color: #fff;
+            border-color: transparent;
+        }
 
-                    <div class="text-center text-sm text-gray-500 dark:text-gray-400 sm:text-right sm:ml-0">
-                        Laravel v{{ Illuminate\Foundation\Application::VERSION }} (PHP v{{ PHP_VERSION }})
-                    </div>
+        .welcome-actions-card .button.welcome-role-login {
+            background: linear-gradient(135deg, #0369a1, #0d9488);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .welcome-services-grid {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .finder-panel .hero-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .finder-panel .hero-actions .button {
+            width: 100%;
+            min-height: 44px;
+            text-align: center;
+        }
+
+        .finder-panel {
+            background:
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 16rem),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 248, 252, 0.94));
+        }
+
+        .welcome-service {
+            border: 1px solid var(--ui-border);
+            border-radius: 14px;
+            background: rgba(248, 250, 252, 0.92);
+            padding: 12px;
+        }
+
+        .welcome-service h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .welcome-service p {
+            margin: 6px 0 0;
+            color: var(--ui-text-muted);
+            line-height: 1.55;
+        }
+
+        @media (max-width: 980px) {
+            .welcome-actions-card .hero-actions,
+            .welcome-services-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 700px) {
+            .welcome-carousel,
+            .welcome-carousel-track,
+            .welcome-slide img {
+                min-height: 320px;
+            }
+
+            .welcome-caption {
+                max-width: calc(100% - 28px);
+                left: 14px;
+                right: 14px;
+                top: auto;
+                bottom: 14px;
+                transform: translateY(0);
+            }
+
+            .welcome-actions-card .hero-actions,
+            .welcome-services-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="welcome-page">
+    <header class="topbar topbar--public">
+        <div class="shell topbar-inner">
+            <div class="brand">
+                <div class="brand-mark">LL</div>
+                <div class="brand-copy">
+                    <strong>LifeLink</strong>
                 </div>
             </div>
+
+            <nav class="topnav">
+                <a href="/ui/departments">Departments</a>
+                <a href="#find-department">Department Finder</a>
+                <a href="/about">About</a>
+                <a id="welcomeNavWorkspaceAction" class="cta" href="/ui/dashboard" hidden>Go to Dashboard</a>
+                <a id="welcomeNavLogoutAction" href="#" hidden>Logout</a>
+                <a id="welcomeNavLoginAction" class="cta" href="/ui/login">Login</a>
+            </nav>
         </div>
-    </body>
+    </header>
+
+    <div class="shell">
+        <main class="welcome-main">
+            <section class="welcome-carousel" id="overview" aria-label="LifeLink highlights">
+                <div class="welcome-carousel-track" id="welcomeCarouselTrack">
+                    <article class="welcome-slide is-active" data-kicker="LifeLink Public Access" data-headline="Connected care begins with faster, clearer public access." data-detail="From discovery to login, one guided path keeps decisions simple.">
+                        <img src="/assets/welcome_pg/welcome1.jpg" alt="Modern hospital care team.">
+                    </article>
+                    <article class="welcome-slide" data-kicker="One Connected Journey" data-headline="Department discovery, booking, and role dashboards stay in one flow." data-detail="Public browsing and role workspaces stay aligned instead of fragmented across tools.">
+                        <img src="/assets/welcome_pg/welcome2.jpg" alt="Hospital operations and patient care.">
+                    </article>
+                    <article class="welcome-slide" data-kicker="Blood Bank Coordination" data-headline="Blood Bank coordination stays linked across patient, nurse, and IT workflows." data-detail="Requests, screening, approval, and donation logging remain synchronized in one lifecycle.">
+                        <img src="/assets/welcome_pg/welcome3.jpg" alt="Healthcare technology and support systems.">
+                    </article>
+                </div>
+                <div id="welcomeCaption" class="welcome-caption is-active is-right">
+                    <span class="welcome-caption__kicker">LifeLink Public Access</span>
+                    <p class="welcome-caption__headline">Connected care begins with faster, clearer public access.</p>
+                    <p class="welcome-caption__detail">From discovery to login, one guided path keeps decisions simple.</p>
+                </div>
+            </section>
+
+            <section class="welcome-actions-card" id="entry">
+                <h2>Start your LifeLink access</h2>
+                <p>Choose your path to create an account or continue into your workspace.</p>
+                <div class="hero-actions">
+                    <a class="button welcome-role-patient" href="/ui/register/patient">Register as Patient</a>
+                    <a class="button welcome-role-donor" href="/ui/register/donor">Register as Donor</a>
+                    <a class="button welcome-role-applicant" href="/ui/register/applicant">Join Our Team</a>
+                    <a id="welcomeEntryPrimaryAction" class="button welcome-role-login" href="/ui/login">Login</a>
+                </div>
+            </section>
+
+            <section class="finder-section" id="find-department" aria-labelledby="finder-title">
+                <div class="finder-header">
+                    <span class="badge">Department Finder</span>
+                    <h2 id="finder-title">Find the right department</h2>
+                    <p>Use the anatomy guide to surface the most relevant department path before you continue into LifeLink.</p>
+                </div>
+
+                <div class="finder-shell">
+                    <article class="anatomy-card">
+                        <div class="anatomy-stage">
+                            <div class="anatomy-figure">
+                                <img src="/assets/anatomy/51152.jpg" alt="Human anatomy illustration with interactive body regions for department guidance.">
+                                <button class="finder-hotspot" type="button" data-region="eyes" style="--top: 19.4%; --left: 22.9%; --width: 9.8%; --height: 4.9%;" aria-label="Eyes" aria-pressed="false" aria-controls="finder-panel">
+                                    <span class="sr-only">Eyes</span>
+                                </button>
+                                <button class="finder-hotspot is-active" type="button" data-region="brain" style="--top: 15.9%; --left: 22.9%; --width: 10.6%; --height: 6.4%;" aria-label="Brain" aria-pressed="true" aria-controls="finder-panel">
+                                    <span class="sr-only">Brain</span>
+                                </button>
+                                <button class="finder-hotspot" type="button" data-region="left-lung" style="--top: 31.2%; --left: 19.2%; --width: 9.4%; --height: 11.8%;" aria-label="Left lung" aria-pressed="false" aria-controls="finder-panel">
+                                    <span class="sr-only">Left lung</span>
+                                </button>
+                                <button class="finder-hotspot" type="button" data-region="right-lung" style="--top: 31.2%; --left: 27.1%; --width: 9.4%; --height: 11.8%;" aria-label="Right lung" aria-pressed="false" aria-controls="finder-panel">
+                                    <span class="sr-only">Right lung</span>
+                                </button>
+                                <button class="finder-hotspot" type="button" data-region="heart" style="--top: 34.8%; --left: 23.2%; --width: 6.3%; --height: 7.2%;" aria-label="Heart" aria-pressed="false" aria-controls="finder-panel">
+                                    <span class="sr-only">Heart</span>
+                                </button>
+                                <button class="finder-hotspot" type="button" data-region="liver" style="--top: 42.6%; --left: 19.2%; --width: 12.6%; --height: 8.2%;" aria-label="Liver" aria-pressed="false" aria-controls="finder-panel">
+                                    <span class="sr-only">Liver</span>
+                                </button>
+                                <button class="finder-hotspot" type="button" data-region="stomach" style="--top: 39.6%; --left: 26.2%; --width: 7.9%; --height: 7.2%;" aria-label="Stomach" aria-pressed="false" aria-controls="finder-panel">
+                                    <span class="sr-only">Stomach</span>
+                                </button>
+                                <button class="finder-hotspot" type="button" data-region="left-kidney" style="--top: 45.8%; --left: 21.9%; --width: 3.6%; --height: 4.3%;" aria-label="Left kidney" aria-pressed="false" aria-controls="finder-panel">
+                                    <span class="sr-only">Left kidney</span>
+                                </button>
+                                <button class="finder-hotspot" type="button" data-region="right-kidney" style="--top: 45.1%; --left: 25.7%; --width: 4.1%; --height: 4.8%;" aria-label="Right kidney" aria-pressed="false" aria-controls="finder-panel">
+                                    <span class="sr-only">Right kidney</span>
+                                </button>
+                                <button class="finder-hotspot" type="button" data-region="intestines" style="--top: 50.9%; --left: 23.1%; --width: 11.1%; --height: 6.8%;" aria-label="Intestines" aria-pressed="false" aria-controls="finder-panel">
+                                    <span class="sr-only">Intestines</span>
+                                </button>
+                                <button class="finder-hotspot" type="button" data-region="bladder" style="--top: 56.6%; --left: 23.1%; --width: 5.3%; --height: 3.7%;" aria-label="Bladder" aria-pressed="false" aria-controls="finder-panel">
+                                    <span class="sr-only">Bladder</span>
+                                </button>
+                                <button class="finder-hotspot" type="button" data-region="hands-arms" style="--top: 45.2%; --left: 35.8%; --width: 7.2%; --height: 22.8%;" aria-label="Hands and arms" aria-pressed="false" aria-controls="finder-panel">
+                                    <span class="sr-only">Hands and arms</span>
+                                </button>
+                                <button class="finder-hotspot" type="button" data-region="legs" style="--top: 80.8%; --left: 23.1%; --width: 19.6%; --height: 28.5%;" aria-label="Legs" aria-pressed="false" aria-controls="finder-panel">
+                                    <span class="sr-only">Legs</span>
+                                </button>
+                                <button class="finder-hotspot" type="button" data-region="bones-joints" style="--top: 45.1%; --left: 9.6%; --width: 6.9%; --height: 21.6%;" aria-label="Bones and joints" aria-pressed="false" aria-controls="finder-panel">
+                                    <span class="sr-only">Bones and joints</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="finder-support">
+                            <span class="finder-support-copy">Need a non-organ path?</span>
+                            <button class="finder-support-button" type="button" data-region="child-care" aria-pressed="false" aria-controls="finder-panel">
+                                Child care
+                            </button>
+                            <button class="finder-support-button" type="button" data-region="blood-donation" aria-pressed="false" aria-controls="finder-panel">
+                                Blood and donation
+                            </button>
+                        </div>
+                    </article>
+
+                    <aside id="finder-panel" class="finder-panel" aria-live="polite">
+                        <div class="finder-panel-top">
+                            <span class="finder-kicker">Recommended match</span>
+                            <h3 id="finder-region-title">Brain</h3>
+                            <p id="finder-region-description">Neurology is the best fit for symptoms centered around the brain, nerves, memory, balance, or severe headaches.</p>
+                        </div>
+
+                        <div class="finder-departments">
+                            <strong>Related departments</strong>
+                            <div id="finder-region-tags" class="finder-tags"></div>
+                        </div>
+
+                        <div class="hero-actions">
+                            <a id="finder-department-link" class="button primary" href="/ui/departments?from=welcome">View Department</a>
+                            <a class="button" href="/ui/departments?from=welcome">Browse All Departments</a>
+                            <a id="welcomeFinderPrimaryAction" class="button" href="/ui/login">Continue to Login</a>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="welcome-services" id="services">
+                <h2>What you can do on this platform</h2>
+                <div class="welcome-services-grid">
+                    <article class="welcome-service">
+                        <h3>Public Department Discovery</h3>
+                        <p>Browse departments, doctor profiles, ratings, and date-based availability before login.</p>
+                    </article>
+                    <article class="welcome-service">
+                        <h3>Patient Care Flow</h3>
+                        <p>Book appointments, view medical records, and submit blood requests from one patient portal.</p>
+                    </article>
+                    <article class="welcome-service">
+                        <h3>Clinical Operations</h3>
+                        <p>Doctor, nurse, and IT dashboards coordinate admissions, monitoring, and care transitions.</p>
+                    </article>
+                    <article class="welcome-service">
+                        <h3>Blood Bank Coordination</h3>
+                        <p>Donor response, nurse screening, and IT approval and fulfillment are linked end to end.</p>
+                    </article>
+                    <article class="welcome-service">
+                        <h3>Admin Governance</h3>
+                        <p>Manage applicant reviews, account status controls, and staff setup from admin workspace.</p>
+                    </article>
+                    <article class="welcome-service">
+                        <h3>Role-aware Routing</h3>
+                        <p>Users land on their role overview panel with consistent UI and focused task access.</p>
+                    </article>
+                </div>
+            </section>
+
+            <section class="welcome-impact" aria-label="LifeLink highlights">
+                <article class="welcome-impact__item">
+                    <strong id="welcomeMetricPatients">--</strong>
+                    <span>Patients Served</span>
+                </article>
+                <article class="welcome-impact__item">
+                    <strong id="welcomeMetricStaff">--</strong>
+                    <span>Medical Staff</span>
+                </article>
+                <article class="welcome-impact__item">
+                    <strong id="welcomeMetricDonors">--</strong>
+                    <span>Active Donors</span>
+                </article>
+            </section>
+
+            <footer class="welcome-footer">
+                <strong>LifeLink</strong>
+                <p>&copy; 2026 LifeLink Hospital Management System. All rights reserved.</p>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+    const welcomeSlides = Array.from(document.querySelectorAll('.welcome-slide'));
+    const welcomeCaption = document.getElementById('welcomeCaption');
+    let currentWelcomeSlide = 0;
+    let welcomeTimer = null;
+
+    function setWelcomeSlide(index) {
+        if (!welcomeSlides.length || !welcomeCaption) return;
+        const safeIndex = ((index % welcomeSlides.length) + welcomeSlides.length) % welcomeSlides.length;
+        currentWelcomeSlide = safeIndex;
+
+        welcomeSlides.forEach((slide, slideIndex) => {
+            const active = slideIndex === safeIndex;
+            slide.classList.toggle('is-active', active);
+        });
+
+        welcomeCaption.classList.remove('is-active');
+        window.setTimeout(() => {
+            const slide = welcomeSlides[safeIndex];
+            const kicker = slide.dataset.kicker || 'LifeLink';
+            const headline = slide.dataset.headline || slide.dataset.caption || '';
+            const detail = slide.dataset.detail || '';
+            welcomeCaption.innerHTML = `
+                <span class="welcome-caption__kicker">${kicker}</span>
+                <p class="welcome-caption__headline">${headline}</p>
+                <p class="welcome-caption__detail">${detail}</p>
+            `;
+            welcomeCaption.classList.toggle('is-right', safeIndex % 2 === 0);
+            welcomeCaption.classList.toggle('is-left', safeIndex % 2 === 1);
+            welcomeCaption.classList.add('is-active');
+        }, 180);
+    }
+
+    function startWelcomeCarousel() {
+        if (welcomeTimer || welcomeSlides.length <= 1) return;
+        welcomeTimer = window.setInterval(() => {
+            setWelcomeSlide(currentWelcomeSlide + 1);
+        }, 4200);
+    }
+
+    const finderHotspots = Array.from(document.querySelectorAll('.finder-hotspot'));
+    const finderSupportButtons = Array.from(document.querySelectorAll('.finder-support-button'));
+    const finderRegionTitle = document.getElementById('finder-region-title');
+    const finderRegionDescription = document.getElementById('finder-region-description');
+    const finderRegionTags = document.getElementById('finder-region-tags');
+    const finderDepartmentLink = document.getElementById('finder-department-link');
+    const welcomeMetricPatients = document.getElementById('welcomeMetricPatients');
+    const welcomeMetricStaff = document.getElementById('welcomeMetricStaff');
+    const welcomeMetricDonors = document.getElementById('welcomeMetricDonors');
+    const welcomeNavLoginAction = document.getElementById('welcomeNavLoginAction');
+    const welcomeNavWorkspaceAction = document.getElementById('welcomeNavWorkspaceAction');
+    const welcomeNavLogoutAction = document.getElementById('welcomeNavLogoutAction');
+    const welcomeEntryPrimaryAction = document.getElementById('welcomeEntryPrimaryAction');
+    const welcomeFinderPrimaryAction = document.getElementById('welcomeFinderPrimaryAction');
+    const finderRegions = {
+        eyes: {
+            name: 'Eyes',
+            departments: ['Neurology & Neurosurgery'],
+            departmentSlug: 'neurology-neurosurgery',
+            description: 'Visual changes, eye-related nerve symptoms, and neurological concerns affecting sight can begin with a neurology-led review.',
+            note: 'This route helps surface vision symptoms that may connect to broader nerve or brain-related evaluation.'
+        },
+        brain: {
+            name: 'Brain',
+            departments: ['Neurology & Neurosurgery'],
+            departmentSlug: 'neurology-neurosurgery',
+            description: 'Neurology is the best fit for symptoms centered around the brain, nerves, memory, balance, or severe headaches.',
+            note: 'A strong first route for neurological review, imaging decisions, and specialist follow-up inside the hospital workflow.'
+        },
+        'left-lung': {
+            name: 'Left Lung',
+            departments: ['Pulmonology', 'General Medicine'],
+            departmentSlug: 'pulmonology',
+            description: 'Breathing discomfort, coughing, congestion, or chest symptoms affecting the left lung can begin with pulmonology-guided triage.',
+            note: 'A focused entry point for respiratory review, baseline assessment, and referral into the next care path.'
+        },
+        'right-lung': {
+            name: 'Right Lung',
+            departments: ['Pulmonology', 'General Medicine'],
+            departmentSlug: 'pulmonology',
+            description: 'Breathing discomfort, coughing, congestion, or chest symptoms affecting the right lung can begin with pulmonology-guided triage.',
+            note: 'This keeps respiratory symptoms moving through a clear pulmonary workflow before any specialty escalation.'
+        },
+        heart: {
+            name: 'Heart',
+            departments: ['Cardiology & Vascular Medicine'],
+            departmentSlug: 'cardiology-vascular-medicine',
+            description: 'Cardiology is the right match for chest pressure, palpitations, circulation concerns, or ongoing heart-health monitoring.',
+            note: 'This path supports focused cardiac assessment, monitoring, and escalation into specialist-led treatment.'
+        },
+        liver: {
+            name: 'Liver',
+            departments: ['Gastroenterology & Hepatology', 'General Medicine'],
+            departmentSlug: 'gastroenterology-hepatology',
+            description: 'Gastroenterology and hepatology are a practical first stop for liver-area discomfort, fatigue, metabolism concerns, or abnormal clinical findings.',
+            note: 'This route supports focused digestive-liver assessment before any additional specialist escalation.'
+        },
+        stomach: {
+            name: 'Stomach',
+            departments: ['Gastroenterology & Hepatology', 'General Medicine'],
+            departmentSlug: 'gastroenterology-hepatology',
+            description: 'Nausea, upper abdominal discomfort, indigestion, or appetite changes can begin with a gastroenterology workup.',
+            note: 'This route supports symptom review, initial treatment, and referral when stomach-related issues need deeper investigation.'
+        },
+        'left-kidney': {
+            name: 'Left Kidney',
+            departments: ['Nephrology & Urology', 'General Medicine'],
+            departmentSlug: 'nephrology-urology',
+            description: 'Left-sided flank pain, swelling, hydration issues, or suspected kidney-related symptoms can be triaged through nephrology and urology care.',
+            note: 'A balanced entry point for tests, acute symptom review, and internal medicine coordination for kidney-related concerns.'
+        },
+        'right-kidney': {
+            name: 'Right Kidney',
+            departments: ['Nephrology & Urology', 'General Medicine'],
+            departmentSlug: 'nephrology-urology',
+            description: 'Right-sided flank pain, swelling, hydration issues, or suspected kidney-related symptoms can be triaged through nephrology and urology care.',
+            note: 'A balanced entry point for tests, acute symptom review, and internal medicine coordination for kidney-related concerns.'
+        },
+        intestines: {
+            name: 'Intestines',
+            departments: ['Gastroenterology & Hepatology', 'General Medicine'],
+            departmentSlug: 'gastroenterology-hepatology',
+            description: 'Bowel discomfort, cramping, digestive irregularity, or lower abdominal symptoms are well suited to gastroenterology triage.',
+            note: 'This path helps turn broad digestive concerns into a clear next step with examination and follow-up planning.'
+        },
+        bladder: {
+            name: 'Bladder',
+            departments: ['Nephrology & Urology', 'General Medicine'],
+            departmentSlug: 'nephrology-urology',
+            description: 'Urinary discomfort, lower pelvic pressure, or fluid-balance concerns can start with nephrology and urology support.',
+            note: 'Helpful for early assessment, testing coordination, and routing into the right treatment pathway.'
+        },
+        'hands-arms': {
+            name: 'Hands and Arms',
+            departments: ['Orthopedics & Musculoskeletal Care'],
+            departmentSlug: 'orthopedics-musculoskeletal-care',
+            description: 'Hand injuries, arm pain, joint strain, or limited upper-limb movement align well with orthopedic evaluation.',
+            note: 'This route is useful for musculoskeletal issues affecting the shoulders, arms, wrists, or hands.'
+        },
+        legs: {
+            name: 'Legs',
+            departments: ['Orthopedics & Musculoskeletal Care'],
+            departmentSlug: 'orthopedics-musculoskeletal-care',
+            description: 'Leg pain, sports injuries, gait problems, fractures, or weight-bearing discomfort fit the orthopedic pathway.',
+            note: 'A strong first stop for lower-limb injuries, stability concerns, and rehab-oriented treatment planning.'
+        },
+        'bones-joints': {
+            name: 'Bones and Joints',
+            departments: ['Orthopedics & Musculoskeletal Care'],
+            departmentSlug: 'orthopedics-musculoskeletal-care',
+            description: 'Bone pain, joint instability, posture issues, or broader skeletal discomfort align best with orthopedics.',
+            note: 'Use this when symptoms feel structural or joint-based rather than isolated to the arms or legs alone.'
+        },
+        'child-care': {
+            name: 'Child Care',
+            departments: ['Pediatrics'],
+            departmentSlug: 'pediatrics',
+            description: 'Pediatrics stays available for child wellness, fever monitoring, growth concerns, and age-specific clinical attention.',
+            note: 'This gives families a clear path into child-focused care without treating pediatrics like a body-organ overlay.'
+        },
+        'blood-donation': {
+            name: 'Blood and Donation',
+            departments: ['Blood Bank'],
+            departmentSlug: 'blood-bank',
+            description: 'Blood requests, donor coordination, and transfusion support should flow through the blood bank pathway.',
+            note: 'Best for donation readiness, blood availability checks, and urgent blood-support coordination in LifeLink.'
+        }
+    };
+
+    function renderFinderRegion(regionKey) {
+        const region = finderRegions[regionKey];
+        if (!region || !finderRegionTitle || !finderRegionDescription || !finderRegionTags) return;
+
+        finderRegionTitle.textContent = region.name;
+        finderRegionDescription.textContent = region.description;
+        finderRegionTags.innerHTML = region.departments.map((department) => `<span>${department}</span>`).join('');
+
+        if (finderDepartmentLink) {
+            const primaryDepartment = region.departments?.[0] || 'Department';
+            const slug = region.departmentSlug || '';
+            finderDepartmentLink.href = slug ? `/ui/departments/${slug}?from=welcome` : '/ui/departments?from=welcome';
+            finderDepartmentLink.textContent = `View ${primaryDepartment}`;
+        }
+
+        finderHotspots.forEach((button) => {
+            const isActive = button.dataset.region === regionKey;
+            button.classList.toggle('is-active', isActive);
+            button.setAttribute('aria-pressed', String(isActive));
+        });
+
+        finderSupportButtons.forEach((button) => {
+            const isActive = button.dataset.region === regionKey;
+            button.classList.toggle('is-active', isActive);
+            button.setAttribute('aria-pressed', String(isActive));
+        });
+    }
+
+    finderHotspots.forEach((button) => {
+        button.addEventListener('click', () => {
+            renderFinderRegion(button.dataset.region);
+        });
+    });
+
+    finderSupportButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            renderFinderRegion(button.dataset.region);
+        });
+    });
+
+    function formatMetricCount(value) {
+        const numberValue = Number(value || 0);
+        return Number.isFinite(numberValue) ? new Intl.NumberFormat().format(numberValue) : '0';
+    }
+
+    async function loadWelcomeMetrics() {
+        try {
+            const response = await fetch('/api/public/welcome/metrics', {
+                headers: { Accept: 'application/json' },
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) return;
+
+            if (welcomeMetricPatients) welcomeMetricPatients.textContent = formatMetricCount(payload?.metrics?.patients);
+            if (welcomeMetricStaff) welcomeMetricStaff.textContent = formatMetricCount(payload?.metrics?.medical_staff);
+            if (welcomeMetricDonors) welcomeMetricDonors.textContent = formatMetricCount(payload?.metrics?.active_donors);
+        } catch (error) {
+            // Graceful fallback for metric endpoint failures.
+        }
+    }
+
+    function parseStoredRoles() {
+        try {
+            const roles = JSON.parse(localStorage.getItem('CURRENT_USER_ROLES') || '[]');
+            return Array.isArray(roles) ? roles : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    function resolveWorkspaceDestination() {
+        const rolePriority = ['Admin', 'ITWorker', 'Doctor', 'Nurse', 'Donor', 'Applicant', 'Patient'];
+        const roleDestinations = {
+            Admin: '/ui/admin-users',
+            ITWorker: '/ui/it-bed-allocation',
+            Doctor: '/ui/doctor-dashboard',
+            Nurse: '/ui/nurse-dashboard',
+            Patient: '/ui/patient-portal',
+            Donor: '/ui/donor-dashboard',
+            Applicant: '/ui/applications',
+        };
+
+        const roles = parseStoredRoles();
+        const role = rolePriority.find((entry) => roles.includes(entry));
+        return roleDestinations[role] || '/ui/dashboard';
+    }
+
+    function hasActiveSession() {
+        const userToken = localStorage.getItem('USER_TOKEN');
+        const adminToken = localStorage.getItem('ADMIN_TOKEN');
+        return Boolean((userToken || adminToken) && parseStoredRoles().length);
+    }
+
+    function clearSessionAndRedirectToLogin() {
+        [
+            'ADMIN_TOKEN', 'ADMIN_USER_ID', 'ADMIN_EMAIL',
+            'USER_TOKEN', 'PATIENT_ID', 'PATIENT_EMAIL',
+            'CURRENT_USER_ID', 'CURRENT_USER_FULL_NAME', 'CURRENT_USER_EMAIL', 'CURRENT_USER_ROLES',
+            'LAST_USED_EMAIL'
+        ].forEach((key) => localStorage.removeItem(key));
+        window.location.href = '/ui/login';
+    }
+
+    function hydrateWelcomeSessionActions() {
+        if (hasActiveSession()) {
+            const workspacePath = resolveWorkspaceDestination();
+            if (welcomeNavLoginAction) welcomeNavLoginAction.hidden = true;
+            if (welcomeNavWorkspaceAction) {
+                welcomeNavWorkspaceAction.hidden = false;
+                welcomeNavWorkspaceAction.href = workspacePath;
+            }
+            if (welcomeNavLogoutAction) {
+                welcomeNavLogoutAction.hidden = false;
+                welcomeNavLogoutAction.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    clearSessionAndRedirectToLogin();
+                });
+            }
+            if (welcomeEntryPrimaryAction) {
+                welcomeEntryPrimaryAction.href = workspacePath;
+                welcomeEntryPrimaryAction.textContent = 'Go to Dashboard';
+            }
+            if (welcomeFinderPrimaryAction) {
+                welcomeFinderPrimaryAction.href = workspacePath;
+                welcomeFinderPrimaryAction.textContent = 'Continue to Workspace';
+            }
+            return;
+        }
+
+        if (welcomeNavLoginAction) welcomeNavLoginAction.hidden = false;
+        if (welcomeNavWorkspaceAction) welcomeNavWorkspaceAction.hidden = true;
+        if (welcomeNavLogoutAction) welcomeNavLogoutAction.hidden = true;
+    }
+
+    setWelcomeSlide(0);
+    startWelcomeCarousel();
+    renderFinderRegion('brain');
+    loadWelcomeMetrics();
+    hydrateWelcomeSessionActions();
+
+    </script>
+</body>
 </html>

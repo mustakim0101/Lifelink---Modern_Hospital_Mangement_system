@@ -24,8 +24,8 @@ Shadman Muhtasim— [nksoag2006@gmail.com](mailto:nksoag2006@gmail.com)  — Git
 
 | # | Issue Title | Commit Message | Branch |
 |---|-------------|----------------|--------|
-| **1** | **Setup Docker environment with MSSQL** | `chore: dockerize laravel  with mssql 2022` | `main` |    -->>DONE musa
-| **2** | **Configure MSSQL database connection** | `fix: establish mssql connection and test migrations` | `main` |   -->>DONE musa          
+| **1** | **Setup Docker environment with MSSQL** | `chore: dockerize laravel  with mssql 2022` | `main` |    
+| **2** | **Configure MSSQL database connection** | `fix: establish mssql connection and test migrations` | `main` |        
 
 ## 🔐 Phase 2: Identity & RBAC (3 Issues/Commits)
 

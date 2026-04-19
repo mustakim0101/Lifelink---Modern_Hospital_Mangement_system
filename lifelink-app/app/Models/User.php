@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
@@ -19,7 +22,14 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $fillable = [
         'name',
+        'full_name',
         'email',
+        'phone',
+        'date_of_birth',
+        'gender',
+        'account_status',
+        'frozen_at',
+        'frozen_by_user_id',
         'password',
     ];
 
@@ -40,8 +50,149 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'frozen_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    protected ?array $resolvedRoleNames = null;
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'user_roles')
+            ->withPivot(['assigned_at', 'assigned_by_user_id']);
+    }
+
+    public function departmentAdminScopes(): HasMany
+    {
+        return $this->hasMany(DepartmentAdmin::class);
+    }
+
+    public function admissionsAsPatient(): HasMany
+    {
+        return $this->hasMany(Admission::class, 'patient_user_id');
+    }
+
+    public function patientProfile(): HasOne
+    {
+        return $this->hasOne(Patient::class, 'patient_id');
+    }
+
+    public function doctorProfile(): HasOne
+    {
+        return $this->hasOne(Doctor::class, 'doctor_id');
+    }
+
+    public function nurseProfile(): HasOne
+    {
+        return $this->hasOne(Nurse::class, 'nurse_id');
+    }
+
+    public function donorProfile(): HasOne
+    {
+        return $this->hasOne(DonorProfile::class, 'donor_id');
+    }
+
+    public function donorAvailabilities(): HasMany
+    {
+        return $this->hasMany(DonorAvailability::class, 'donor_id');
+    }
+
+    public function donorHealthChecks(): HasMany
+    {
+        return $this->hasMany(DonorHealthCheck::class, 'donor_id');
+    }
+
+    public function donorDonations(): HasMany
+    {
+        return $this->hasMany(BloodDonation::class, 'donor_id');
+    }
+
+    public function recordedBloodDonations(): HasMany
+    {
+        return $this->hasMany(BloodDonation::class, 'recorded_by_user_id');
+    }
+
+    public function doctorAppointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'doctor_user_id');
+    }
+
+    public function cancelledAppointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'cancelled_by_user_id');
+    }
+
+    public function approvedAppointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'approved_by_user_id');
+    }
+
+    public function doctorAppointmentRules(): HasMany
+    {
+        return $this->hasMany(DoctorAppointmentRule::class, 'doctor_user_id');
+    }
+
+    public function createdMedicalRecords(): HasMany
+    {
+        return $this->hasMany(MedicalRecord::class, 'created_by_user_id');
+    }
+
+    public function recordedVitalSigns(): HasMany
+    {
+        return $this->hasMany(NurseVitalSignLog::class, 'nurse_id');
+    }
+
+    public function requestedBloodRequests(): HasMany
+    {
+        return $this->hasMany(BloodRequest::class, 'requested_by_user_id');
+    }
+
+    public function hasRole(string ...$roles): bool
+    {
+        if (empty($roles)) {
+            return false;
+        }
+
+        $targetRoles = array_values(array_unique($roles));
+
+        if ($this->relationLoaded('roles')) {
+            return $this->roles->pluck('role_name')
+                ->intersect($targetRoles)
+                ->isNotEmpty();
+        }
+
+        return ! empty(array_intersect($this->roleNames(), $targetRoles));
+    }
+
+    public function roleNames(): array
+    {
+        if ($this->relationLoaded('roles')) {
+            $this->resolvedRoleNames = $this->roles
+                ->pluck('role_name')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            return $this->resolvedRoleNames;
+        }
+
+        if ($this->resolvedRoleNames === null) {
+            $this->resolvedRoleNames = $this->roles()
+                ->pluck('role_name')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        return $this->resolvedRoleNames;
+    }
+
+    public function isFrozen(): bool
+    {
+        return $this->account_status === 'Frozen';
+    }
 
     public function getJWTIdentifier(): mixed
     {
